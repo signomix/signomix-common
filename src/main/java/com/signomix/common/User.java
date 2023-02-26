@@ -38,6 +38,8 @@ public class User {
     public long credits;
     public boolean autologin;
     public String preferredLanguage;
+    public long organization;
+    public String sessionToken;
 
     public User() {
     }
