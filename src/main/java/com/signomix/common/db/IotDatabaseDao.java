@@ -247,7 +247,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setTimestamp(paramIdx, dataQuery.getFromTs());
                 paramIdx++;
                 // System.out.println("toTS: " + dataQuery.getToTs().getTime());
-                pst.setTimestamp(paramIdx, dataQuery.getToTs());
+                pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
                 paramIdx++;
             }
             pst.setInt(paramIdx, dataQuery.getLimit() == 0 ? limit : dataQuery.getLimit());
@@ -379,7 +379,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != dataQuery.getFromTs() && null != dataQuery.getToTs()) {
                 pst.setTimestamp(paramIdx, dataQuery.getFromTs());
                 paramIdx++;
-                pst.setTimestamp(paramIdx, dataQuery.getToTs());
+                pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
                 paramIdx++;
             }
             pst.setInt(paramIdx, limit);

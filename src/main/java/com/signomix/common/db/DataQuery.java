@@ -43,6 +43,17 @@ public class DataQuery {
         return toTs;
     }
 
+    /**
+     * Calculates ending timestamp 1 millisecond earlier.
+     * @return toTs decreased by 1 millisecond
+     *
+     */
+    public Timestamp getToTsExclusive() {
+        Timestamp sooner = new Timestamp(toTs.getTime() - 1);
+        sooner.setNanos(toTs.getNanos());
+        return sooner;
+    }
+
     public DataQuery() {
         limit = 0;
         average = 0;
@@ -54,10 +65,10 @@ public class DataQuery {
         newValue = null;
         group = null;
         state = null;
-        //fromTs = new Timestamp(0);
-        //toTs = new Timestamp(System.currentTimeMillis());
-        fromTs=null;
-        toTs=null;
+        // fromTs = new Timestamp(0);
+        // toTs = new Timestamp(System.currentTimeMillis());
+        fromTs = null;
+        toTs = null;
         virtual = false;
         dateParamPresent = false;
     }
@@ -353,11 +364,11 @@ public class DataQuery {
     public void setFromTs(String fromStr) {
         try {
             fromTs = DateTool.parseTimestamp(fromStr, null, false);
-            if(null!=fromTs){
+            if (null != fromTs) {
                 dateParamPresent = true;
             }
         } catch (Exception ex) {
-            
+
         }
     }
 
@@ -369,7 +380,7 @@ public class DataQuery {
     public void setToTs(String toStr) {
         try {
             toTs = DateTool.parseTimestamp(toStr, null, true);
-            if(null!=toTs){
+            if (null != toTs) {
                 dateParamPresent = true;
             }
         } catch (Exception ex) {
