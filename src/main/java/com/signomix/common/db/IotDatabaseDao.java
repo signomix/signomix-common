@@ -1121,8 +1121,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        
+        String query = "CALL CSVWRITE('data.csv', 'SELECT * FROM devicedata');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
