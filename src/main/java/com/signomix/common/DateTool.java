@@ -13,9 +13,19 @@ import java.time.format.DateTimeParseException;
 import org.jboss.logging.Logger;
 
 public class DateTool {
+
+    private static int DAY_MILLIS = 86400 * 1000;
+    private static int WEEK_MILLIS = DAY_MILLIS * 7;
+    private static int MONTH_MILLIS = WEEK_MILLIS * 4;
+    private static int HOUR_MILLIS = 3600 * 1000;
+    private static int MINUTE_MILLIS = 60 * 1000;
+    
+    public static String CHIRPSTACK_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX";
+
     private static final Logger LOG = Logger.getLogger(DateTool.class);
 
-    public static Timestamp parseTimestamp(String input, String secondaryInput, boolean useSystemTimeOnError) {
+    public static Timestamp parseTimestamp(String input, String secondaryInput, boolean useSystemTimeOnError) 
+    throws Exception {
         if (null == input || input.isEmpty()) {
             return null;
         }
@@ -36,23 +46,33 @@ public class DateTool {
                 zoneId = input.substring(zonePosition + 1).replaceFirst("\\.", "/");
             }
             switch (unitSymbol) {
+                case 'M':
+                    multiplicand = MONTH_MILLIS;
+                    break;
+                case 'w':
+                    multiplicand = WEEK_MILLIS;
+                    break;
                 case 'd':
-                    multiplicand = 86400 * 1000;
+                    multiplicand = DAY_MILLIS;
                     break;
                 case 'h':
-                    multiplicand = 3600 * 1000;
+                    multiplicand = HOUR_MILLIS;
                     break;
                 case 'm':
-                    multiplicand = 60 * 1000;
+                    multiplicand = MINUTE_MILLIS;
                     break;
                 default: // seconds
                     multiplicand = 1000;
             }
-            if (millis == 0 && multiplicand == 86400 * 1000) {
+            if (millis == 0 && multiplicand == DAY_MILLIS) {
                 // -0d means start of current day
                 ts = new Timestamp(getStartOfDayAsUTC(zoneId));
                 return ts;
-            } else if (millis == 0 && multiplicand != 86400 * 1000) {
+            } else if (millis == 0 && multiplicand == MONTH_MILLIS) {
+                // -0d means start of current day
+                ts = new Timestamp(getStartOfMonthAsUTC(zoneId));
+                return ts;
+            } else if (millis != 0 && (multiplicand == DAY_MILLIS || multiplicand == MONTH_MILLIS)) {
                 // cannot be parsed (parsing error) - actual timestamp will be returned
             } else {
                 ts = new Timestamp(System.currentTimeMillis() - millis * multiplicand);
@@ -81,6 +101,10 @@ public class DateTool {
             } catch (Exception e2) {
             }
             try {
+                return getTimestamp(timeString, CHIRPSTACK_TIME_FORMAT);
+            } catch (Exception e2) {
+            } 
+            try {
                 ts = Timestamp.from(Instant.parse(secondaryInput));
                 return ts;
             } catch (Exception e4) {
@@ -89,7 +113,7 @@ public class DateTool {
         if (useSystemTimeOnError) {
             return new Timestamp(System.currentTimeMillis());
         } else {
-            return new Timestamp(0);
+            throw new Exception("Unparsable timestamp");
         }
     }
 
@@ -107,7 +131,20 @@ public class DateTool {
         ZonedDateTime startOfDayInEurope2 = localDate.atTime(LocalTime.MIN)
                 .atZone(ZoneId.of(zoneId));
         long offset = startOfDayInEurope2.getOffset().getTotalSeconds() * 1000;
-        result=Timestamp.valueOf(startOfDayInEurope2.toLocalDateTime()).getTime() - offset;
+        result = Timestamp.valueOf(startOfDayInEurope2.toLocalDateTime()).getTime() - offset;
+        return result;
+    }
+
+    public static long getStartOfMonthAsUTC(String zoneId) {
+        long result;
+        LocalDate localDateNow = LocalDate.now(ZoneId.of(zoneId));
+        int year = localDateNow.getYear();
+        int month = localDateNow.getMonthValue();
+        LocalDate localDate = LocalDate.of(year, month, 1);
+        ZonedDateTime startOfDayInEurope2 = localDate.atTime(LocalTime.MIN)
+                .atZone(ZoneId.of(zoneId));
+        long offset = startOfDayInEurope2.getOffset().getTotalSeconds() * 1000;
+        result = Timestamp.valueOf(startOfDayInEurope2.toLocalDateTime()).getTime() - offset;
         return result;
     }
 }
