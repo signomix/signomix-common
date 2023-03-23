@@ -45,6 +45,7 @@ public class DataQuery {
 
     /**
      * Calculates ending timestamp 1 millisecond earlier.
+     * 
      * @return toTs decreased by 1 millisecond
      *
      */
@@ -86,6 +87,11 @@ public class DataQuery {
         String[] params = q.split(" ");
         for (int i = 0; i < params.length;) {
             switch (params[i].toLowerCase()) {
+                case "get":
+                case "where":
+                case "as":
+                    i = i + 1;
+                    break;
                 case "last":
                     if (params[i + 1].equals("*") || params[i + 1].equals("0")) {
                         dq.setLimit(Integer.MAX_VALUE);
