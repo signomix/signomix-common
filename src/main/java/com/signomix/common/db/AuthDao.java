@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import io.agroal.api.AgroalDataSource;
@@ -66,6 +65,19 @@ public class AuthDao implements AuthDaoIface {
             LOG.warn(ex.getMessage());
         } catch(Exception ex){
             LOG.error(ex.getMessage());
+        }
+    }
+
+    @Override
+    public void backupDb() throws IotDatabaseException {
+        String query = "CALL CSVWRITE('backup/tokens.csv', 'SELECT * FROM tokens');"
+                + "CALL CSVWRITE('backup/ptokens.csv', 'SELECT * FROM ptokens');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
 

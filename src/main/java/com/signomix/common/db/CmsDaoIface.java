@@ -2,9 +2,8 @@ package com.signomix.common.db;
 
 import io.agroal.api.AgroalDataSource;
 
-public interface AuthDaoIface {
+public interface CmsDaoIface {
     public void setDatasource(AgroalDataSource ds);
-    public String getUser(String token);
-    public void clearExpiredTokens();
     public void backupDb() throws IotDatabaseException;
+    public void createStructure() throws IotDatabaseException;
 }

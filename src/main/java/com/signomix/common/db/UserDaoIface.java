@@ -11,4 +11,5 @@ public interface UserDaoIface {
     public String getUser(String uid);
     public void removeNotConfirmed(long since);
     public List<User> getAll();
+    public void backupDb() throws IotDatabaseException;
 }

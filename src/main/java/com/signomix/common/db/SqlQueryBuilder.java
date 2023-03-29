@@ -44,7 +44,7 @@ public class SqlQueryBuilder {
             query = query.concat(wherePart);
         }
         query = query.concat(orderPart);
-        System.out.println(query);
+        LOG.debug(query);
         return query;
     }
 
