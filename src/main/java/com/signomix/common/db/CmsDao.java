@@ -22,6 +22,11 @@ public class CmsDao implements CmsDaoIface {
         this.dataSource = dataSource;
     }
 
+    /**
+     * Backup database
+     * 
+     * @throws IotDatabaseException
+     */
     @Override
     public void backupDb() throws IotDatabaseException {
         String query = "CALL CSVWRITE('backup/paths.csv', 'SELECT * FROM paths');"
@@ -43,6 +48,11 @@ public class CmsDao implements CmsDaoIface {
         }
     }
 
+    /**
+     * Creates database structure
+     * 
+     * @throws IotDatabaseException
+     */
     @Override
     public void createStructure() throws IotDatabaseException {
         String query = "CREATE TABLE IF NOT EXISTS urls ("
@@ -58,6 +68,12 @@ public class CmsDao implements CmsDaoIface {
         }
     }
 
+    /**
+     * Creates a new document
+     * 
+     * @param rs ResultSet with document data
+     * @throws IotDatabaseException
+     */
     Document buildDocument(ResultSet rs) throws CmsException, SQLException {
         Document doc = new Document();
         doc.setUid(rs.getString(1));
@@ -81,6 +97,41 @@ public class CmsDao implements CmsDaoIface {
         }
         doc.setExtra(rs.getString(17));
         return doc;
+    }
+
+    /**
+     * Removes all paths that are not used by any document
+     * 
+     * @throws IotDatabaseException
+     */
+    @Override
+    public void doCleanup() throws IotDatabaseException {
+        String query = "DELETE"
+                + " FROM paths"
+                + " WHERE paths.path NOT IN ("
+                + " SELECT path FROM published_pl"
+                + " UNION"
+                + " SELECT path FROM published_en"
+                + " UNION"
+                + " SELECT path FROM published_fr"
+                + " UNION"
+                + " SELECT path FROM published_it"
+                + " UNION"
+                + " SELECT path FROM wip_pl"
+                + " UNION"
+                + " SELECT path FROM wip_en"
+                + " UNION"
+                + " SELECT path FROM wip_fr"
+                + " UNION"
+                + " SELECT path FROM wip_it"
+                + ");";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
     }
 
 }
