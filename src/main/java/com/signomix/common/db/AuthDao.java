@@ -5,10 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.inject.Singleton;
+
 import org.jboss.logging.Logger;
 
 import io.agroal.api.AgroalDataSource;
+import io.quarkus.cache.CacheResult;
 
+@Singleton
 public class AuthDao implements AuthDaoIface {
     private static final Logger LOG = Logger.getLogger(AuthDao.class);
 
@@ -22,6 +26,7 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
+    @CacheResult(cacheName = "token-cache")
     public String getUser(String token) {
         if(null==token){
             return null;

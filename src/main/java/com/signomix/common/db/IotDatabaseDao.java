@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.jboss.logging.Logger;
 
 import com.cedarsoftware.util.io.JsonObject;
@@ -27,11 +29,13 @@ import com.signomix.common.iot.virtual.VirtualData;
 import io.agroal.api.AgroalDataSource;
 import io.quarkus.cache.CacheResult;
 
+@Singleton
 public class IotDatabaseDao implements IotDatabaseIface {
     private static final Logger LOG = Logger.getLogger(IotDatabaseDao.class);
 
     private AgroalDataSource dataSource;
 
+    // TODO: get requestLimit from config
     private long requestLimit = 500;
 
     @Override
@@ -43,274 +47,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public void setQueryResultsLimit(int limit) {
         requestLimit = limit;
         LOG.info("requestLimit:" + requestLimit);
-    }
-
-    @Override
-    public List<List> getValues(String userID, String deviceEUI, String dataQuery)
-            throws IotDatabaseException {
-        LOG.debug("queryLimit:" + requestLimit);
-        DataQuery dq;
-        try {
-            dq = DataQuery.parse(dataQuery);
-        } catch (DataQueryException ex) {
-            throw new IotDatabaseException(ex.getCode(), "DataQuery " + ex.getMessage());
-        }
-        if (dq.isVirtual()) {
-            return getVirtualDeviceMeasures(userID, deviceEUI, dq);
-        }
-        if (null != dq.getGroup()) {
-            String channelName = dq.getChannelName();
-            if (null == channelName) {
-                channelName = "";
-            }
-            // return getValuesOfGroup(userID, dq.getGroup(), channelName.split(","),
-            // defaultGroupInterval, dq);
-            return new ArrayList<>();
-        }
-
-        int limit = dq.getLimit();
-        if (dq.average > 0) {
-            limit = dq.average;
-        }
-        if (dq.minimum > 0) {
-            limit = dq.minimum;
-        }
-        if (dq.maximum > 0) {
-            limit = dq.maximum;
-        }
-        if (dq.summary > 0) {
-            limit = dq.summary;
-        }
-        List<List> result = new ArrayList<>();
-        if (dq.getNewValue() != null) {
-            limit = limit - 1;
-        }
-
-        if (null == dq.getChannelName() || "*".equals(dq.getChannelName())) {
-            // TODO
-            result.add(getValues(userID, deviceEUI, limit, dq));
-            return result;
-        }
-        boolean singleChannel = !dq.getChannelName().contains(",");
-        long t0, t1, t2;
-        t0 = System.currentTimeMillis();
-        if (singleChannel) {
-            result.add(getChannelValues(userID, deviceEUI, dq.getChannelName(), limit, dq)); // project
-            t1 = System.currentTimeMillis();
-            LOG.debug("Query time [ms]: " + (t1 - t0));
-        } else {
-            String[] channels = dq.getChannelName().split(",");
-            List<ChannelData>[] temp = new ArrayList[channels.length];
-            for (int i = 0; i < channels.length; i++) {
-                temp[i] = getChannelValues(userID, deviceEUI, channels[i], limit, dq); // project
-            }
-            t1 = System.currentTimeMillis();
-            LOG.debug("Query time [ms]: " + (t1 - t0));
-            List<ChannelData> values;
-            LOG.debug("DQ limit: " + limit);
-            int realLimit = 0;
-            for (int j = 0; j < channels.length; j++) {
-                if (temp[j].size() > realLimit) {
-                    realLimit = temp[j].size();
-                }
-            }
-            LOG.debug("Result limit: " + realLimit);
-            for (int i = 0; i < realLimit; i++) {
-                values = new ArrayList<>();
-                for (int j = 0; j < channels.length; j++) {
-                    if (temp[j].size() > i) {
-                        values.add(temp[j].get(i));
-                    }
-                }
-                if (values.size() > 0) {
-                    result.add(values);
-                }
-            }
-        }
-
-        if (!singleChannel) {
-            t2 = System.currentTimeMillis();
-            LOG.debug("Query processing time [ms]: " + (t2 - t1));
-            return result;
-        }
-
-        ChannelData data = new ChannelData(dq.getChannelName(), 0.0, System.currentTimeMillis());
-        data.setNullValue();
-        List<ChannelData> subResult = new ArrayList<>();
-        Double actualValue = null;
-        Double tmpValue;
-        int size = 0;
-        LOG.debug("DQ: " + dq.average + " " + dq.maximum + " " + dq.minimum + " " + dq.summary);
-        if (dq.average > 0) {
-            if (result.size() > 0) {
-                size = result.get(0).size();
-                for (int i = 0; i < size; i++) {
-                    if (i == 0) {
-                        actualValue = ((ChannelData) result.get(0).get(i)).getValue();
-                    } else {
-                        actualValue = actualValue + ((ChannelData) result.get(0).get(i)).getValue();
-                    }
-                }
-            }
-            if (dq.getNewValue() != null) {
-                if (null != actualValue) {
-                    actualValue = actualValue + dq.getNewValue();
-                } else {
-                    actualValue = dq.getNewValue();
-                }
-                data.setValue(actualValue / (size + 1));
-            } else {
-                if (size > 0) {
-                    data.setValue(actualValue / size);
-                }
-            }
-            subResult.add(data);
-            result.clear();
-            result.add(subResult);
-        } else if (dq.maximum > 0) {
-            actualValue = Double.MIN_VALUE;
-            if (result.size() > 0) {
-                size = result.get(0).size();
-                for (int i = 0; i < size; i++) {
-                    tmpValue = ((ChannelData) result.get(0).get(i)).getValue();
-                    if (tmpValue.compareTo(actualValue) > 0) {
-                        actualValue = tmpValue;
-                    }
-                }
-            }
-            if (dq.getNewValue() != null && dq.getNewValue() > actualValue) {
-                actualValue = dq.getNewValue();
-            }
-            if (actualValue.compareTo(Double.MIN_VALUE) > 0) {
-                data.setValue(actualValue);
-            }
-            subResult.add(data);
-            result.clear();
-            result.add(subResult);
-        } else if (dq.minimum > 0) {
-            actualValue = Double.MAX_VALUE;
-            if (result.size() > 0) {
-                size = result.get(0).size();
-                for (int i = 0; i < size; i++) {
-                    tmpValue = ((ChannelData) result.get(0).get(i)).getValue();
-                    if (tmpValue.compareTo(actualValue) < 0) {
-                        actualValue = tmpValue;
-                    }
-                }
-            }
-            if (dq.getNewValue() != null && dq.getNewValue() < actualValue) {
-                actualValue = dq.getNewValue();
-            }
-            if (actualValue.compareTo(Double.MAX_VALUE) < 0) {
-                data.setValue(actualValue);
-            }
-            subResult.add(data);
-            result.clear();
-            result.add(subResult);
-        } else if (dq.summary > 0) {
-            actualValue = null;
-            if (result.size() > 0) {
-                size = result.get(0).size();
-                for (int i = 0; i < size; i++) {
-                    if (i == 0) {
-                        actualValue = ((ChannelData) result.get(0).get(i)).getValue();
-                    } else {
-                        actualValue = actualValue + ((ChannelData) result.get(0).get(i)).getValue();
-                    }
-                }
-            }
-            if (dq.getNewValue() != null) {
-                if (null == actualValue) {
-                    actualValue = actualValue + dq.getNewValue();
-                } else {
-                    actualValue = dq.getNewValue();
-                }
-            }
-            if (null != actualValue) {
-                data.setValue(actualValue);
-            }
-            subResult.add(data);
-            result.clear();
-            result.add(subResult);
-        }
-        t2 = System.currentTimeMillis();
-        LOG.debug("Query processing time [ms]: " + (t2 - t1));
-        return result;
-    }
-
-    private List<List> getValues(String userID, String deviceEUI, int limit, DataQuery dataQuery)
-            throws IotDatabaseException {
-        String query = SqlQueryBuilder.buildDeviceDataQuery(-1, dataQuery);
-        List<String> channels = getDeviceChannels(deviceEUI);
-        List<List> result = new ArrayList<>();
-        ArrayList<ChannelData> row;
-        ArrayList row2;
-        // System.out.println("SQL QUERY: " + query);
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, deviceEUI);
-            int paramIdx = 2;
-            if (null != dataQuery.getProject()) {
-                pst.setString(paramIdx, dataQuery.getProject());
-                paramIdx++;
-                if (null != dataQuery.getState()) {
-                    pst.setDouble(paramIdx, dataQuery.getState());
-                    paramIdx++;
-                }
-            } else {
-                if (null != dataQuery.getState()) {
-                    pst.setDouble(paramIdx, dataQuery.getState());
-                    paramIdx++;
-                }
-            }
-            if (null != dataQuery.getFromTs() && null != dataQuery.getToTs()) {
-                // System.out.println("fromTS: " + dataQuery.getFromTs().getTime());
-                pst.setTimestamp(paramIdx, dataQuery.getFromTs());
-                paramIdx++;
-                // System.out.println("toTS: " + dataQuery.getToTs().getTime());
-                pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
-                paramIdx++;
-            }
-            pst.setInt(paramIdx, dataQuery.getLimit() == 0 ? limit : dataQuery.getLimit());
-
-            ResultSet rs = pst.executeQuery();
-            if (dataQuery.isTimeseries()) {
-                row2 = new ArrayList();
-                row2.add("timestamp");
-                for (int i = 0; i < channels.size(); i++) {
-                    row2.add(channels.get(i));
-                }
-                result.add(row2);
-            }
-            double d;
-            while (rs.next()) {
-                if (dataQuery.isTimeseries()) {
-                    row2 = new ArrayList();
-                    row2.add(rs.getTimestamp(5).getTime());
-                    for (int i = 0; i < channels.size(); i++) {
-                        d = rs.getDouble(6 + i);
-                        if (!rs.wasNull()) {
-                            row2.add(d);
-                        } else {
-                            row2.add(null);
-                        }
-                    }
-                    result.add(row2);
-                } else {
-                    row = new ArrayList<>();
-                    for (int i = 0; i < channels.size(); i++) {
-                        d = rs.getDouble(6 + i);
-                        if (!rs.wasNull()) {
-                            row.add(new ChannelData(deviceEUI, channels.get(i), d,
-                                    rs.getTimestamp(5).getTime()));
-                        }
-                    }
-                    result.add(row);
-                }
-            }
-            return result;
-        } catch (SQLException e) {
-            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
-        }
     }
 
     @Override
@@ -337,127 +73,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-    }
-
-    @Override
-    public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException {
-        String query = "select eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from devicedata where eui=? order by tstamp desc limit 1";
-        List<String> channels = getDeviceChannels(deviceEUI);
-        ArrayList<ChannelData> row = new ArrayList<>();
-        ArrayList<List> result = new ArrayList<>();
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, deviceEUI);
-            ResultSet rs = pst.executeQuery();
-            double d;
-            if (rs.next()) {
-                for (int i = 0; i < channels.size(); i++) {
-                    d = rs.getDouble(6 + i);
-                    if (!rs.wasNull()) {
-                        row.add(new ChannelData(deviceEUI, channels.get(i), d,
-                                rs.getTimestamp(5).getTime()));
-                    }
-                }
-                result.add(row);
-            }
-            return result;
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-    }
-
-    private List<ChannelData> getChannelValues(String userID, String deviceEUI, String channel, int resultsLimit,
-            DataQuery dataQuery) throws IotDatabaseException {
-        ArrayList<ChannelData> result = new ArrayList<>();
-        int channelIndex = getChannelIndex(deviceEUI, channel);
-        if (channelIndex < 1) {
-            return result;
-        }
-        String query = SqlQueryBuilder.buildDeviceDataQuery(channelIndex, dataQuery);
-        int limit = resultsLimit;
-        if (requestLimit > 0 && requestLimit < limit) {
-            limit = (int) requestLimit;
-        }
-        LOG.debug(query);
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, deviceEUI);
-
-            int paramIdx = 2;
-            if (null != dataQuery.getProject()) {
-                pst.setString(paramIdx, dataQuery.getProject());
-                paramIdx++;
-                if (null != dataQuery.getState()) {
-                    pst.setDouble(paramIdx, dataQuery.getState());
-                    paramIdx++;
-                }
-            } else {
-                if (null != dataQuery.getState()) {
-                    pst.setDouble(paramIdx, dataQuery.getState());
-                    paramIdx++;
-                }
-            }
-            if (null != dataQuery.getFromTs() && null != dataQuery.getToTs()) {
-                pst.setTimestamp(paramIdx, dataQuery.getFromTs());
-                paramIdx++;
-                pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
-                paramIdx++;
-            }
-            pst.setInt(paramIdx, limit);
-
-            ResultSet rs = pst.executeQuery();
-            Double d;
-            while (rs.next()) {
-                d = rs.getDouble(6);
-                if (!rs.wasNull()) {
-                    result.add(0, new ChannelData(deviceEUI, channel, d, rs.getTimestamp(5).getTime()));
-                }
-            }
-            return result;
-        } catch (SQLException e) {
-            LOG.error("problematic query = " + query);
-            e.printStackTrace();
-            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
-        }
-    }
-
-    private List<List> getVirtualDeviceMeasures(String userID, String deviceEUI, DataQuery dataQuery)
-            throws IotDatabaseException {
-        List<List> result = new ArrayList<>();
-        String query = SqlQueryBuilder.buildDeviceDataQuery(-1, dataQuery);
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, deviceEUI);
-            ResultSet rs = pst.executeQuery();
-            String eui;
-            Timestamp ts;
-            String serializedData;
-            ChannelData cData;
-            ArrayList<ChannelData> channels = new ArrayList<>();
-            String channelName;
-            while (rs.next()) {
-                eui = rs.getString(1);
-                ts = rs.getTimestamp(2);
-                serializedData = rs.getString(3);
-                JsonObject jo = (JsonObject) JsonReader.jsonToJava(serializedData);
-                VirtualData vd = new VirtualData(eui);
-                vd.timestamp = ts.getTime();
-                JsonObject fields = (JsonObject) jo.get("payload_fields");
-                Iterator<String> it = fields.keySet().iterator();
-                while (it.hasNext()) {
-                    channelName = it.next();
-                    cData = new ChannelData();
-                    cData.setDeviceEUI(eui);
-                    cData.setTimestamp(vd.timestamp);
-                    cData.setName(channelName);
-                    cData.setValue((Double) fields.get(channelName));
-                    channels.add(cData);
-                }
-            }
-            result.add(channels);
-        } catch (SQLException e) {
-            LOG.error("problematic query = " + query);
-            e.printStackTrace();
-            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
-        }
-        return result;
     }
 
     @Override
@@ -685,41 +300,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void updateDeviceStatus(String eui, Double newStatus, long timestamp, long lastFrame, String downlink,
-            String deviceId) throws IotDatabaseException {
-        Device device = getDevice(eui);
-        if (device == null) {
-            throw new IotDatabaseException(IotDatabaseException.NOT_FOUND, "device not found", null);
-        }
-        device.setState(newStatus);
-        Device previous = getDevice(device.getEUI());
-        String query;
-        if (null != newStatus) {
-            query = "update devices set lastseen=?,lastframe=?,downlink=?,devid=?,state=? where eui=?";
-        } else {
-            query = "update devices set lastseen=?,lastframe=?,downlink=?,devid=? where eui=?";
-        }
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, timestamp);
-            pstmt.setLong(2, lastFrame);
-            pstmt.setString(3, downlink);
-            pstmt.setString(4, deviceId);
-            if (null != newStatus) {
-                pstmt.setDouble(5, newStatus);
-                pstmt.setString(6, eui);
-            } else {
-                pstmt.setString(5, eui);
-            }
-            int updated = pstmt.executeUpdate();
-            if (updated < 1) {
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
-                        "DB error updating device " + device.getEUI(), null);
-            }
+    public void removeCommand(long id) throws IotDatabaseException {
+        String query = "delete from commands where id=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setLong(1, id);
+            pst.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage(), null);
         }
     }
 
@@ -752,78 +339,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public Device getDevice(String userID, String deviceEUI, boolean withShared) throws IotDatabaseException {
-        String query;
-        if (withShared) {
-            query = buildDeviceQuery()
-                    + " AND (upper(d.eui)=upper(?) AND (d.userid = ? OR d.team like ? OR d.administrators like ?))";
-        } else {
-            query = buildDeviceQuery() + " AND ( upper(d.eui)=upper(?) and d.userid = ?)";
-        }
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, deviceEUI);
-            pstmt.setString(2, userID);
-            if (withShared) {
-                pstmt.setString(3, "%," + userID + ",%");
-                pstmt.setString(4, "%," + userID + ",%");
-            }
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                Device device = buildDevice(rs);
-                return device;
-            } else {
-                return null;
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public Device getDevice(String deviceEUI) throws IotDatabaseException {
-        String query = buildDeviceQuery() + " AND ( upper(d.eui) = upper(?))";
-        if (deviceEUI == null || deviceEUI.isEmpty()) {
-            return null;
-        }
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, deviceEUI);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                Device device = buildDevice(rs);
-                return device;
-            } else {
-                return null;
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException {
-        List<String> channels;
-        String query = "select channels from devicechannels where eui=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, deviceEUI);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                String[] s = rs.getString(1).toLowerCase().split(",");
-                channels = Arrays.asList(s);
-                String channelStr = "";
-                for (int i = 0; i < channels.size(); i++) {
-                    channelStr = channelStr + channels.get(i) + ",";
-                }
-                LOG.debug("CHANNELS READ: " + deviceEUI + " " + channelStr);
-                return channels;
-            } else {
-                return new ArrayList<>();
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-    }
-
-    @Override
     public void putCommandLog(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
         String query = "insert into commandslog (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
         String command = (String) commandEvent.getPayload();
@@ -837,48 +352,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setString(4, deviceEUI);
             pst.setString(5, command);
             pst.setLong(6, commandEvent.getCreatedAt());
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
-        String query = "insert into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
-        String query2 = "merge into commands (id,category,type,origin,payload,createdat) key (id) values (?,?,?,?,?,?)";
-        String command = (String) commandEvent.getPayload();
-        boolean overwriteMode = false;
-        if (command.startsWith("&")) {
-            overwriteMode = false;
-        } else if (command.startsWith("#")) {
-            query = query2;
-            overwriteMode = true;
-        }
-        command = command.substring(1);
-        String origin = commandEvent.getOrigin();
-        if (null == origin || origin.isEmpty()) {
-            origin = deviceEUI;
-        }
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setLong(1, commandEvent.getId());
-            pst.setString(2, commandEvent.getCategory());
-            pst.setString(3, commandEvent.getType());
-            pst.setString(4, origin);
-            pst.setString(5, command);
-            pst.setLong(6, commandEvent.getCreatedAt());
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-
-    }
-
-    @Override
-    public void removeCommand(long id) throws IotDatabaseException {
-        String query = "delete from commands where id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setLong(1, id);
             pst.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -1008,12 +481,180 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     private String buildDeviceQuery() {
         String query = "SELECT"
-                + " d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder, d.key, d.description, d.lastseen, d.tinterval,"
+                + " d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder, d.devicekey, d.description, d.lastseen, d.tinterval,"
                 + " d.lastframe, d.template, d.pattern, d.downlink, d.commandscript, d.appid, d.groups, d.alert,"
                 + " d.appeui, d.devid, d.active, d.project, d.latitude, d.longitude, d.altitude, d.state, d.retention,"
                 + " d.administrators, d.framecheck, d.configuration, d.organization, d.organizationapp, a.configuration FROM devices AS d"
                 + " LEFT JOIN applications AS a WHERE d.organizationapp=a.id";
         return query;
+    }
+
+    @Override
+    public void addSmsLog(long id, boolean confirmed, String phone, String text) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void removeOutdatedSmsLogs(long checkpoint) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void setConfirmedSms(long id) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public List<Long> getUnconfirmedSms() throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void removeOldData() throws IotDatabaseException {
+        //TODO: remove old data
+        /* String query = "delete from devicedata where eui=? and tstamp<?";
+        try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new ThingsDataException(ThingsDataException.BAD_REQUEST, e.getMessage());
+        } 
+        String query = "delete from commands where origin like ? and createdat<?";
+        try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, "%@" + deviceEUI);
+            pst.setLong(2, checkPoint);
+            // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new ThingsDataException(ThingsDataException.BAD_REQUEST, e.getMessage());
+        }
+        String query = "delete from commandslog where origin like ? and createdat<?";
+        try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, "%@" + deviceEUI);
+            pst.setLong(2, checkPoint);
+            // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new ThingsDataException(ThingsDataException.BAD_REQUEST, e.getMessage());
+        }
+        String query = "delete from alerts where userid=? and createdat < ?";
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setLong(2, checkpoint);
+            int updated = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String query = "delete from devicestatus where userid=? and createdat < ?";
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setLong(2, checkpoint);
+            int updated = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        */
+    }
+
+    @Override
+    public void updateDeviceStatus(String eui, Double newStatus, int newAlertStatus) throws IotDatabaseException {
+        LOG.debug("Updating device status.");
+        /* Device device = getDevice(eui);
+        if (device == null) {
+            LOG.warn("Device " + eui + " not found");
+            throw new IotDatabaseException(IotDatabaseException.NOT_FOUND, "device not found", null);
+        }
+        device.setState(newStatus); */
+        // Device previous = getDevice(device.getEUI());
+        String query;
+        //if (null != newStatus) {
+            query = "INSERT INTO devicestatus (eui, status, alert) VALUES (?, ?, ?)";
+        //} else {
+        //    query = "update devices set lastseen=?,lastframe=?,downlink=?,devid=? where eui=?";
+        //}
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, eui);
+            pstmt.setDouble(2, newStatus);
+            pstmt.setInt(3, newAlertStatus);
+            int updated = pstmt.executeUpdate();
+            if (updated < 1) {
+                LOG.warn("DB error updating device " + eui);
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
+                        "DB error updating device " + eui, null);
+            }else{
+                LOG.debug("Status rows updated: " + updated);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage(), null);
+        }
+    }
+
+    @Override
+    public void backupDb() throws IotDatabaseException {
+        String query = "CALL CSVWRITE('backup/alerts.csv', 'SELECT * FROM alerts');"
+                + "CALL CSVWRITE('backup/applications.csv', 'SELECT * FROM applications');"
+                + "CALL CSVWRITE('backup/commands.csv', 'SELECT * FROM commands');"
+                + "CALL CSVWRITE('backup/commandslog.csv', 'SELECT * FROM commandslog');"
+                + "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');"
+                + "CALL CSVWRITE('backup/dashboardtemplates.csv', 'SELECT * FROM dashboardtemplates');"
+                + "CALL CSVWRITE('backup/devicechannels.csv', 'SELECT * FROM devicechannels');"
+                + "CALL CSVWRITE('backup/devicedata.csv', 'SELECT * FROM devicedata');"
+                + "CALL CSVWRITE('backup/devicestatus.csv', 'SELECT * FROM devicestatus');"
+                + "CALL CSVWRITE('backup/devices.csv', 'SELECT * FROM devices');"
+                + "CALL CSVWRITE('backup/devicetemplates.csv', 'SELECT * FROM devicetemplates');"
+                + "CALL CSVWRITE('backup/groups.csv', 'SELECT * FROM groups');"
+                + "CALL CSVWRITE('backup/virtualdevicedata.csv', 'SELECT * FROM virtualdevicedata');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
+        String query = "insert into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
+        String query2 = "merge into commands (id,category,type,origin,payload,createdat) key (id) values (?,?,?,?,?,?)";
+        String command = (String) commandEvent.getPayload();
+        boolean overwriteMode = false;
+        if (command.startsWith("&")) {
+            overwriteMode = false;
+        } else if (command.startsWith("#")) {
+            query = query2;
+            overwriteMode = true;
+        }
+        command = command.substring(1);
+        String origin = commandEvent.getOrigin();
+        if (null == origin || origin.isEmpty()) {
+            origin = deviceEUI;
+        }
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setLong(1, commandEvent.getId());
+            pst.setString(2, commandEvent.getCategory());
+            pst.setString(3, commandEvent.getType());
+            pst.setString(4, origin);
+            pst.setString(5, command);
+            pst.setLong(6, commandEvent.getCreatedAt());
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+
     }
 
     @Override
@@ -1067,6 +708,348 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     }
 
+    @Override
+    public Device getDevice(String userID, String deviceEUI, boolean withShared) throws IotDatabaseException {
+        String query;
+        if (withShared) {
+            query = buildDeviceQuery()
+                    + " AND (upper(d.eui)=upper(?) AND (d.userid = ? OR d.team like ? OR d.administrators like ?))";
+        } else {
+            query = buildDeviceQuery() + " AND ( upper(d.eui)=upper(?) and d.userid = ?)";
+        }
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            pstmt.setString(2, userID);
+            if (withShared) {
+                pstmt.setString(3, "%," + userID + ",%");
+                pstmt.setString(4, "%," + userID + ",%");
+            }
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Device device = buildDevice(rs);
+                return device;
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @CacheResult(cacheName = "device-cache")
+    @Override
+    public Device getDevice(String deviceEUI) throws IotDatabaseException {
+        String query = buildDeviceQuery() + " AND ( upper(d.eui) = upper(?))";
+        if (deviceEUI == null || deviceEUI.isEmpty()) {
+            return null;
+        }
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Device device = buildDevice(rs);
+                return device;
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException {
+        List<String> channels;
+        String query = "select channels from devicechannels where eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                String[] s = rs.getString(1).toLowerCase().split(",");
+                channels = Arrays.asList(s);
+                String channelStr = "";
+                for (int i = 0; i < channels.size(); i++) {
+                    channelStr = channelStr + channels.get(i) + ",";
+                }
+                LOG.debug("CHANNELS READ: " + deviceEUI + " " + channelStr);
+                return channels;
+            } else {
+                return new ArrayList<>();
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @CacheResult(cacheName = "values-cache")
+    public List<List> getValues(String userID, String deviceEUI, String dataQuery)
+            throws IotDatabaseException {
+        LOG.debug("queryLimit:" + requestLimit);
+        DataQuery dq;
+        try {
+            dq = DataQuery.parse(dataQuery);
+        } catch (DataQueryException ex) {
+            throw new IotDatabaseException(ex.getCode(), "DataQuery " + ex.getMessage());
+        }
+        if (dq.isVirtual()) {
+            return getVirtualDeviceMeasures(userID, deviceEUI, dq);
+        }
+        if (null != dq.getGroup()) {
+            String channelName = dq.getChannelName();
+            if (null == channelName) {
+                channelName = "";
+            }
+            // return getValuesOfGroup(userID, dq.getGroup(), channelName.split(","),
+            // defaultGroupInterval, dq);
+            return new ArrayList<>();
+        }
+
+        int limit = dq.getLimit();
+        if (dq.average > 0) {
+            limit = dq.average;
+        }
+        if (dq.minimum > 0) {
+            limit = dq.minimum;
+        }
+        if (dq.maximum > 0) {
+            limit = dq.maximum;
+        }
+        if (dq.summary > 0) {
+            limit = dq.summary;
+        }
+        List<List> result = new ArrayList<>();
+        if (dq.getNewValue() != null) {
+            limit = limit - 1;
+        }
+
+        if (null == dq.getChannelName() || "*".equals(dq.getChannelName())) {
+            // TODO
+            result.add(getValues(userID, deviceEUI, limit, dq));
+            return result;
+        }
+        boolean singleChannel = !dq.getChannelName().contains(",");
+        long t0, t1, t2;
+        t0 = System.currentTimeMillis();
+        if (singleChannel) {
+            result.add(getChannelValues(userID, deviceEUI, dq.getChannelName(), limit, dq)); // project
+            t1 = System.currentTimeMillis();
+            LOG.debug("Query time [ms] 1: " + (t1 - t0));
+        } else {
+            String[] channels = dq.getChannelName().split(",");
+            List<ChannelData>[] temp = new ArrayList[channels.length];
+            for (int i = 0; i < channels.length; i++) {
+                temp[i] = getChannelValues(userID, deviceEUI, channels[i], limit, dq); // project
+            }
+            t1 = System.currentTimeMillis();
+            LOG.debug("Query time [ms] 2: " + (t1 - t0));
+            List<ChannelData> values;
+            LOG.debug("DQ limit: " + limit);
+            int realLimit = 0;
+            for (int j = 0; j < channels.length; j++) {
+                if (temp[j].size() > realLimit) {
+                    realLimit = temp[j].size();
+                }
+            }
+            LOG.debug("Result limit: " + realLimit);
+            for (int i = 0; i < realLimit; i++) {
+                values = new ArrayList<>();
+                for (int j = 0; j < channels.length; j++) {
+                    if (temp[j].size() > i) {
+                        values.add(temp[j].get(i));
+                    }
+                }
+                if (values.size() > 0) {
+                    result.add(values);
+                }
+            }
+        }
+
+        if (!singleChannel) {
+            t2 = System.currentTimeMillis();
+            LOG.debug("Query processing time [ms]: " + (t2 - t1));
+            return result;
+        }
+
+        ChannelData data = new ChannelData(dq.getChannelName(), 0.0, System.currentTimeMillis());
+        data.setNullValue();
+        List<ChannelData> subResult = new ArrayList<>();
+        Double actualValue = null;
+        Double tmpValue;
+        int size = 0;
+        LOG.debug("DQ: " + dq.average + " " + dq.maximum + " " + dq.minimum + " " + dq.summary);
+        if (dq.average > 0) {
+            if (result.size() > 0) {
+                size = result.get(0).size();
+                for (int i = 0; i < size; i++) {
+                    if (i == 0) {
+                        actualValue = ((ChannelData) result.get(0).get(i)).getValue();
+                    } else {
+                        actualValue = actualValue + ((ChannelData) result.get(0).get(i)).getValue();
+                    }
+                }
+            }
+            if (dq.getNewValue() != null) {
+                if (null != actualValue) {
+                    actualValue = actualValue + dq.getNewValue();
+                } else {
+                    actualValue = dq.getNewValue();
+                }
+                data.setValue(actualValue / (size + 1));
+            } else {
+                if (size > 0) {
+                    data.setValue(actualValue / size);
+                }
+            }
+            subResult.add(data);
+            result.clear();
+            result.add(subResult);
+        } else if (dq.maximum > 0) {
+            actualValue = Double.MIN_VALUE;
+            if (result.size() > 0) {
+                size = result.get(0).size();
+                for (int i = 0; i < size; i++) {
+                    tmpValue = ((ChannelData) result.get(0).get(i)).getValue();
+                    if (tmpValue.compareTo(actualValue) > 0) {
+                        actualValue = tmpValue;
+                    }
+                }
+            }
+            if (dq.getNewValue() != null && dq.getNewValue() > actualValue) {
+                actualValue = dq.getNewValue();
+            }
+            if (actualValue.compareTo(Double.MIN_VALUE) > 0) {
+                data.setValue(actualValue);
+            }
+            subResult.add(data);
+            result.clear();
+            result.add(subResult);
+        } else if (dq.minimum > 0) {
+            actualValue = Double.MAX_VALUE;
+            if (result.size() > 0) {
+                size = result.get(0).size();
+                for (int i = 0; i < size; i++) {
+                    tmpValue = ((ChannelData) result.get(0).get(i)).getValue();
+                    if (tmpValue.compareTo(actualValue) < 0) {
+                        actualValue = tmpValue;
+                    }
+                }
+            }
+            if (dq.getNewValue() != null && dq.getNewValue() < actualValue) {
+                actualValue = dq.getNewValue();
+            }
+            if (actualValue.compareTo(Double.MAX_VALUE) < 0) {
+                data.setValue(actualValue);
+            }
+            subResult.add(data);
+            result.clear();
+            result.add(subResult);
+        } else if (dq.summary > 0) {
+            actualValue = null;
+            if (result.size() > 0) {
+                size = result.get(0).size();
+                for (int i = 0; i < size; i++) {
+                    if (i == 0) {
+                        actualValue = ((ChannelData) result.get(0).get(i)).getValue();
+                    } else {
+                        actualValue = actualValue + ((ChannelData) result.get(0).get(i)).getValue();
+                    }
+                }
+            }
+            if (dq.getNewValue() != null) {
+                if (null == actualValue) {
+                    actualValue = actualValue + dq.getNewValue();
+                } else {
+                    actualValue = dq.getNewValue();
+                }
+            }
+            if (null != actualValue) {
+                data.setValue(actualValue);
+            }
+            subResult.add(data);
+            result.clear();
+            result.add(subResult);
+        }
+        t2 = System.currentTimeMillis();
+        LOG.debug("Query processing time [ms]: " + (t2 - t1));
+        return result;
+    }
+
+    private List<List> getValues(String userID, String deviceEUI, int limit, DataQuery dataQuery)
+            throws IotDatabaseException {
+        String query = SqlQueryBuilder.buildDeviceDataQuery(-1, dataQuery);
+        List<String> channels = getDeviceChannels(deviceEUI);
+        List<List> result = new ArrayList<>();
+        ArrayList<ChannelData> row;
+        ArrayList row2;
+        // System.out.println("SQL QUERY: " + query);
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            int paramIdx = 2;
+            if (null != dataQuery.getProject()) {
+                pst.setString(paramIdx, dataQuery.getProject());
+                paramIdx++;
+                if (null != dataQuery.getState()) {
+                    pst.setDouble(paramIdx, dataQuery.getState());
+                    paramIdx++;
+                }
+            } else {
+                if (null != dataQuery.getState()) {
+                    pst.setDouble(paramIdx, dataQuery.getState());
+                    paramIdx++;
+                }
+            }
+            if (null != dataQuery.getFromTs() && null != dataQuery.getToTs()) {
+                // System.out.println("fromTS: " + dataQuery.getFromTs().getTime());
+                pst.setTimestamp(paramIdx, dataQuery.getFromTs());
+                paramIdx++;
+                // System.out.println("toTS: " + dataQuery.getToTs().getTime());
+                pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
+                paramIdx++;
+            }
+            pst.setInt(paramIdx, dataQuery.getLimit() == 0 ? limit : dataQuery.getLimit());
+
+            ResultSet rs = pst.executeQuery();
+            if (dataQuery.isTimeseries()) {
+                row2 = new ArrayList();
+                row2.add("timestamp");
+                for (int i = 0; i < channels.size(); i++) {
+                    row2.add(channels.get(i));
+                }
+                result.add(row2);
+            }
+            double d;
+            while (rs.next()) {
+                if (dataQuery.isTimeseries()) {
+                    row2 = new ArrayList();
+                    row2.add(rs.getTimestamp(5).getTime());
+                    for (int i = 0; i < channels.size(); i++) {
+                        d = rs.getDouble(6 + i);
+                        if (!rs.wasNull()) {
+                            row2.add(d);
+                        } else {
+                            row2.add(null);
+                        }
+                    }
+                    result.add(row2);
+                } else {
+                    row = new ArrayList<>();
+                    for (int i = 0; i < channels.size(); i++) {
+                        d = rs.getDouble(6 + i);
+                        if (!rs.wasNull()) {
+                            row.add(new ChannelData(deviceEUI, channels.get(i), d,
+                                    rs.getTimestamp(5).getTime()));
+                        }
+                    }
+                    result.add(row);
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
+        }
+    }
+
     private Device buildDevice(ResultSet rs) throws SQLException {
         // select
         // eui,name,userid,type,team,channels,code,decoder,key,description,
@@ -1113,56 +1096,386 @@ public class IotDatabaseDao implements IotDatabaseIface {
         return d;
     }
 
-    @Override
-    public void addSmsLog(long id, boolean confirmed, String phone, String text) throws IotDatabaseException {
-        // TODO Auto-generated method stub
+    private List<ChannelData> getChannelValues(String userID, String deviceEUI, String channel, int resultsLimit,
+            DataQuery dataQuery) throws IotDatabaseException {
+        ArrayList<ChannelData> result = new ArrayList<>();
+        int channelIndex = getChannelIndex(deviceEUI, channel);
+        if (channelIndex < 1) {
+            return result;
+        }
+        String query = SqlQueryBuilder.buildDeviceDataQuery(channelIndex, dataQuery);
+        int limit = resultsLimit;
+        if (requestLimit > 0 && requestLimit < limit) {
+            limit = (int) requestLimit;
+        }
+        LOG.debug("SQL QUERY: "+query);
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
 
-    }
+            int paramIdx = 2;
+            if (null != dataQuery.getProject()) {
+                pst.setString(paramIdx, dataQuery.getProject());
+                paramIdx++;
+                if (null != dataQuery.getState()) {
+                    pst.setDouble(paramIdx, dataQuery.getState());
+                    paramIdx++;
+                }
+            } else {
+                if (null != dataQuery.getState()) {
+                    pst.setDouble(paramIdx, dataQuery.getState());
+                    paramIdx++;
+                }
+            }
+            if (null != dataQuery.getFromTs() && null != dataQuery.getToTs()) {
+                pst.setTimestamp(paramIdx, dataQuery.getFromTs());
+                paramIdx++;
+                pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
+                paramIdx++;
+            }
+            pst.setInt(paramIdx, limit);
 
-    @Override
-    public void removeOutdatedSmsLogs(long checkpoint) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void setConfirmedSms(long id) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public List<Long> getUnconfirmedSms() throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void removeOldData() throws IotDatabaseException {
-
-    }
-
-    @Override
-    public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/alerts.csv', 'SELECT * FROM alerts');"
-                + "CALL CSVWRITE('backup/applications.csv', 'SELECT * FROM applications');"
-                + "CALL CSVWRITE('backup/commands.csv', 'SELECT * FROM commands');"
-                + "CALL CSVWRITE('backup/commandslog.csv', 'SELECT * FROM commandslog');"
-                + "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');"
-                + "CALL CSVWRITE('backup/dashboardtemplates.csv', 'SELECT * FROM dashboardtemplates');"
-                + "CALL CSVWRITE('backup/devicechannels.csv', 'SELECT * FROM devicechannels');"
-                + "CALL CSVWRITE('backup/devicedata.csv', 'SELECT * FROM devicedata');"
-                + "CALL CSVWRITE('backup/devices.csv', 'SELECT * FROM devices');"
-                + "CALL CSVWRITE('backup/devicetemplates.csv', 'SELECT * FROM devicetemplates');"
-                + "CALL CSVWRITE('backup/groups.csv', 'SELECT * FROM groups');"
-                + "CALL CSVWRITE('backup/virtualdevicedata.csv', 'SELECT * FROM virtualdevicedata');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.execute();
+            ResultSet rs = pst.executeQuery();
+            Double d;
+            while (rs.next()) {
+                d = rs.getDouble(6);
+                if (!rs.wasNull()) {
+                    result.add(0, new ChannelData(deviceEUI, channel, d, rs.getTimestamp(5).getTime()));
+                }
+            }
+            return result;
         } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
+            LOG.error("problematic query = " + query);
             e.printStackTrace();
+            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
     }
 
+    private List<List> getVirtualDeviceMeasures(String userID, String deviceEUI, DataQuery dataQuery)
+            throws IotDatabaseException {
+        List<List> result = new ArrayList<>();
+        String query = SqlQueryBuilder.buildDeviceDataQuery(-1, dataQuery);
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            ResultSet rs = pst.executeQuery();
+            String eui;
+            Timestamp ts;
+            String serializedData;
+            ChannelData cData;
+            ArrayList<ChannelData> channels = new ArrayList<>();
+            String channelName;
+            while (rs.next()) {
+                eui = rs.getString(1);
+                ts = rs.getTimestamp(2);
+                serializedData = rs.getString(3);
+                JsonObject jo = (JsonObject) JsonReader.jsonToJava(serializedData);
+                VirtualData vd = new VirtualData(eui);
+                vd.timestamp = ts.getTime();
+                JsonObject fields = (JsonObject) jo.get("payload_fields");
+                Iterator<String> it = fields.keySet().iterator();
+                while (it.hasNext()) {
+                    channelName = it.next();
+                    cData = new ChannelData();
+                    cData.setDeviceEUI(eui);
+                    cData.setTimestamp(vd.timestamp);
+                    cData.setName(channelName);
+                    cData.setValue((Double) fields.get(channelName));
+                    channels.add(cData);
+                }
+            }
+            result.add(channels);
+        } catch (SQLException e) {
+            LOG.error("problematic query = " + query);
+            e.printStackTrace();
+            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
+        }
+        return result;
+    }
+
+    @Override
+    public ChannelData getMinimalValue(String userID, String deviceID, String channel, int scope, Double newValue)
+            throws IotDatabaseException {
+        ArrayList<Double> list = getLastValues(deviceID, channel, scope);
+        if (null != newValue) {
+            list.add(newValue);
+        }
+        if (list.size() == 0) {
+            ChannelData cd = new ChannelData();
+            cd.setNullValue();
+            cd.setName(channel);
+            cd.setTimestamp(System.currentTimeMillis());
+            return cd;
+        }
+        double result = list.get(0).doubleValue();
+        double nextValue;
+        for (int i = 1; i < list.size(); i++) {
+            nextValue = list.get(i).doubleValue();
+            if (result > nextValue) {
+                result = nextValue;
+            }
+        }
+        return new ChannelData(channel, result, System.currentTimeMillis());
+    }
+
+    @Override
+    public ChannelData getMaximalValue(String userID, String deviceID, String channel, int scope, Double newValue)
+            throws IotDatabaseException {
+        ArrayList<Double> list = getLastValues(deviceID, channel, scope);
+        if (null != newValue) {
+            list.add(newValue);
+        }
+        if (list.size() == 0) {
+            ChannelData cd = new ChannelData();
+            cd.setNullValue();
+            cd.setName(channel);
+            cd.setTimestamp(System.currentTimeMillis());
+            return cd;
+        }
+        double result = list.get(0).doubleValue();
+        double nextValue;
+        for (int i = 1; i < list.size(); i++) {
+            nextValue = list.get(i).doubleValue();
+            if (result < nextValue) {
+                result = nextValue;
+            }
+        }
+        return new ChannelData(channel, result, System.currentTimeMillis());
+    }
+
+    @Override
+    public ChannelData getSummaryValue(String userID, String deviceID, String channel, int scope, Double newValue)
+            throws IotDatabaseException {
+        ArrayList<Double> list = getLastValues(deviceID, channel, scope);
+        if (null != newValue) {
+            list.add(newValue);
+        }
+        if (list.size() == 0) {
+            ChannelData cd = new ChannelData();
+            cd.setNullValue();
+            cd.setName(channel);
+            cd.setTimestamp(System.currentTimeMillis());
+            return cd;
+        }
+        Double result = 0.0;
+        for (int i = 0; i < list.size(); i++) {
+            result = Double.sum(result, list.get(i));
+        }
+        return new ChannelData(channel, result, System.currentTimeMillis());
+    }
+
+    @Override
+    public ChannelData getAverageValue(String userID, String deviceID, String channel, int scope, Double newValue)
+            throws IotDatabaseException {
+        ArrayList<Double> list = getLastValues(deviceID, channel, scope);
+        if (null != newValue) {
+            list.add(newValue);
+        }
+        if (list.size() == 0) {
+            ChannelData cd = new ChannelData();
+            cd.setNullValue();
+            cd.setName(channel);
+            cd.setTimestamp(System.currentTimeMillis());
+            return cd;
+        }
+        Double result = 0.0;
+        for (int i = 0; i < list.size(); i++) {
+            result = Double.sum(result, list.get(i));
+        }
+        result = result / list.size();
+        return new ChannelData(channel, result, System.currentTimeMillis());
+    }
+
+    private ArrayList<Double> getLastValues(String deviceEUI, String channel, int scope) throws IotDatabaseException {
+        ArrayList<Double> result = new ArrayList<>();
+        int channelIndex = getChannelIndex(deviceEUI, channel);
+        if (channelIndex <= 0) {
+            return result;
+        }
+        String columnName = "d" + channelIndex;
+        String query = "select " + columnName + " from devicedata where eui=? order by tstamp desc limit ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.setInt(2, scope);
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getDouble(1));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException {
+        String query = "select eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from devicedata where eui=? order by tstamp desc limit 1";
+        List<String> channels = getDeviceChannels(deviceEUI);
+        ArrayList<ChannelData> row = new ArrayList<>();
+        ArrayList<List> result = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            ResultSet rs = pst.executeQuery();
+            double d;
+            if (rs.next()) {
+                for (int i = 0; i < channels.size(); i++) {
+                    d = rs.getDouble(6 + i);
+                    if (!rs.wasNull()) {
+                        row.add(new ChannelData(deviceEUI, channels.get(i), d,
+                                rs.getTimestamp(5).getTime()));
+                    }
+                }
+                result.add(row);
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void createStructure() throws IotDatabaseException {
+        LOG.info("createStructure()");
+        String query;
+        StringBuilder sb = new StringBuilder();
+        sb.append("CREATE SEQUENCE IF NOT EXISTS id_seq;");
+        //applications
+        sb.append("CREATE TABLE IF NOT EXISTS applications (")
+                .append("id bigint default id_seq.nextval primary key,")
+                // .append("organization bigint default 0 references organizations,")
+                .append("organization bigint default 0,")
+                .append("version bigint default 0,")
+                .append("name varchar UNIQUE, configuration varchar);");
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pst = conn.prepareStatement(sb.toString());) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,0,0,'','');");) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+
+        }
+        sb = new StringBuilder();
+        //devicetemplates
+        sb.append("CREATE TABLE IF NOT EXISTS devicetemplates (").append("eui varchar primary key,")
+                .append("appid varchar,")
+                .append("appeui varchar,").append("type varchar,").append("channels varchar,")
+                .append("code varchar,").append("decoder varchar,").append("description varchar,")
+                .append("tinterval bigint,").append("pattern varchar,").append("commandscript varchar,")
+                .append("producer varchar,").append("configuration varchar);");
+        //dashboardtemplates
+        sb.append("CREATE TABLE IF NOT EXISTS dashboardtemplates (").append("id varchar primary key,")
+                .append("title varchar,")
+                .append("widgets varchar);");
+        //devices
+        sb.append("CREATE TABLE IF NOT EXISTS devices (")
+                .append("eui varchar primary key,").append("name varchar,")
+                .append("userid varchar,").append("type varchar,").append("team varchar,")
+                .append("channels varchar,").append("code varchar,").append("decoder varchar,")
+                .append("devicekey varchar,").append("description varchar,")
+                .append("lastseen bigint,")
+                .append("tinterval bigint,").append("lastframe bigint,")
+                .append("template varchar,")
+                .append("pattern varchar,").append("downlink varchar,")
+                .append("commandscript varchar,")
+                .append("appid varchar,").append("groups varchar,")
+                .append("alert number,")
+                .append("appeui varchar,").append("devid varchar,")
+                .append("active boolean,")
+                .append("project varchar,").append("latitude double,").append("longitude double,")
+                .append("altitude double,")
+                .append("state double,")
+                .append("retention bigint,")
+                .append("administrators varchar, framecheck boolean,")
+                .append("configuration varchar,")
+                // .append("organization bigint default 0 references organizations,")
+                .append("organization bigint default 0,")
+                .append("organizationapp bigint default 0 references applications);");
+        //dashboards
+        sb.append("CREATE TABLE IF NOT EXISTS dashboards (").append("id varchar primary key,")
+                .append("name varchar,")
+                .append("userid varchar,").append("title varchar,").append("team varchar,")
+                .append("widgets varchar,").append("token varchar,").append("shared boolean,")
+                .append("administrators varchar);");
+        //alerts 
+        sb.append("CREATE TABLE IF NOT EXISTS alerts (").append("id bigint default id_seq.nextval primary key ,")
+                .append("name varchar,")
+                .append("category varchar,").append("type varchar,").append("deviceeui varchar,")
+                .append("userid varchar,").append("payload varchar,").append("timepoint varchar,")
+                .append("serviceid varchar,").append("uuid varchar,").append("calculatedtimepoint bigint,")
+                .append("createdat bigint,").append("rooteventid bigint,").append("cyclic boolean);");
+        //devicechannels
+        sb.append("CREATE TABLE IF NOT EXISTS devicechannels (").append("eui varchar primary key,")
+                .append("channels varchar);");
+        //devicedata
+        sb.append("CREATE TABLE IF NOT EXISTS devicedata (").append("eui varchar not null,").append("userid varchar,")
+                .append("day date,").append("dtime time,").append("tstamp timestamp not null,").append("d1 double,")
+                .append("d2 double,").append("d3 double,").append("d4 double,").append("d5 double,")
+                .append("d6 double,").append("d7 double,").append("d8 double,").append("d9 double,")
+                .append("d10 double,").append("d11 double,").append("d12 double,").append("d13 double,")
+                .append("d14 double,").append("d15 double,").append("d16 double,").append("d17 double,")
+                .append("d18 double,").append("d19 double,").append("d20 double,").append("d21 double,")
+                .append("d22 double,").append("d23 double,").append("d24 double,").append("project varchar,")
+                .append("state double,")
+                .append("PRIMARY KEY (eui,tstamp) );");
+        //virtualdevicedata
+        sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
+                .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);");
+        //groups
+        sb.append("CREATE TABLE IF NOT EXISTS groups (").append("eui varchar primary key,").append("name varchar,")
+                .append("userid varchar,").append("team varchar,").append("channels varchar,")
+                .append("description varchar,")
+                .append("administrators varchar,")
+                .append("organization bigint default 0);");
+        //commands
+        sb.append("CREATE TABLE IF NOT EXISTS commands (")
+                .append("id bigint,")
+                .append("category varchar,")
+                .append("type varchar,")
+                .append("origin varchar,")
+                .append("payload varchar,")
+                .append("createdat bigint);");
+        sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(origin);");
+        //commandslog
+        sb.append("CREATE TABLE IF NOT EXISTS commandslog (")
+                .append("id bigint,")
+                .append("category varchar,")
+                .append("type varchar,")
+                .append("origin varchar,")
+                .append("payload varchar,")
+                .append("createdat bigint);");
+        sb.append("CREATE INDEX IF NOT EXISTS idxcommandslog on commandslog(origin);");
+        query = sb.toString();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+        }
+        query = "CREATE INDEX IF NOT EXISTS idx_devicedata_eui_tstamp on devicedata(eui,tstamp);"
+                + "CREATE INDEX IF NOT EXISTS idx_devicedata_tstamp on devicedata(tstamp)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+        }
+        //TODO: devicestatus
+        query="CREATE TABLE IF NOT EXISTS devicestatus ( "
+                +"eui VARCHAR NOT NULL,"
+                +"ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," //lastseen from ts
+                +"status DOUBLE,"
+                +"alert NUMBER"
+                +");"
+                +"CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts on devicestatus(eui,ts);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) { 
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+        }
+    }
 }
+ 

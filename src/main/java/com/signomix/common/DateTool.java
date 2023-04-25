@@ -30,8 +30,8 @@ public class DateTool {
         if (null == input || input.isEmpty()) {
             return null;
         }
-        String timeString = input.replace('~', '+').replace('_', '/');
-        LOG.info("TIMESTRING:" + timeString);
+        String timeString = input.replace('~', '+').replace('_','/');
+        LOG.info("TIMESTRING:"+timeString);
         Timestamp ts = null;
         if (input.startsWith("-")) {
             int multiplicand = 1;
@@ -47,9 +47,9 @@ public class DateTool {
                 unitSymbol = input.charAt(2);
                 zoneId = input.substring(zonePosition + 1).replaceFirst("\\.", "/");
             }
-            // if (isInSeconds(millis)) {
-            // millis = millis * 1000;
-            // }
+            if (isInSeconds(millis)) {
+                millis = millis * 1000;
+            }
             switch (unitSymbol) {
                 case 'M':
                     multiplicand = MONTH_MILLIS;
@@ -85,27 +85,14 @@ public class DateTool {
                 ts = new Timestamp(System.currentTimeMillis() - millis * multiplicand);
                 return ts;
             }
-            /* if (millis == 0 && multiplicand == DAY_MILLIS && 'd' == unitSymbol) {
-                // -0d means start of current day
-                ts = new Timestamp(getStartOfDayAsUTC(zoneId));
-                return ts;
-            } else if (millis != 0 && multiplicand == DAY_MILLIS && 'D' == unitSymbol) {
-                // -Xd means start of the day, X days back
-                ts = new Timestamp(getStartOfDaysBackAsUTC(millis, zoneId));
-                return ts;
-            } else if (millis == 0 && multiplicand == MONTH_MILLIS) {
-                // -0M means start of current month
-                ts = new Timestamp(getStartOfMonthAsUTC(zoneId));
-                return ts;
-            } else if (millis != 0 && (multiplicand == DAY_MILLIS || multiplicand == MONTH_MILLIS)) {
-                // cannot be parsed (parsing error) - actual timestamp will be returned
-            } else {
-                ts = new Timestamp(System.currentTimeMillis() - millis * multiplicand);
-                return ts;
-            } */
         } else {
+            long millis = Long.parseLong(timeString);
+            if(isInSeconds(millis)){
+                millis = millis * 1000;
+                LOG.debug("Timestamp in seconds, multiplying by 1000");
+            }
             try {
-                ts = new Timestamp(Long.parseLong(timeString));
+                ts = new Timestamp(millis);
                 return ts;
             } catch (Exception e) {
                 LOG.warn(e.getMessage());
@@ -205,7 +192,8 @@ public class DateTool {
     }
 
     private static boolean isInSeconds(long timestamp) {
-        Instant instant = Instant.ofEpochMilli(timestamp);
-        return instant.toEpochMilli() != timestamp;
+        //Instant instant = Instant.ofEpochMilli(timestamp);
+        //return instant.toEpochMilli() != timestamp;
+        return timestamp < 9999999999L;
     }
 }
