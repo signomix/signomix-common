@@ -20,6 +20,7 @@ import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
@@ -32,6 +33,7 @@ import io.quarkus.cache.CacheResult;
 @Singleton
 public class IotDatabaseDao implements IotDatabaseIface {
     private static final Logger LOG = Logger.getLogger(IotDatabaseDao.class);
+    private static final long DEFAULT_ORGANIZATION_ID = -1L;
 
     private AgroalDataSource dataSource;
 
@@ -515,72 +517,87 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void removeOldData() throws IotDatabaseException {
-        //TODO: remove old data
-        /* String query = "delete from devicedata where eui=? and tstamp<?";
-        try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, deviceEUI);
-            pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new ThingsDataException(ThingsDataException.BAD_REQUEST, e.getMessage());
-        } 
-        String query = "delete from commands where origin like ? and createdat<?";
-        try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, "%@" + deviceEUI);
-            pst.setLong(2, checkPoint);
-            // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new ThingsDataException(ThingsDataException.BAD_REQUEST, e.getMessage());
-        }
-        String query = "delete from commandslog where origin like ? and createdat<?";
-        try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, "%@" + deviceEUI);
-            pst.setLong(2, checkPoint);
-            // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new ThingsDataException(ThingsDataException.BAD_REQUEST, e.getMessage());
-        }
-        String query = "delete from alerts where userid=? and createdat < ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, userID);
-            pstmt.setLong(2, checkpoint);
-            int updated = pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION, e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        String query = "delete from devicestatus where userid=? and createdat < ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, userID);
-            pstmt.setLong(2, checkpoint);
-            int updated = pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION, e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
+        // TODO: remove old data
+        /*
+         * String query = "delete from devicedata where eui=? and tstamp<?";
+         * try (Connection conn = getConnection(); PreparedStatement pst =
+         * conn.prepareStatement(query);) {
+         * pst.setString(1, deviceEUI);
+         * pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+         * pst.executeUpdate();
+         * } catch (SQLException e) {
+         * throw new ThingsDataException(ThingsDataException.BAD_REQUEST,
+         * e.getMessage());
+         * }
+         * String query = "delete from commands where origin like ? and createdat<?";
+         * try (Connection conn = getConnection(); PreparedStatement pst =
+         * conn.prepareStatement(query);) {
+         * pst.setString(1, "%@" + deviceEUI);
+         * pst.setLong(2, checkPoint);
+         * // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+         * pst.executeUpdate();
+         * } catch (SQLException e) {
+         * throw new ThingsDataException(ThingsDataException.BAD_REQUEST,
+         * e.getMessage());
+         * }
+         * String query = "delete from commandslog where origin like ? and createdat<?";
+         * try (Connection conn = getConnection(); PreparedStatement pst =
+         * conn.prepareStatement(query);) {
+         * pst.setString(1, "%@" + deviceEUI);
+         * pst.setLong(2, checkPoint);
+         * // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+         * pst.executeUpdate();
+         * } catch (SQLException e) {
+         * throw new ThingsDataException(ThingsDataException.BAD_REQUEST,
+         * e.getMessage());
+         * }
+         * String query = "delete from alerts where userid=? and createdat < ?";
+         * try (Connection conn = getConnection(); PreparedStatement pstmt =
+         * conn.prepareStatement(query);) {
+         * pstmt.setString(1, userID);
+         * pstmt.setLong(2, checkpoint);
+         * int updated = pstmt.executeUpdate();
+         * } catch (SQLException e) {
+         * throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION,
+         * e.getMessage());
+         * } catch (Exception e) {
+         * e.printStackTrace();
+         * }
+         * String query = "delete from devicestatus where userid=? and createdat < ?";
+         * try (Connection conn = getConnection(); PreparedStatement pstmt =
+         * conn.prepareStatement(query);) {
+         * pstmt.setString(1, userID);
+         * pstmt.setLong(2, checkpoint);
+         * int updated = pstmt.executeUpdate();
+         * } catch (SQLException e) {
+         * throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION,
+         * e.getMessage());
+         * } catch (Exception e) {
+         * e.printStackTrace();
+         * }
+         */
     }
 
     @Override
     public void updateDeviceStatus(String eui, Double newStatus, int newAlertStatus) throws IotDatabaseException {
         LOG.debug("Updating device status.");
-        /* Device device = getDevice(eui);
-        if (device == null) {
-            LOG.warn("Device " + eui + " not found");
-            throw new IotDatabaseException(IotDatabaseException.NOT_FOUND, "device not found", null);
-        }
-        device.setState(newStatus); */
+        /*
+         * Device device = getDevice(eui);
+         * if (device == null) {
+         * LOG.warn("Device " + eui + " not found");
+         * throw new IotDatabaseException(IotDatabaseException.NOT_FOUND,
+         * "device not found", null);
+         * }
+         * device.setState(newStatus);
+         */
         // Device previous = getDevice(device.getEUI());
         String query;
-        //if (null != newStatus) {
-            query = "INSERT INTO devicestatus (eui, status, alert) VALUES (?, ?, ?)";
-        //} else {
-        //    query = "update devices set lastseen=?,lastframe=?,downlink=?,devid=? where eui=?";
-        //}
+        // if (null != newStatus) {
+        query = "INSERT INTO devicestatus (eui, status, alert) VALUES (?, ?, ?)";
+        // } else {
+        // query = "update devices set lastseen=?,lastframe=?,downlink=?,devid=? where
+        // eui=?";
+        // }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, eui);
             pstmt.setDouble(2, newStatus);
@@ -590,7 +607,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 LOG.warn("DB error updating device " + eui);
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
                         "DB error updating device " + eui, null);
-            }else{
+            } else {
                 LOG.debug("Status rows updated: " + updated);
             }
         } catch (SQLException e) {
@@ -709,7 +726,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public Device getDevice(String userID, String deviceEUI, boolean withShared) throws IotDatabaseException {
+    public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus)
+            throws IotDatabaseException {
         String query;
         if (withShared) {
             query = buildDeviceQuery()
@@ -727,6 +745,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 Device device = buildDevice(rs);
+                if (withStatus) {
+                    device = getDeviceStatusData(device);
+                }
                 return device;
             } else {
                 return null;
@@ -738,7 +759,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @CacheResult(cacheName = "device-cache")
     @Override
-    public Device getDevice(String deviceEUI) throws IotDatabaseException {
+    public Device getDevice(String deviceEUI, boolean withStatus) throws IotDatabaseException {
         String query = buildDeviceQuery() + " AND ( upper(d.eui) = upper(?))";
         if (deviceEUI == null || deviceEUI.isEmpty()) {
             return null;
@@ -748,12 +769,31 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 Device device = buildDevice(rs);
+                if (withStatus) {
+                    device = getDeviceStatusData(device);
+                }
                 return device;
             } else {
                 return null;
             }
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    private Device getDeviceStatusData(Device device) throws IotDatabaseException {
+        String query = "SELECT ts,status,alert FROM devicestatus WHERE eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, device.getEUI());
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                device.setLastSeen(rs.getTimestamp("ts").getTime());
+                device.setState(rs.getDouble("status"));
+                device.setAlertStatus(rs.getInt("alert"));
+            }
+            return device;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }
 
@@ -786,6 +826,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<List> getValues(String userID, String deviceEUI, String dataQuery)
             throws IotDatabaseException {
         LOG.debug("queryLimit:" + requestLimit);
+        LOG.debug("getValues dataQuery:" + dataQuery);
         DataQuery dq;
         try {
             dq = DataQuery.parse(dataQuery);
@@ -1000,12 +1041,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 }
             }
             if (null != dataQuery.getFromTs() && null != dataQuery.getToTs()) {
-                // System.out.println("fromTS: " + dataQuery.getFromTs().getTime());
+                LOG.debug("fromTS: " + dataQuery.getFromTs().getTime());
                 pst.setTimestamp(paramIdx, dataQuery.getFromTs());
                 paramIdx++;
-                // System.out.println("toTS: " + dataQuery.getToTs().getTime());
+                LOG.debug("toTS: " + dataQuery.getToTs().getTime());
                 pst.setTimestamp(paramIdx, dataQuery.getToTsExclusive());
                 paramIdx++;
+            }else{
+                LOG.debug("fromTS: " + dataQuery.getFromTs());
             }
             pst.setInt(paramIdx, dataQuery.getLimit() == 0 ? limit : dataQuery.getLimit());
 
@@ -1108,7 +1151,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         if (requestLimit > 0 && requestLimit < limit) {
             limit = (int) requestLimit;
         }
-        LOG.debug("SQL QUERY: "+query);
+        LOG.debug("SQL QUERY: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, deviceEUI);
 
@@ -1337,7 +1380,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String query;
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE SEQUENCE IF NOT EXISTS id_seq;");
-        //applications
+        // applications
         sb.append("CREATE TABLE IF NOT EXISTS applications (")
                 .append("id bigint default id_seq.nextval primary key,")
                 // .append("organization bigint default 0 references organizations,")
@@ -1358,58 +1401,69 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
         }
         sb = new StringBuilder();
-        //devicetemplates
+        // devicetemplates
         sb.append("CREATE TABLE IF NOT EXISTS devicetemplates (").append("eui varchar primary key,")
                 .append("appid varchar,")
                 .append("appeui varchar,").append("type varchar,").append("channels varchar,")
                 .append("code varchar,").append("decoder varchar,").append("description varchar,")
                 .append("tinterval bigint,").append("pattern varchar,").append("commandscript varchar,")
                 .append("producer varchar,").append("configuration varchar);");
-        //dashboardtemplates
+        // dashboardtemplates
         sb.append("CREATE TABLE IF NOT EXISTS dashboardtemplates (").append("id varchar primary key,")
                 .append("title varchar,")
                 .append("widgets varchar);");
-        //devices
+        // devices
         sb.append("CREATE TABLE IF NOT EXISTS devices (")
-                .append("eui varchar primary key,").append("name varchar,")
-                .append("userid varchar,").append("type varchar,").append("team varchar,")
-                .append("channels varchar,").append("code varchar,").append("decoder varchar,")
-                .append("devicekey varchar,").append("description varchar,")
+                .append("eui varchar primary key,")
+                .append("name varchar,")
+                .append("userid varchar,")
+                .append("type varchar,")
+                .append("team varchar,")
+                .append("channels varchar,")
+                .append("code varchar,")
+                .append("decoder varchar,")
+                .append("devicekey varchar,")
+                .append("description varchar,")
                 .append("lastseen bigint,")
-                .append("tinterval bigint,").append("lastframe bigint,")
+                .append("tinterval bigint,")
+                .append("lastframe bigint,")
                 .append("template varchar,")
-                .append("pattern varchar,").append("downlink varchar,")
+                .append("pattern varchar,")
+                .append("downlink varchar,")
                 .append("commandscript varchar,")
-                .append("appid varchar,").append("groups varchar,")
+                .append("appid varchar,")
+                .append("groups varchar,")
                 .append("alert number,")
-                .append("appeui varchar,").append("devid varchar,")
+                .append("appeui varchar,")
+                .append("devid varchar,")
                 .append("active boolean,")
-                .append("project varchar,").append("latitude double,").append("longitude double,")
+                .append("project varchar,")
+                .append("latitude double,")
+                .append("longitude double,")
                 .append("altitude double,")
                 .append("state double,")
                 .append("retention bigint,")
                 .append("administrators varchar, framecheck boolean,")
                 .append("configuration varchar,")
-                // .append("organization bigint default 0 references organizations,")
                 .append("organization bigint default 0,")
                 .append("organizationapp bigint default 0 references applications);");
-        //dashboards
+        // dashboards
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (").append("id varchar primary key,")
                 .append("name varchar,")
                 .append("userid varchar,").append("title varchar,").append("team varchar,")
                 .append("widgets varchar,").append("token varchar,").append("shared boolean,")
                 .append("administrators varchar);");
-        //alerts 
+        // alerts
         sb.append("CREATE TABLE IF NOT EXISTS alerts (").append("id bigint default id_seq.nextval primary key ,")
                 .append("name varchar,")
                 .append("category varchar,").append("type varchar,").append("deviceeui varchar,")
                 .append("userid varchar,").append("payload varchar,").append("timepoint varchar,")
                 .append("serviceid varchar,").append("uuid varchar,").append("calculatedtimepoint bigint,")
                 .append("createdat bigint,").append("rooteventid bigint,").append("cyclic boolean);");
-        //devicechannels
+        // devicechannels
         sb.append("CREATE TABLE IF NOT EXISTS devicechannels (").append("eui varchar primary key,")
                 .append("channels varchar);");
-        //devicedata
+        // devicedata
         sb.append("CREATE TABLE IF NOT EXISTS devicedata (").append("eui varchar not null,").append("userid varchar,")
                 .append("day date,").append("dtime time,").append("tstamp timestamp not null,").append("d1 double,")
                 .append("d2 double,").append("d3 double,").append("d4 double,").append("d5 double,")
@@ -1420,16 +1474,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d22 double,").append("d23 double,").append("d24 double,").append("project varchar,")
                 .append("state double,")
                 .append("PRIMARY KEY (eui,tstamp) );");
-        //virtualdevicedata
+        // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
                 .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);");
-        //groups
+        // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (").append("eui varchar primary key,").append("name varchar,")
                 .append("userid varchar,").append("team varchar,").append("channels varchar,")
                 .append("description varchar,")
                 .append("administrators varchar,")
                 .append("organization bigint default 0);");
-        //commands
+        // commands
         sb.append("CREATE TABLE IF NOT EXISTS commands (")
                 .append("id bigint,")
                 .append("category varchar,")
@@ -1438,7 +1492,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("payload varchar,")
                 .append("createdat bigint);");
         sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(origin);");
-        //commandslog
+        // commandslog
         sb.append("CREATE TABLE IF NOT EXISTS commandslog (")
                 .append("id bigint,")
                 .append("category varchar,")
@@ -1462,20 +1516,129 @@ public class IotDatabaseDao implements IotDatabaseIface {
             e.printStackTrace();
             LOG.error(e.getMessage());
         }
-        //TODO: devicestatus
-        query="CREATE TABLE IF NOT EXISTS devicestatus ( "
-                +"eui VARCHAR NOT NULL,"
-                +"ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," //lastseen from ts
-                +"status DOUBLE,"
-                +"alert NUMBER"
-                +");"
-                +"CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts on devicestatus(eui,ts);";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) { 
+        // TODO: devicestatus
+        query = "CREATE TABLE IF NOT EXISTS devicestatus ( "
+                + "eui VARCHAR NOT NULL,"
+                + "ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," // lastseen from ts
+                + "status DOUBLE,"
+                + "alert NUMBER"
+                + ");"
+                + "CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts on devicestatus(eui,ts);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
         }
     }
+
+    @Override
+    public List<Device> getUserDevices(User user, boolean withStatus) throws IotDatabaseException{
+        ArrayList<Device> devices = new ArrayList<>();
+        // TODO: withShared, withStatus
+        DeviceSelector selector = new DeviceSelector(user, false, withStatus, false);
+        String query = selector.query;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            if (selector.numberOfWritableParams > 0) {
+                pst.setString(1, user.uid);
+                pst.setString(2, user.uid);
+            }
+            if (selector.numberOfUserParams > 0) {
+                pst.setString(selector.numberOfWritableParams+1, user.uid);
+                pst.setString(selector.numberOfWritableParams+2, "%," + user.uid + ",%");
+                pst.setString(selector.numberOfWritableParams+3, "%," + user.uid + ",%");
+            }
+            ResultSet rs = pst.executeQuery();
+            while(rs.next()) {
+                devices.add(builDevice(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return devices;
+    }
+
+    @Override
+    public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus)
+            throws IotDatabaseException {
+        // TODO: withShared, withStatus
+        DeviceSelector selector = new DeviceSelector(user, withShared, withStatus, true);
+        String query = selector.query;
+        Device device = null;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            if (selector.numberOfWritableParams > 0) {
+                pst.setString(1, user.uid);
+                pst.setString(2, user.uid);
+            }
+            pst.setString(selector.numberOfWritableParams+1, deviceEUI);
+            if (selector.numberOfUserParams > 0) {
+                pst.setString(selector.numberOfWritableParams+2, user.uid);
+                pst.setString(selector.numberOfWritableParams+3, "%," + user.uid + ",%");
+                pst.setString(selector.numberOfWritableParams+4, "%," + user.uid + ",%");
+            }
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                device = builDevice(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return device;
+    }
+
+    private Device builDevice(ResultSet rs) throws SQLException {
+        Device device = new Device();
+        device.setEUI(rs.getString(1));
+        device.setName(rs.getString(2));
+        device.setUserID(rs.getString(3));
+        device.setType(rs.getString(4));
+        device.setTeam(rs.getString(5));
+        device.setChannels(rs.getString(6));
+        device.setCode(rs.getString(7));
+        device.setEncoder(rs.getString(8));
+        device.setKey(rs.getString(9));
+        device.setDescription(rs.getString(10));
+        device.setTransmissionInterval(rs.getInt(11));
+        device.setTemplate(rs.getString(12));
+        device.setPattern(rs.getString(13));
+        device.setCommandScript(rs.getString(14));
+        device.setApplicationID(rs.getString(15));
+        device.setGroups(rs.getString(16));
+        device.setApplicationEUI(rs.getString(17));
+        device.setActive(rs.getBoolean(18));
+        device.setProject(rs.getString(19));
+        device.setLatitude(rs.getDouble(20));
+        device.setLongitude(rs.getDouble(21));
+        device.setAltitude(rs.getDouble(22));
+        device.setRetentionTime(rs.getInt(23));
+        device.setAdministrators(rs.getString(24));
+        device.setCheckFrames(rs.getBoolean(25));
+        device.setConfiguration(rs.getString(26));
+        device.setOrganizationId(rs.getLong(27));
+        device.setOrgApplicationId(rs.getLong(28));
+        device.setWritable(rs.getBoolean(29));
+        return device;
+    }
+
+    @Override
+    public Device deleteDevice(User user, String deviceEUI) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteDevice'");
+    }
+
+    @Override
+    public void updateDevice(User user, Device device) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateDevice'");
+    }
+
+    @Override
+    public void createDevice(User user, Device device) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createDevice'");
+    }
 }
- 

@@ -8,7 +8,7 @@ import io.agroal.api.AgroalDataSource;
 
 public interface UserDaoIface {
     public void setDatasource(AgroalDataSource ds);
-    public String getUser(String uid);
+    public User getUser(String uid) throws IotDatabaseException ;
     public void removeNotConfirmed(long since);
     public List<User> getAll();
     public void backupDb() throws IotDatabaseException;

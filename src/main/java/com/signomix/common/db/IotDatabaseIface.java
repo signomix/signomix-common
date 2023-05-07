@@ -3,6 +3,7 @@ package com.signomix.common.db;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
@@ -13,17 +14,29 @@ import io.agroal.api.AgroalDataSource;
 public interface IotDatabaseIface {
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
-    //ThinksAdapter
     public void setDatasource(AgroalDataSource ds);
     public void setQueryResultsLimit(int limit);
+
+
     public List<List> getValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
-    public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException;//public List<List<List>> getGroupValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
     public List<List<List>> getValuesOfGroup(String userID, long organizationId, String groupEUI, String channelNames, long secondsBack) throws IotDatabaseException;
-    public void updateDeviceStatus(String eui, Double newStatus, int newAlertStatus) throws IotDatabaseException;
     public void putData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException;
     public void putVirtualData(Device device, VirtualData data) throws IotDatabaseException;
-    public Device getDevice(String eui) throws IotDatabaseException;
-    public Device getDevice(String userID, String deviceEUI, boolean withShared) throws IotDatabaseException;
+    
+    //DEVICES
+    public List<Device> getUserDevices(User user, boolean withStatus) throws IotDatabaseException;
+    //public Device getDevice(User user, boolean withStatus) throws IotDatabaseException;
+    public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
+    public Device deleteDevice(User user, String deviceEUI) throws IotDatabaseException;
+    public void updateDevice(User user, Device device) throws IotDatabaseException;
+    public void createDevice(User user, Device device) throws IotDatabaseException;
+
+    public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
+        public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
+    public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException;//public List<List<List>> getGroupValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
+    public void updateDeviceStatus(String eui, Double newStatus, int newAlertStatus) throws IotDatabaseException;
+
+    
     public ChannelData getLastValue(String userID, String deviceID, String channel) throws IotDatabaseException;
     public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException;
     

@@ -6,7 +6,7 @@ package com.signomix.common;
 public class User {
 
     public static final int USER = 0; // default type, standard user
-    public static final int OWNER = 1; // owner, admin
+    public static final int OWNER = 1; // owner, service admin
     public static final int APPLICATION = 2; // application
     public static final int DEMO = 3;
     public static final int FREE = 4; // registered, free account
@@ -14,6 +14,8 @@ public class User {
     public static final int READONLY = 6;
     public static final int EXTENDED = 7; // students, scientists, nonprofits
     public static final int SUPERUSER = 8;
+    public static final int ADMIN = 9; // organization admin
+    public static final int ANONYMOUS = 10;
     public static final int SUBSCRIBER = 100;
 
     public Integer type;

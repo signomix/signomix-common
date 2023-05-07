@@ -24,12 +24,6 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public String getUser(String uid) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void removeNotConfirmed(long days) {
         String query = "DELETE FROM users WHERE confirmed=false AND " + days
                 + ">TIMESTAMPDIFF(DAY, CURRENT_TIMESTAMP, created) ";
@@ -85,6 +79,24 @@ public class UserDao implements UserDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+    }
+
+    @Override
+    public User getUser(String uid) throws IotDatabaseException {
+        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
+        +"infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+        +"user_number,services,phoneprefix,credits,autologin,language from users "
+        +"WHERE uid=?";
+            try (Connection conn = dataSource.getConnection();PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, uid);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    return buildUser(rs);
+                }
+            } catch (SQLException e) {
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            }
+            return null;
     }
 
 }

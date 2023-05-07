@@ -70,6 +70,7 @@ public class Device {
     private Long orgApplicationId;
     private HashMap<String, Object> applicationConfig;
     private Long organizationId;
+    private boolean writable;
 
     // TODO: change uid to uidHex and add validation (is it hex value)
     /**
@@ -103,6 +104,7 @@ public class Device {
         orgApplicationId = 0L;
         applicationConfig = null;
         organizationId = 0L;
+        writable=false;
     }
 
     public void print() {
@@ -110,6 +112,14 @@ public class Device {
         System.out.println("TEAM: " + getTeam());
         System.out.println("CHANNELS: " + getChannels().keySet().size());
         System.out.println("CODE: " + getCode());
+    }
+
+    public boolean isWritable() {
+        return writable;
+    }
+
+    public void setWritable(boolean writable) {
+        this.writable = writable;
     }
 
     public Long getOrganizationId() {
