@@ -27,7 +27,7 @@ public interface IotDatabaseIface {
     public List<Device> getUserDevices(User user, boolean withStatus) throws IotDatabaseException;
     //public Device getDevice(User user, boolean withStatus) throws IotDatabaseException;
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
-    public Device deleteDevice(User user, String deviceEUI) throws IotDatabaseException;
+    public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException;
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
 

@@ -277,11 +277,23 @@ public class Device {
         return result;
     }
 
+    public void setChannelsAsString(String channels) {
+        if (null != channels && !channels.isEmpty()) {
+            this.channels = new LinkedHashMap();
+            String[] ch = channels.split(",");
+            for (String channel : ch) {
+                this.channels.put(channel, new Channel(channel));
+            }
+        }
+    }
+
     /**
      * @param channels the channels to set
      */
     public void setChannels(LinkedHashMap channels) {
-        this.channels = channels;
+        if(null!=channels){
+            this.channels = channels;
+        }
     }
 
     public void setChannels(String channels) {

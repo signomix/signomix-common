@@ -1,9 +1,14 @@
 package com.signomix.common.db;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import com.signomix.common.User;
 
 public class DeviceSelector {
-    public static final int DEFAULT_ORGANIZATION_ID = -1;
+
+    Long defaultOrganizationId = ConfigProvider.getConfig().getValue("signomix.default.organization.id", Long.class);
+    
+    //public static final int defaultOrganizationId = -1;
     public String userSql;
     public String writable;
     public int numberOfWritableParams;
@@ -17,18 +22,18 @@ public class DeviceSelector {
             // system admin
             this.userSql = "";
             this.writable = "true";
-        } else if (user.organization != DEFAULT_ORGANIZATION_ID && user.type == User.ADMIN) {
+        } else if (user.organization != defaultOrganizationId && user.type == User.ADMIN) {
             this.userSql = "";
             this.writable = "true";
-        } else if (user.organization != DEFAULT_ORGANIZATION_ID && user.type != User.ADMIN) {
+        } else if (user.organization != defaultOrganizationId && user.type != User.ADMIN) {
             // organization admin
             this.userSql = "";
             this.writable = "false";
         } else {
             // default organization
-            this.userSql = " " + (single ? "AND" : "") + " (d.userid=? OR d.team like ? OR d.administrators like ?) ";
+            this.userSql = " " + (single ? "AND" : "WHERE") + " (d.userid=? OR d.team like ? OR d.administrators like ?) ";
             numberOfUserParams = 3;
-            this.writable = "(d.userid=? OR d.administrators like ?)";
+            this.writable = "(d.userid=? OR d.administrators like ?) AS writable";
             this.numberOfWritableParams = 2;
         }
 

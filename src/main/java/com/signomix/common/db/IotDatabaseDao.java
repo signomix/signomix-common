@@ -14,6 +14,7 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import com.cedarsoftware.util.io.JsonObject;
@@ -33,7 +34,8 @@ import io.quarkus.cache.CacheResult;
 @Singleton
 public class IotDatabaseDao implements IotDatabaseIface {
     private static final Logger LOG = Logger.getLogger(IotDatabaseDao.class);
-    private static final long DEFAULT_ORGANIZATION_ID = -1L;
+
+    Long defaultOrganizationId = ConfigProvider.getConfig().getValue("signomix.default.organization.id", Long.class);
 
     private AgroalDataSource dataSource;
 
@@ -735,6 +737,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } else {
             query = buildDeviceQuery() + " AND ( upper(d.eui)=upper(?) and d.userid = ?)";
         }
+        LOG.info("getDevice query: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEUI);
             pstmt.setString(2, userID);
@@ -1443,7 +1446,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("altitude double,")
                 .append("state double,")
                 .append("retention bigint,")
-                .append("administrators varchar, framecheck boolean,")
+                .append("administrators varchar,")
+                .append("framecheck boolean,")
                 .append("configuration varchar,")
                 .append("organization bigint default 0,")
                 .append("organizationapp bigint default 0 references applications);");
@@ -1566,6 +1570,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO: withShared, withStatus
         DeviceSelector selector = new DeviceSelector(user, withShared, withStatus, true);
         String query = selector.query;
+        LOG.info(query);
         Device device = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (selector.numberOfWritableParams > 0) {
@@ -1625,20 +1630,158 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public Device deleteDevice(User user, String deviceEUI) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteDevice'");
+    public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException {
+        LOG.info("deleteDevice: " + deviceEUI+ " for user: " + user.uid);
+        Device device=getDevice(user.uid, deviceEUI, false, false);
+        if(!device.isWritable()){
+            throw new IotDatabaseException(IotDatabaseException.CONFLICT, "User is not allowed to update device");
+        }
+        String query = "DELETE FROM devices WHERE eui=?;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
-    public void updateDevice(User user, Device device) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateDevice'");
+    public void updateDevice(User user, Device updatedDevice) throws IotDatabaseException {
+        Device device=getDevice(user, updatedDevice.getEUI(), true, false);
+        if(!device.isWritable()){
+            throw new IotDatabaseException(IotDatabaseException.CONFLICT, "User is not allowed to update device");
+        }
+        String query = 
+        "UPDATE devices SET name=?, userid=?, type=?, team=?, channels=?, code=?, "
+        +"decoder=?, devicekey=?, description=?, tinterval=?, template=?, pattern=?, "
+        +"commandscript=?, appid=?, groups=?, appeui=?, devid=?, active=?, project=?, "
+        +"latitude=?, longitude=?, altitude=?, retention=?, administrators=?, "
+        +"framecheck=?, configuration=?, organization=?, organizationapp=? "
+        +"WHERE eui=?;";
+        try(Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, updatedDevice.getName());
+            pst.setString(2, updatedDevice.getUserID());
+            pst.setString(3, updatedDevice.getType());
+            pst.setString(4, updatedDevice.getTeam());
+            pst.setString(5, updatedDevice.getChannelsAsString());
+            pst.setString(6, updatedDevice.getCode());
+            pst.setString(7, updatedDevice.getEncoder());
+            pst.setString(8, updatedDevice.getKey());
+            pst.setString(9, updatedDevice.getDescription());
+            pst.setLong(10, updatedDevice.getTransmissionInterval());
+            pst.setString(11, updatedDevice.getTemplate());
+            pst.setString(12, updatedDevice.getPattern());
+            pst.setString(13, updatedDevice.getCommandScript());
+            pst.setString(14, updatedDevice.getApplicationID());
+            pst.setString(15, updatedDevice.getGroups());
+            pst.setString(16, updatedDevice.getApplicationEUI());
+            pst.setString(17, updatedDevice.getDeviceID());
+            pst.setBoolean(18, updatedDevice.isActive());
+            pst.setString(19, updatedDevice.getProject());
+            if(null!=updatedDevice.getLatitude()){
+                pst.setDouble(20, updatedDevice.getLatitude());
+            }else{
+                pst.setNull(20, java.sql.Types.DOUBLE);
+            }
+            if(null!=updatedDevice.getLongitude()){
+                pst.setDouble(21, updatedDevice.getLongitude());
+            }else{
+                pst.setNull(21, java.sql.Types.DOUBLE);
+            }
+            if(null!=updatedDevice.getAltitude()){
+                pst.setDouble(22, updatedDevice.getAltitude());
+            }else{
+                pst.setNull(22, java.sql.Types.DOUBLE);
+            }
+            pst.setLong(23, updatedDevice.getRetentionTime());
+            pst.setString(24, updatedDevice.getAdministrators());
+            pst.setBoolean(25, updatedDevice.isCheckFrames());
+            pst.setString(26, updatedDevice.getConfiguration());
+            if(null!=updatedDevice.getOrganizationId()){
+                pst.setLong(27, updatedDevice.getOrganizationId());
+            }else{
+                pst.setLong(27, defaultOrganizationId);
+            }
+            if(null!=updatedDevice.getOrgApplicationId()){
+                pst.setLong(28, updatedDevice.getOrgApplicationId());
+            }else{
+                pst.setNull(28, java.sql.Types.BIGINT);
+            }
+            pst.setString(29, updatedDevice.getEUI());
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
     public void createDevice(User user, Device device) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createDevice'");
+        String query = 
+        "INSERT INTO devices (eui, name, userid, type, team, channels, code, "
+        +"decoder, devicekey, description, tinterval, template, pattern, "
+        +"commandscript, appid, groups, appeui, devid, active, project, "
+        +"latitude, longitude, altitude, retention, administrators, "
+        +"framecheck, configuration, organization, organizationapp) "
+        +"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try(Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, device.getEUI());
+            pst.setString(2, device.getName());
+            pst.setString(3, device.getUserID());
+            pst.setString(4, device.getType());
+            pst.setString(5, device.getTeam());
+            pst.setString(6, device.getChannelsAsString());
+            pst.setString(7, device.getCode());
+            pst.setString(8, device.getEncoder());
+            pst.setString(9, device.getKey());
+            pst.setString(10, device.getDescription());
+            pst.setLong(11, device.getTransmissionInterval());
+            pst.setString(12, device.getTemplate());
+            pst.setString(13, device.getPattern());
+            pst.setString(14, device.getCommandScript());
+            pst.setString(15, device.getApplicationID());
+            pst.setString(16, device.getGroups());
+            pst.setString(17, device.getApplicationEUI());
+            pst.setString(18, device.getDeviceID());
+            pst.setBoolean(19, device.isActive());
+            pst.setString(20, device.getProject());
+            if(null!=device.getLatitude()){
+                pst.setDouble(21, device.getLatitude());
+            }else{
+                pst.setNull(21, java.sql.Types.DOUBLE);
+            }
+            if(null!=device.getLongitude()){
+                pst.setDouble(22, device.getLongitude());
+            }else{
+                pst.setNull(22, java.sql.Types.DOUBLE);
+            }
+            if(null!=device.getAltitude()){
+                pst.setDouble(23, device.getAltitude());
+            }else{
+                pst.setNull(23, java.sql.Types.DOUBLE);
+            }
+            pst.setLong(24, device.getRetentionTime());
+            pst.setString(25, device.getAdministrators());
+            pst.setBoolean(26, device.isCheckFrames());
+            pst.setString(27, device.getConfiguration());
+            if(null!=device.getOrganizationId()){
+                pst.setLong(28, device.getOrganizationId());
+            }else{
+                pst.setLong(28, defaultOrganizationId);
+            }
+            if(null!=device.getOrgApplicationId()){
+                pst.setLong(29, device.getOrgApplicationId());
+            }else{
+                pst.setNull(29, java.sql.Types.BIGINT);
+            }
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 }
