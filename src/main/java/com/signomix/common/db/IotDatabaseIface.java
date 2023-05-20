@@ -25,16 +25,17 @@ public interface IotDatabaseIface {
     
     //DEVICES
     public List<Device> getUserDevices(User user, boolean withStatus) throws IotDatabaseException;
-    //public Device getDevice(User user, boolean withStatus) throws IotDatabaseException;
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
+    public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
+    //public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
+    //public Device getDevice(User user, boolean withStatus) throws IotDatabaseException;
     public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException;
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
+    public List<Device> getInactiveDevices() throws IotDatabaseException;
 
-    public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
-        public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
     public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException;//public List<List<List>> getGroupValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
-    public void updateDeviceStatus(String eui, Double newStatus, int newAlertStatus) throws IotDatabaseException;
+    public void updateDeviceStatus(String eui, long transmissionInterval, Double newStatus, int newAlertStatus) throws IotDatabaseException;
 
     
     public ChannelData getLastValue(String userID, String deviceID, String channel) throws IotDatabaseException;
@@ -65,4 +66,12 @@ public interface IotDatabaseIface {
     public void setConfirmedSms(long id) throws IotDatabaseException;
     public List<Long> getUnconfirmedSms() throws IotDatabaseException;
     public void removeOldData() throws IotDatabaseException;
+
+    //system parameters
+    public long getParameterValue(String name, long accountType) throws IotDatabaseException;
+    public String getParameterTextValue(String name, long accountType) throws IotDatabaseException;
+    public void setParameter(String name, long accountType, long value, String text) throws IotDatabaseException;
+    //system features
+    public boolean isFeatureEnabled(String name, long accountType) throws IotDatabaseException;
+    public void setFeature(String name, long accountType, boolean enabled) throws IotDatabaseException;
 }

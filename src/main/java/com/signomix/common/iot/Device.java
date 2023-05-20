@@ -10,6 +10,8 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import org.jboss.logging.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -18,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Grzegorz Skorupa <g.skorupa at gmail.com>
  */
 public class Device {
+    Logger LOG=Logger.getLogger(Device.class);
 
     public static String GENERIC = "GENERIC";
     public static String TTN = "TTN";
@@ -27,9 +30,9 @@ public class Device {
     public static String KPN = "KPN";
     public static String EXTERNAL = "EXTERNAL";
 
-    public static int UNKNOWN = 0;
-    public static int OK = 1;
-    public static int FAILURE = 2;
+    public static int ALERT_UNKNOWN = 0;
+    public static int ALERT_OK = 1;
+    public static int ALERT_FAILURE = 2;
 
     private String template;
 
@@ -91,7 +94,7 @@ public class Device {
         transmissionInterval = 0; // 10 minutes
         lastFrame = -1;
         checkFrames = true;
-        alertStatus = UNKNOWN;
+        alertStatus = ALERT_UNKNOWN;
         deviceID = "";
         project = "";
         active = true;
@@ -148,6 +151,7 @@ public class Device {
             mapping = new ObjectMapper().readValue(applicationConfig, HashMap.class);
             this.applicationConfig = mapping;
         } catch (IOException ex) {
+            LOG.warn(ex.getMessage());
             this.applicationConfig = new HashMap<>();
         }
     }
@@ -311,7 +315,7 @@ public class Device {
         try {
             return URLDecoder.decode(code, "UTF-8");
         } catch (NullPointerException | UnsupportedEncodingException e) {
-            e.printStackTrace();
+            LOG.warn(e.getMessage());
         }
         return "";
     }
@@ -408,6 +412,7 @@ public class Device {
         try {
             return URLDecoder.decode(encoder, "UTF-8");
         } catch (NullPointerException | UnsupportedEncodingException e) {
+            LOG.warn(e.getMessage());
             return "";
         }
     }
@@ -723,7 +728,7 @@ public class Device {
             mapping = new ObjectMapper().readValue(configuration.trim(), HashMap.class);
             return mapping;
         } catch (IOException ex) {
-            ex.printStackTrace();
+            LOG.warn("Error parsing configuration: " + ex.getMessage());
             return new HashMap<>();
         }
     }
