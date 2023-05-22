@@ -637,7 +637,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "CALL CSVWRITE('backup/devices.csv', 'SELECT * FROM devices');"
                 + "CALL CSVWRITE('backup/devicetemplates.csv', 'SELECT * FROM devicetemplates');"
                 + "CALL CSVWRITE('backup/groups.csv', 'SELECT * FROM groups');"
-                + "CALL CSVWRITE('backup/virtualdevicedata.csv', 'SELECT * FROM virtualdevicedata');";
+                + "CALL CSVWRITE('backup/virtualdevicedata.csv', 'SELECT * FROM virtualdevicedata');"
+                + "CALL CSVWRITE('backup/devicestatus.csv', 'SELECT * FROM devicestatus');"
+                + "CALL CSVWRITE('backup/account_params.csv', 'SELECT * FROM account_params');"
+                + "CALL CSVWRITE('backup/account_features.csv', 'SELECT * FROM account_features');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
