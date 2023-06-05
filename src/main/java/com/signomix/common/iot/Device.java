@@ -732,5 +732,11 @@ public class Device {
             return new HashMap<>();
         }
     }
+
+    /* public void setStatusData(DeviceStatus statusData) {
+        this.state = statusData.status;
+        this.alertStatus = statusData.alert;
+        this.transmissionInterval = statusData.transmissionInterval;
+    } */
     
 }

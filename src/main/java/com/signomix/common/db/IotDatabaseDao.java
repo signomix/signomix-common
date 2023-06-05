@@ -604,8 +604,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, eui);
             pstmt.setLong(2, transmissionInterval);
-            pstmt.setDouble(2, newStatus);
-            pstmt.setInt(3, newAlertStatus);
+            pstmt.setDouble(3, newStatus);
+            pstmt.setInt(4, newAlertStatus);
             int updated = pstmt.executeUpdate();
             if (updated < 1) {
                 LOG.warn("DB error updating device " + eui);
@@ -779,7 +779,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         if (deviceEUI == null || deviceEUI.isEmpty()) {
             return null;
         }
-        DeviceSelector selector = new DeviceSelector(null, false, withStatus, true);
+        DeviceSelector selector = new DeviceSelector(null, false, withStatus, true, null, null);
         String query = selector.query;
         // String query = buildDeviceQuery() + " AND ( upper(d.eui) = upper(?))";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -800,7 +800,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     private Device getDeviceStatusData(Device device) throws IotDatabaseException {
-        String query = "SELECT ts,status,alert FROM devicestatus WHERE eui=? ORDER BY ts DESC LIMIT 1";
+        String query = "SELECT ts,status,alert,tinterval FROM devicestatus WHERE eui=? ORDER BY ts DESC LIMIT 1";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, device.getEUI());
             ResultSet rs = pstmt.executeQuery();
@@ -808,6 +808,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 device.setLastSeen(rs.getTimestamp("ts").getTime());
                 device.setState(rs.getDouble("status"));
                 device.setAlertStatus(rs.getInt("alert"));
+                device.setTransmissionInterval(rs.getInt("tinterval"));
             }
             return device;
         } catch (SQLException e) {
@@ -1519,11 +1520,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getUserDevices(User user, boolean withStatus) throws IotDatabaseException {
+    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException {
         ArrayList<Device> devices = new ArrayList<>();
         // TODO: withShared, withStatus
-        DeviceSelector selector = new DeviceSelector(user, false, withStatus, false);
+        DeviceSelector selector = new DeviceSelector(user, false, withStatus, false, limit, offset);
         String query = selector.query;
+        Device device;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (selector.numberOfWritableParams > 0) {
                 pst.setString(1, user.uid);
@@ -1536,7 +1538,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
-                devices.add(buildDevice(rs));
+                device = buildDevice(rs);
+                if (withStatus) {
+                    device = getDeviceStatusData(device);
+                }
+                devices.add(device);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1550,7 +1556,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus)
             throws IotDatabaseException {
         // TODO: withShared, withStatus
-        DeviceSelector selector = new DeviceSelector(user, withShared, withStatus, true);
+        DeviceSelector selector = new DeviceSelector(user, withShared, withStatus, true, null, null);
         String query = selector.query;
         LOG.info(query);
         Device device = null;
@@ -1568,6 +1574,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
                 device = buildDevice(rs);
+                if (withStatus){
+                    device = getDeviceStatusData(device);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1924,40 +1933,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<Device> getInactiveDevices() throws IotDatabaseException {
         DeviceSelector selector = new DeviceSelector(true);
         String query = selector.query;
-
-        /*
-         * // find devices having alert < 2 and ts < TIMESTAMPADD('MINUTE', -10,
-         * // CURRENT_TIMESTAMP)
-         * // timestamp older than 10 minutes from now
-         * String q0 = "SELECT DISTINCT ON (eui)"
-         * + "eui, ts "
-         * + "FROM device_status "
-         * +
-         * "WHERE alert<2 AND tinterval>0 AND ts < TIMESTAMPADD('MILLISECOND', -1*tinterval, CURRENT_TIMESTAMP) "
-         * + "ORDER BY eui, ts DESC;";
-         * // then
-         * // query=query + " AND d.eui IN ("+q1+")";
-         * 
-         * int secondsBack = -10;
-         * String q1 =
-         * "CREATE TABLE IF NOT EXIST tmp_disconected (eui VARCHAR, ts TIMESTAMP, alert NUMBER); "
-         * + "INSERT INTO tmp_disconected (eui, ts, alert) SELECT DISTINCT ON (eui) "
-         * + "eui, ts, alert "
-         * + "FROM device_status "
-         * + "WHERE alert<2 AND ts < TIMESTAMPADD('MINUTE', " + secondsBack +
-         * ", CURRENT_TIMESTAMP) "
-         * + "ORDER BY eui, ts DESC;";
-         * String q2 =
-         * "SELECT * FROM devices d INNER JOIN tmp_disconected t ON d.eui=t.eui "
-         * + "WHERE d.ts < TIMESTAMPADD('SECOND', d.timestampinterval, t.ts);";
-         * String q3 = "DROP TABLE tmp_disconected;";
-         */
-
+        Device device;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {
-                list.add(buildDevice(rs));
+                device = buildDevice(rs);
+                device=getDeviceStatusData(device);
+                list.add(device);
             }
             return list;
         } catch (SQLException e) {

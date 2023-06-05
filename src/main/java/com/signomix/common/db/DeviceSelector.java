@@ -14,6 +14,8 @@ public class DeviceSelector {
     public int numberOfWritableParams;
     public int numberOfUserParams;
     public String query;
+    public String limitSql;
+    public String offsetSql;
 
     /**
      * Constructor for DeviceSelector.
@@ -51,9 +53,11 @@ public class DeviceSelector {
         query = sb.toString();
     }
 
-    public DeviceSelector(User user, boolean withShared, boolean withStatus, boolean single) {
+    public DeviceSelector(User user, boolean withShared, boolean withStatus, boolean single, Integer limit, Integer offset) {
         numberOfWritableParams = 0;
         numberOfUserParams = 0;
+        limitSql="";
+        offsetSql="";
         if (user == null) {
             // anonymous
             this.userSql = "";
@@ -78,6 +82,12 @@ public class DeviceSelector {
                 this.writable = "(d.userid=? OR d.administrators like ?) AS writable";
                 this.numberOfWritableParams = 2;
             }
+            if(null!=limit){
+                this.limitSql=" LIMIT "+limit;
+            }
+            if(null!=offset){
+                this.offsetSql=" OFFSET "+offset;
+            }
         }
 
         StringBuffer sb = new StringBuffer()
@@ -89,7 +99,9 @@ public class DeviceSelector {
                 .append(" FROM devices AS d ")
                 .append(" LEFT JOIN applications AS a WHERE d.organizationapp=a.id ")
                 .append( (single ? "AND d.eui=? " : ""))
-                .append(this.userSql);
+                .append(this.userSql)
+                .append(this.limitSql)
+                .append(this.offsetSql);
         query = sb.toString();
     }
 

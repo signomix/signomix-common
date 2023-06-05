@@ -24,7 +24,7 @@ public interface IotDatabaseIface {
     public void putVirtualData(Device device, VirtualData data) throws IotDatabaseException;
     
     //DEVICES
-    public List<Device> getUserDevices(User user, boolean withStatus) throws IotDatabaseException;
+    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
     public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
     //public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
@@ -36,7 +36,6 @@ public interface IotDatabaseIface {
 
     public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException;//public List<List<List>> getGroupValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
     public void updateDeviceStatus(String eui, long transmissionInterval, Double newStatus, int newAlertStatus) throws IotDatabaseException;
-
     
     public ChannelData getLastValue(String userID, String deviceID, String channel) throws IotDatabaseException;
     public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException;
