@@ -35,6 +35,8 @@ public interface IotDatabaseIface {
     public List<Device> getInactiveDevices() throws IotDatabaseException;
 
     public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException;//public List<List<List>> getGroupValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
+    public void clearDeviceData(String deviceEUI) throws IotDatabaseException;
+    public void updateDeviceChannels(String deviceEUI, String channels) throws IotDatabaseException;
     public void updateDeviceStatus(String eui, long transmissionInterval, Double newStatus, int newAlertStatus) throws IotDatabaseException;
     
     public ChannelData getLastValue(String userID, String deviceID, String channel) throws IotDatabaseException;

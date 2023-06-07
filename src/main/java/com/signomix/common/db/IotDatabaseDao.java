@@ -1435,7 +1435,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("serviceid varchar,").append("uuid varchar,").append("calculatedtimepoint bigint,")
                 .append("createdat bigint,").append("rooteventid bigint,").append("cyclic boolean);");
         // devicechannels
-        sb.append("CREATE TABLE IF NOT EXISTS devicechannels (").append("eui varchar primary key,")
+        sb.append("CREATE TABLE IF NOT EXISTS devicechannels (")
+                .append("eui varchar primary key,")
                 .append("channels varchar);");
         // devicedata
         sb.append("CREATE TABLE IF NOT EXISTS devicedata (").append("eui varchar not null,").append("userid varchar,")
@@ -1505,12 +1506,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
             e.printStackTrace();
             LOG.error(e.getMessage());
         }
-        query="CREATE TABLE IF NOT EXISTS account_params "
-        +"(param VARCHAR, accounttype VARCHAR, text VARCHAR, value BIGINT); "
-        +"CREATE TABLE IF NOT EXISTS account_features "
-        +"(feature VARCHAR, accounttype VARCHAR, enabled BOOLEAN);"
-        + "CREATE INDEX IF NOT EXISTS idx_account_params on account_params(param,accounttype);"
-        + "CREATE INDEX IF NOT EXISTS idx_account_features on account_features(feature,accounttype);";
+        query = "CREATE TABLE IF NOT EXISTS account_params "
+                + "(param VARCHAR, accounttype VARCHAR, text VARCHAR, value BIGINT); "
+                + "CREATE TABLE IF NOT EXISTS account_features "
+                + "(feature VARCHAR, accounttype VARCHAR, enabled BOOLEAN);"
+                + "CREATE INDEX IF NOT EXISTS idx_account_params on account_params(param,accounttype);"
+                + "CREATE INDEX IF NOT EXISTS idx_account_features on account_features(feature,accounttype);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -1520,7 +1521,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException {
+    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset)
+            throws IotDatabaseException {
         ArrayList<Device> devices = new ArrayList<>();
         // TODO: withShared, withStatus
         DeviceSelector selector = new DeviceSelector(user, false, withStatus, false, limit, offset);
@@ -1574,7 +1576,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
                 device = buildDevice(rs);
-                if (withStatus){
+                if (withStatus) {
                     device = getDeviceStatusData(device);
                 }
             }
@@ -1939,7 +1941,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {
                 device = buildDevice(rs);
-                device=getDeviceStatusData(device);
+                device = getDeviceStatusData(device);
                 list.add(device);
             }
             return list;
@@ -1968,7 +1970,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public long getParameterValue(String name, long accountType) throws IotDatabaseException {
-        String query="SELECT value FROM account_params WHERE param=? AND accounttype=?";
+        String query = "SELECT value FROM account_params WHERE param=? AND accounttype=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, name);
             pstmt.setLong(2, accountType);
@@ -1984,7 +1986,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public String getParameterTextValue(String name, long accountType) throws IotDatabaseException {
-        String query="SELECT text FROM account_params WHERE param=? AND accounttype=?";
+        String query = "SELECT text FROM account_params WHERE param=? AND accounttype=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, name);
             pstmt.setLong(2, accountType);
@@ -2000,7 +2002,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void setParameter(String name, long accountType, long value, String text) throws IotDatabaseException {
-        String query="MERGE INTO account_params KEY(param,accounttype) (param, accounttype, value, text) VALUES (?, ?, ?, ?)";
+        String query = "MERGE INTO account_params (param, accounttype, value, text) KEY(param,accounttype) VALUES (?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, name);
             pstmt.setLong(2, accountType);
@@ -2016,7 +2018,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public boolean isFeatureEnabled(String name, long accountType) throws IotDatabaseException {
-        String query="SELECT enabled FROM account_features WHERE feature=? AND accounttype=?";
+        String query = "SELECT enabled FROM account_features WHERE feature=? AND accounttype=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, name);
             pstmt.setLong(2, accountType);
@@ -2032,12 +2034,35 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void setFeature(String name, long accountType, boolean enabled) throws IotDatabaseException {
-        String query="MERGE INTO account_features KEY(feature,accounttype) (feature, accounttype, enabled) VALUES (?, ?, ?)";
+        String query = "MERGE INTO account_features (feature, accounttype, enabled) KEY(feature,accounttype) VALUES (?, ?, ?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, name);
             pstmt.setLong(2, accountType);
             pstmt.setBoolean(3, enabled);
             pstmt.setBoolean(4, enabled);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public void clearDeviceData(String deviceEUI) throws IotDatabaseException {
+        String query = "DELETE FROM devicedata WHERE eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateDeviceChannels(String deviceEUI, String channels) throws IotDatabaseException {
+        String query = "MERGE INTO devicechannels (eui, channels) KEY(eui) VALUES (?, ?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            pstmt.setString(2, channels); 
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
