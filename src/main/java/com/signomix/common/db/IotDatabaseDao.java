@@ -36,7 +36,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     private static final Logger LOG = Logger.getLogger(IotDatabaseDao.class);
 
     Long defaultOrganizationId = ConfigProvider.getConfig().getValue("signomix.default.organization.id", Long.class);
-
+    Long defaultApplicationId = ConfigProvider.getConfig().getValue("signomix.default.application.id", Long.class);
     private AgroalDataSource dataSource;
 
     // TODO: get requestLimit from config
@@ -1777,7 +1777,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != updatedDevice.getOrgApplicationId()) {
                 pst.setLong(28, updatedDevice.getOrgApplicationId());
             } else {
-                pst.setNull(28, java.sql.Types.BIGINT);
+                pst.setLong(28, defaultApplicationId);
             }
             pst.setString(29, updatedDevice.getEUI());
             pst.executeUpdate();
@@ -1844,7 +1844,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != device.getOrgApplicationId()) {
                 pst.setLong(29, device.getOrgApplicationId());
             } else {
-                pst.setNull(29, java.sql.Types.BIGINT);
+                pst.setLong(29, defaultApplicationId);
             }
             pst.executeUpdate();
         } catch (SQLException e) {
