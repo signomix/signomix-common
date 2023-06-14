@@ -31,25 +31,15 @@ public class DateTool {
             return null;
         }
         String timeString = input.replace('~', '+').replace('_', '/');
-        LOG.info("TIMESTRING:" + timeString);
         Timestamp ts = null;
         if (input.startsWith("-")) {
             int multiplicand = 1;
-            int zonePosition = input.indexOf("-", 1);
+            // int zonePosition = input.indexOf("-", 1);
             char unitSymbol;
             long millis;
             String zoneId = "";
-            if (zonePosition == -1) {
-                millis = Long.parseLong(input.substring(1, input.length() - 1));
-                unitSymbol = input.charAt(input.length() - 1);
-            } else {
-                millis = Long.parseLong(input.substring(1, 2));
-                unitSymbol = input.charAt(2);
-                zoneId = input.substring(zonePosition + 1).replaceFirst("\\.", "/");
-            }
-            if (isInSeconds(millis)) {
-                millis = millis * 1000;
-            }
+            millis = Long.parseLong(input.substring(1, input.length() - 1));
+            unitSymbol = input.charAt(input.length() - 1);
             switch (unitSymbol) {
                 case 'M':
                     multiplicand = MONTH_MILLIS;
@@ -68,8 +58,12 @@ public class DateTool {
                 case 'm':
                     multiplicand = MINUTE_MILLIS;
                     break;
-                default: // seconds
+                case 's':
                     multiplicand = 1000;
+                    break;
+                default: // seconds
+                    LOG.error("Unparsable input: " + input);
+                    throw new Exception("Unparsable input: " + input);
             }
             if (multiplicand == DAY_MILLIS) {
                 // -Xd means start of the day, X days back
@@ -81,6 +75,8 @@ public class DateTool {
                 return ts;
             } else if (millis != 0 && multiplicand == MONTH_MILLIS) {
                 // cannot be parsed (parsing error) - actual timestamp will be returned
+                LOG.error("Unparsable input: " + input);
+                throw new Exception("Unparsable input: " + input);
             } else {
                 ts = new Timestamp(System.currentTimeMillis() - millis * multiplicand);
                 return ts;
