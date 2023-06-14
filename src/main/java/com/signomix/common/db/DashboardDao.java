@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.logging.Logger;
 
@@ -191,6 +193,67 @@ public class DashboardDao implements DashboardIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+    }
+
+    @Override
+    public List<Dashboard> getUserDashboards(String userId, Integer offset, Integer limit) throws IotDatabaseException {
+        String query = "SELECT * FROM dashboards WHERE userid=? ORDER BY name LIMIT ? OFFSET ?";
+        List<Dashboard> dashboards = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userId);
+            pstmt.setInt(2, limit);
+            pstmt.setInt(3, offset);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    Dashboard dashboard = new Dashboard();
+                    dashboard.setId(rs.getString("id"));
+                    dashboard.setName(rs.getString("name"));
+                    dashboard.setUserID(rs.getString("userid"));
+                    dashboard.setTitle(rs.getString("title"));
+                    dashboard.setTeam(rs.getString("team"));
+                    dashboard.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboard.setSharedToken(rs.getString("token"));
+                    dashboard.setShared(rs.getBoolean("shared"));
+                    dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboards.add(dashboard);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return dashboards;
+    }
+
+    @Override
+    public List<Dashboard> getDashboards(Integer offset, Integer limit) throws IotDatabaseException {
+        String query = "SELECT * FROM dashboards ORDER BY name LIMIT ? OFFSET ?";
+        List<Dashboard> dashboards = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setInt(1, limit);
+            pstmt.setInt(2, offset);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    Dashboard dashboard = new Dashboard();
+                    dashboard.setId(rs.getString("id"));
+                    dashboard.setName(rs.getString("name"));
+                    dashboard.setUserID(rs.getString("userid"));
+                    dashboard.setTitle(rs.getString("title"));
+                    dashboard.setTeam(rs.getString("team"));
+                    dashboard.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboard.setSharedToken(rs.getString("token"));
+                    dashboard.setShared(rs.getBoolean("shared"));
+                    dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboards.add(dashboard);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return dashboards;
     }
 
 }

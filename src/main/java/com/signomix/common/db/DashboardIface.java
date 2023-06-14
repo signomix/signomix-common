@@ -1,5 +1,7 @@
 package com.signomix.common.db;
 
+import java.util.List;
+
 import com.signomix.common.gui.Dashboard;
 import com.signomix.common.gui.DashboardTemplate;
 
@@ -16,4 +18,6 @@ public interface DashboardIface {
     public DashboardTemplate getDashboardTemplate(String dashboardTemplateId) throws IotDatabaseException;
     public void saveAsTemplate(Dashboard dashboard) throws IotDatabaseException;
     public void removeTemplate(String dashboardTemplateId) throws IotDatabaseException;
+    public List<Dashboard> getUserDashboards(String userId, Integer limit, Integer offset) throws IotDatabaseException;
+    public List<Dashboard> getDashboards(Integer limit, Integer offset)throws IotDatabaseException;
 }

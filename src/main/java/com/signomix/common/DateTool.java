@@ -47,6 +47,7 @@ public class DateTool {
                 unitSymbol = input.charAt(2);
                 zoneId = input.substring(zonePosition + 1).replaceFirst("\\.", "/");
             }
+            System.out.println("UNIT SYMBOL:[" + unitSymbol + "]");
             if (isInSeconds(millis)) {
                 millis = millis * 1000;
             }
