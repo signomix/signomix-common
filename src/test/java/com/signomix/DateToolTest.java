@@ -46,11 +46,35 @@ public class DateToolTest
     {
         try {
             long expectedTime=System.currentTimeMillis()-3600000;
-            long calculatedTime=DateTool.parseTimestamp("-60", null, false).getTime();
+            long calculatedTime=DateTool.parseTimestamp("-1h", null, false).getTime();
             long diff=calculatedTime-expectedTime;
             assertTrue("Zbyt duża różnica czasu "+diff, Math.abs(diff)<ACCEPTED_DIFF);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void test24h()
+    {
+        try {
+            long expectedTime=System.currentTimeMillis()-(3600000*24);
+            long calculatedTime=DateTool.parseTimestamp("-24h", null, false).getTime();
+            long diff=calculatedTime-expectedTime;
+            assertTrue("Zbyt duża różnica czasu "+diff, Math.abs(diff)<ACCEPTED_DIFF);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testZoneId(){
+        try {
+            DateTool.parseTimestamp("-0M-Europe/Warsaw", null, false);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 }

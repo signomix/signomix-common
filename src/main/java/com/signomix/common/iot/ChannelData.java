@@ -24,6 +24,14 @@ public class ChannelData {
     public ChannelData() {
     }
 
+    public ChannelData(String deviceEUI, String name, Double value, long timestamp, String stringValue) {
+        this.deviceEUI = deviceEUI;
+        this.name = name;
+        this.value = value;
+        this.timestamp = timestamp;
+        this.stringValue = stringValue;
+    }
+    
     public ChannelData(String deviceEUI, String name, Double value, long timestamp) {
         this.deviceEUI = deviceEUI;
         this.name = name;
