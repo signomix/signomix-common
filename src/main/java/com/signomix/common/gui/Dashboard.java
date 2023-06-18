@@ -21,7 +21,8 @@ public class Dashboard {
     private String title;
     private boolean shared;
     private String team;
-    private ArrayList widgets;
+    private ArrayList<Widget> widgets;
+    private ArrayList<DashboardItem> items;
     private String sharedToken;
     private String administrators;
 
@@ -29,12 +30,14 @@ public class Dashboard {
         id = null;
         shared = false;
         widgets = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
     public Dashboard(String newID) {
         id = newID;
         shared = false;
         widgets = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
     public void applyTemplate(DashboardTemplate template, String deviceEui) {
@@ -49,7 +52,7 @@ public class Dashboard {
         widgets.add(widget);
     }
 
-    public void setWidget(int index, Object widget) {
+    public void setWidget(int index, Widget widget) {
         widgets.add(index, widget);
     }
 
@@ -188,6 +191,17 @@ public class Dashboard {
         this.widgets = widgets;
     }
 
+    public ArrayList getItems() {
+        return items;
+    }
+
+    /**
+     * @param widgets the widgets to set
+     */
+    public void setItems(ArrayList items) {
+        this.items = items;
+    }
+
     /**
      * @return the sharedToken
      */
@@ -214,6 +228,26 @@ public class Dashboard {
 
     public void setWidgetsFromJson(String jsonString) {
         widgets = (ArrayList) JsonReader.jsonToJava(jsonString);
+        /* ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            widgets = objectMapper.readValue(jsonString, ArrayList.class);
+        } catch (JsonProcessingException ex) {
+            //
+        } */
+    }
+
+    public String getItemsAsJson() {
+        return JsonWriter.objectToJson(items);
+        /* ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(widgets);
+        } catch (JsonProcessingException ex) {
+            return "";
+        } */
+    }
+
+    public void setItemsFromJson(String jsonString) {
+        items = (ArrayList) JsonReader.jsonToJava(jsonString);
         /* ObjectMapper objectMapper = new ObjectMapper();
         try {
             widgets = objectMapper.readValue(jsonString, ArrayList.class);

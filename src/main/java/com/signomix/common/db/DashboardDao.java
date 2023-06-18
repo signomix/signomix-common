@@ -8,14 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.logging.Logger;
-
 import com.signomix.common.gui.Dashboard;
 import com.signomix.common.gui.DashboardTemplate;
 
 import io.agroal.api.AgroalDataSource;
 
 public class DashboardDao implements DashboardIface {
-    private static final Logger LOG = Logger.getLogger(DashboardDao.class);
+    
+    Logger logger = Logger.getLogger(DashboardDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -196,8 +196,10 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
-    public List<Dashboard> getUserDashboards(String userId, Integer offset, Integer limit) throws IotDatabaseException {
+    public List<Dashboard> getUserDashboards(String userId, Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT * FROM dashboards WHERE userid=? ORDER BY name LIMIT ? OFFSET ?";
+        logger.info("getUserDashboards: " + query);
+        logger.info("getUserDashboards: " + userId + " " + offset + " " + limit);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
@@ -219,22 +221,29 @@ public class DashboardDao implements DashboardIface {
                 }
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        logger.info("getUserDashboards size: " + dashboards.size());
         return dashboards;
     }
 
     @Override
-    public List<Dashboard> getDashboards(Integer offset, Integer limit) throws IotDatabaseException {
+    public List<Dashboard> getDashboards(Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT * FROM dashboards ORDER BY name LIMIT ? OFFSET ?";
+        logger.info("getDashboards: " + query);
+        logger.info("getDashboards: " + offset + " " + limit);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            logger.info("getDashboards datasource url: "+ conn.getMetaData().getURL());
             pstmt.setInt(1, limit);
             pstmt.setInt(2, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
+                    logger.info("getDashboards: " + rs.getString("id"));
                     Dashboard dashboard = new Dashboard();
                     dashboard.setId(rs.getString("id"));
                     dashboard.setName(rs.getString("name"));
@@ -249,8 +258,10 @@ public class DashboardDao implements DashboardIface {
                 }
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return dashboards;
