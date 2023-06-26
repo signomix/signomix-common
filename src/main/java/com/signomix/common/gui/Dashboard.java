@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -25,6 +27,7 @@ public class Dashboard {
     private ArrayList<DashboardItem> items;
     private String sharedToken;
     private String administrators;
+    private int version = 0;
 
     public Dashboard() {
         id = null;
@@ -46,6 +49,14 @@ public class Dashboard {
             widget.setDev_id(deviceEui);
         });
         setWidgets(widgets);
+    }
+
+    public void setVersion(int v) {
+        version = v;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public void addWidget(Widget widget) {
@@ -202,6 +213,10 @@ public class Dashboard {
         this.items = items;
     }
 
+    public void addItem(DashboardItem item) {
+        items.add(item);
+    }
+
     /**
      * @return the sharedToken
      */
@@ -217,43 +232,63 @@ public class Dashboard {
     }
 
     public String getWidgetsAsJson() {
-        return JsonWriter.objectToJson(widgets);
-        /* ObjectMapper objectMapper = new ObjectMapper();
+        // if (null == items || items.isEmpty()) {
+        // return JsonWriter.objectToJson(widgets);
+        // } else {
+        ObjectMapper objectMapper = new ObjectMapper();
         try {
             return objectMapper.writeValueAsString(widgets);
         } catch (JsonProcessingException ex) {
             return "";
-        } */
+        }
+        // }
     }
 
     public void setWidgetsFromJson(String jsonString) {
-        widgets = (ArrayList) JsonReader.jsonToJava(jsonString);
-        /* ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            widgets = objectMapper.readValue(jsonString, ArrayList.class);
-        } catch (JsonProcessingException ex) {
-            //
-        } */
+        if (jsonString.indexOf("@type") > 0) {
+            widgets = (ArrayList) JsonReader.jsonToJava(jsonString);
+        } else {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                widgets = objectMapper.readValue(jsonString, ArrayList.class);
+            } catch (JsonProcessingException ex) {
+                //
+            }
+        }
+        /*
+         * ObjectMapper objectMapper = new ObjectMapper();
+         * try {
+         * widgets = objectMapper.readValue(jsonString, ArrayList.class);
+         * } catch (JsonProcessingException ex) {
+         * //
+         * }
+         */
     }
 
     public String getItemsAsJson() {
-        return JsonWriter.objectToJson(items);
-        /* ObjectMapper objectMapper = new ObjectMapper();
+        // return JsonWriter.objectToJson(items);
+
+        ObjectMapper objectMapper = new ObjectMapper();
         try {
-            return objectMapper.writeValueAsString(widgets);
+            return objectMapper.writeValueAsString(items);
         } catch (JsonProcessingException ex) {
+            ex.printStackTrace();
             return "";
-        } */
+        }
     }
 
     public void setItemsFromJson(String jsonString) {
-        items = (ArrayList) JsonReader.jsonToJava(jsonString);
-        /* ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            widgets = objectMapper.readValue(jsonString, ArrayList.class);
-        } catch (JsonProcessingException ex) {
-            //
-        } */
+        if (jsonString.indexOf("@type") > 0) {
+            items = (ArrayList) JsonReader.jsonToJava(jsonString);
+        } else {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                items = objectMapper.readValue(jsonString, ArrayList.class);
+            } catch (JsonProcessingException ex) {
+                ex.printStackTrace();
+                items = null;
+            }
+        }
     }
 
     public Dashboard normalize() {

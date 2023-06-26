@@ -14,7 +14,7 @@ import com.signomix.common.gui.DashboardTemplate;
 import io.agroal.api.AgroalDataSource;
 
 public class DashboardDao implements DashboardIface {
-    
+
     Logger logger = Logger.getLogger(DashboardDao.class);
 
     private AgroalDataSource dataSource;
@@ -28,7 +28,8 @@ public class DashboardDao implements DashboardIface {
     public void backupDb() throws IotDatabaseException {
         String query = "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');";
         String query2 = "CALL CSVWRITE('backup/dashboardtemplates.csv', 'SELECT * FROM dashboardtemplates');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query+query2);) {
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query + query2);) {
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -48,11 +49,13 @@ public class DashboardDao implements DashboardIface {
                 + "widgets VARCHAR,"
                 + "token VARCHAR,"
                 + "shared BOOLEAN,"
-                + "administrators VARCHAR);"
+                + "administrators VARCHAR,"
+                + "items VARCHAR);"
                 + "CREATE TABLE IF NOT EXISTS dashboardtemplates ("
                 + "id VARCHAR PRIMARY KEY,"
                 + "title VARCHAR,"
-                + "widgets VARCHAR);";
+                + "widgets VARCHAR,"
+                + "items VARCHAR);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -64,7 +67,7 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void addDashboard(Dashboard dashboard) throws IotDatabaseException {
-        String query = "INSERT INTO dashboards (id,name,userid,title,team,widgets,token,shared,administrators) VALUES (?,?,?,?,?,?,?,?,?)";
+        String query = "INSERT INTO dashboards (id,name,userid,title,team,widgets,token,shared,administrators,items) VALUES (?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getId());
             pstmt.setString(2, dashboard.getName());
@@ -75,6 +78,7 @@ public class DashboardDao implements DashboardIface {
             pstmt.setString(7, dashboard.getSharedToken());
             pstmt.setBoolean(8, dashboard.isShared());
             pstmt.setString(9, dashboard.getAdministrators());
+            pstmt.setString(10, dashboard.getItemsAsJson());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -113,6 +117,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setSharedToken(rs.getString("token"));
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboard.setItemsFromJson(rs.getString("items"));
                     return dashboard;
                 }
             }
@@ -126,7 +131,7 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void updateDashboard(Dashboard dashboard) throws IotDatabaseException {
-        String query = "UPDATE dashboards SET name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=? WHERE id=?";
+        String query = "UPDATE dashboards SET name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=? WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getName());
             pstmt.setString(2, dashboard.getUserID());
@@ -136,7 +141,8 @@ public class DashboardDao implements DashboardIface {
             pstmt.setString(6, dashboard.getSharedToken());
             pstmt.setBoolean(7, dashboard.isShared());
             pstmt.setString(8, dashboard.getAdministrators());
-            pstmt.setString(9, dashboard.getId());
+            pstmt.setString(9, dashboard.getItemsAsJson());
+            pstmt.setString(10, dashboard.getId());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -169,11 +175,12 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void saveAsTemplate(Dashboard dashboard) throws IotDatabaseException {
-        String query = "INSERT INTO dashboardtemplates (id,title,widgets) VALUES (?,?,?)";
+        String query = "INSERT INTO dashboardtemplates (id,title,widgets,items) VALUES (?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getId());
             pstmt.setString(2, dashboard.getTitle());
             pstmt.setString(3, dashboard.getWidgetsAsJson());
+            pstmt.setString(4, dashboard.getItemsAsJson());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -198,8 +205,7 @@ public class DashboardDao implements DashboardIface {
     @Override
     public List<Dashboard> getUserDashboards(String userId, Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT * FROM dashboards WHERE userid=? ORDER BY name LIMIT ? OFFSET ?";
-        logger.info("getUserDashboards: " + query);
-        logger.info("getUserDashboards: " + userId + " " + offset + " " + limit);
+        String itemsStr;
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
@@ -217,6 +223,11 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setSharedToken(rs.getString("token"));
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
+                    itemsStr=rs.getString("items");
+                    if(null==itemsStr || itemsStr.isEmpty()){
+                        itemsStr="[]";
+                    }
+                    dashboard.setItemsFromJson(itemsStr);
                     dashboards.add(dashboard);
                 }
             }
@@ -238,7 +249,7 @@ public class DashboardDao implements DashboardIface {
         logger.info("getDashboards: " + offset + " " + limit);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            logger.info("getDashboards datasource url: "+ conn.getMetaData().getURL());
+            logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
             pstmt.setInt(1, limit);
             pstmt.setInt(2, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -254,6 +265,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setSharedToken(rs.getString("token"));
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboard.setItemsFromJson(rs.getString("items"));
                     dashboards.add(dashboard);
                 }
             }

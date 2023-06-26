@@ -13,4 +13,12 @@ public class ItemSize {
         this.w = w;
         this.h = h;
     }
+
+    public void setW(int w) {
+        this.w = w;
+    }
+
+    public void setH(int h) {
+        this.h = h;
+    }
 }

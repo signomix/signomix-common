@@ -43,4 +43,24 @@ public class ItemResDef {
         this.y = y;
         this.id = id;
     }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setW(int w) {
+        this.w = w;
+    }
+
+    public void setH(int h) {
+        this.h = h;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 }
