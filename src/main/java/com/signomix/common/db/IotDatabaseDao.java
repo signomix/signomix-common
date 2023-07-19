@@ -1368,7 +1368,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             LOG.error(e.getMessage());
         }
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,0,0,'','');");) {
+                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,0,0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
 
