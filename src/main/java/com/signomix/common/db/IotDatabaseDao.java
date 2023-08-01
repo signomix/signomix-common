@@ -2008,8 +2008,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pstmt.setLong(2, accountType);
             pstmt.setLong(3, value);
             pstmt.setString(4, text);
-            pstmt.setLong(5, value);
-            pstmt.setString(6, text);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -2039,7 +2037,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pstmt.setString(1, name);
             pstmt.setLong(2, accountType);
             pstmt.setBoolean(3, enabled);
-            pstmt.setBoolean(4, enabled);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());

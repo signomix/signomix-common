@@ -203,14 +203,36 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
-    public List<Dashboard> getUserDashboards(String userId, Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT * FROM dashboards WHERE userid=? ORDER BY name LIMIT ? OFFSET ?";
+    public List<Dashboard> getUserDashboards(String userId, boolean withShared, boolean adminRole, Integer limit,
+            Integer offset) throws IotDatabaseException {
+        String query = "SELECT * FROM dashboards ";
+        if (adminRole) {
+            // do nothing
+        } else if (withShared) {
+            query = query + "WHERE userid=? OR team LIKE ? OR administrators LIKE ?";
+        } else {
+            query = query + "WHERE userid=?";
+        }
+        query = query + " ORDER BY name LIMIT ? OFFSET ?";
         String itemsStr;
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, userId);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
+            if (adminRole) {
+                pstmt.setInt(1, limit);
+                pstmt.setInt(2, offset);
+            } else {
+                if(withShared){
+                    pstmt.setString(1, userId);
+                    pstmt.setString(2, "%," + userId + ",%");
+                    pstmt.setString(3, "%," + userId + ",%");
+                    pstmt.setInt(4, limit);
+                    pstmt.setInt(5, offset);
+                }else{
+                    pstmt.setString(1, userId);
+                    pstmt.setInt(2, limit);
+                    pstmt.setInt(3, offset);
+                }
+            }
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     Dashboard dashboard = new Dashboard();
@@ -223,9 +245,9 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setSharedToken(rs.getString("token"));
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
-                    itemsStr=rs.getString("items");
-                    if(null==itemsStr || itemsStr.isEmpty()){
-                        itemsStr="[]";
+                    itemsStr = rs.getString("items");
+                    if (null == itemsStr || itemsStr.isEmpty()) {
+                        itemsStr = "[]";
                     }
                     dashboard.setItemsFromJson(itemsStr);
                     dashboards.add(dashboard);
