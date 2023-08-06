@@ -242,6 +242,15 @@ public class DataQuery {
         return (null != channelName) ? (Arrays.asList(channelName.split(","))) : new ArrayList<>();
     }
 
+    public void setChannels(List<String> channels) {
+        if (null != channels && !channels.isEmpty()) {
+            channelName = channels.get(0);
+            for (int i = 1; i < channels.size(); i++) {
+                channelName += "," + channels.get(i);
+            }
+        }
+    }
+
     /**
      * @return the limit
      */

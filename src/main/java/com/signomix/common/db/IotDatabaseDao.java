@@ -8,9 +8,12 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Singleton;
 
@@ -816,6 +819,24 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    public LinkedHashMap<String, Integer> getDeviceChannelPositions(String deviceEUI) throws IotDatabaseException {
+        LinkedHashMap<String, Integer> channels = new LinkedHashMap<String, Integer>();
+        String query = "select channels from devicechannels where eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                String[] ch = rs.getString(1).toLowerCase().split(",");
+                for (int i = 0; i < ch.length; i++) {
+                    channels.put(ch[i], i + 1);
+                }
+            }
+            return channels;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
     @Override
     public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException {
         List<String> channels;
@@ -838,6 +859,153 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
+    }
+
+    @Override
+    @CacheResult(cacheName = "values-cache2")
+    public List<List> getValues2(String userID, String deviceEUI, String dataQuery) throws IotDatabaseException {
+        DataQuery dq;
+        try {
+            dq = DataQuery.parse(dataQuery);
+            if(dq.getChannels().size()==1 && dq.getChannels().get(0).equals("*")){
+                dq.setChannels(getDeviceChannels(deviceEUI));
+            }
+        } catch (DataQueryException ex) {
+            throw new IotDatabaseException(ex.getCode(), "DataQuery " + ex.getMessage());
+        }
+        if (dq.isVirtual()) {
+            return getVirtualDeviceMeasures(userID, deviceEUI, dq); // TODO: refactor
+        }
+        LinkedHashMap<String, Integer> columnPositions = getDeviceChannelPositions(deviceEUI);
+        ArrayList<String> columnSymbols = getColumnSymbols(dq, columnPositions);
+        String query = buildDataQuery(userID, deviceEUI, dq, columnSymbols);
+        int limit = dq.getLimit();
+        if (dq.average > 0) {
+            limit = dq.average;
+        }
+        if (dq.minimum > 0) {
+            limit = dq.minimum;
+        }
+        if (dq.maximum > 0) {
+            limit = dq.maximum;
+        }
+        if (dq.summary > 0) {
+            limit = dq.summary;
+        }
+        if (dq.getNewValue() != null) {
+            limit = limit - 1;
+        }
+        ArrayList<List> values = new ArrayList<>();
+        int idx = 1;
+        try {
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, deviceEUI);
+            idx = 2;
+            if (null != dq.getProject()) {
+                pstmt.setString(idx, dq.getProject());
+                idx++;
+            }
+            if (null != dq.getState()) {
+                pstmt.setDouble(idx, dq.getState());
+                idx++;
+            }
+            if (null != dq.getFromTs() && null != dq.getToTs()) {
+                pstmt.setTimestamp(idx, dq.getFromTs());
+                idx++;
+                pstmt.setTimestamp(idx, dq.getToTs());
+                idx++;
+            }
+            pstmt.setInt(idx, limit);
+
+            ResultSet rs = pstmt.executeQuery();
+            List<ChannelData> row;
+            ChannelData channelData;
+            String eui;
+            String userid;
+            //String project;
+            long tstamp;
+            //Double status;
+            String channelName;
+            Double value;
+            while (rs.next()) {
+                row = new ArrayList<>();
+                eui=rs.getString("eui");
+                userid=rs.getString("userid");
+                tstamp=rs.getTimestamp("tstamp").getTime();
+                //status=rs.getDouble("state"); //not used
+                //project=rs.getString("project"); //not used
+                int i = 0;
+                for (String columnSymbol : columnSymbols) {
+                    channelData=new ChannelData();
+                    channelData.setDeviceEUI(eui);
+                    channelData.setName(dq.getChannels().get(i));
+                    channelData.setTimestamp(tstamp);
+                    channelData.setValue(rs.getDouble(columnSymbol));
+                    if(rs.wasNull()){
+                        channelData.setNullValue();
+                    }
+                    row.add(channelData);
+                    i++;
+                }
+                values.add(row);
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+        Collections.reverse(values);
+        return values;
+    }
+
+    private ArrayList<String> getColumnSymbols(DataQuery dq, HashMap<String, Integer> columnPositions) {
+        ArrayList<String> columnSymbols = new ArrayList<>();
+        Integer columnPosition;
+        if ("*".equals(dq.getChannelName())) {
+            for (String key : columnPositions.keySet()) {
+                columnSymbols.add("d" + columnPositions.get(key));
+            }
+
+        } else {
+            for (String column : dq.getChannels()) {
+                columnPosition = columnPositions.get(column);
+                if (columnPosition != null) {
+                    columnSymbols.add("d" + columnPosition);
+                }
+            }
+        }
+        return columnSymbols;
+    }
+
+    private String buildDataQuery(String userID, String deviceEUI, DataQuery dq, ArrayList<String> columnSymbols) {
+
+        String query = "SELECT eui,userid,tstamp,project,state ";
+        for (String columnName : columnSymbols) {
+            query = query + "," + columnName;
+        }
+        query = query + " FROM devicedata WHERE eui=?";
+
+        //if there is only one column, we need to add IS NOT NULL to the query
+        if(columnSymbols.size()==1){
+            query = query + " AND " + columnSymbols.get(0) + " IS NOT NULL";
+        }
+        String projectQuery = " AND project=?";
+        String statusQuery = " AND state=?";
+        String wherePart = " AND tstamp BETWEEN ? AND ?";
+        String orderPart = " ORDER BY tstamp DESC LIMIT ?";
+
+        if (null != dq.getProject()) {
+            query = query.concat(projectQuery);
+        }
+        if (null != dq.getState()) {
+            query = query.concat(statusQuery);
+        }
+        LOG.debug("fromTs:" + dq.getFromTs());
+        LOG.debug("toTs:" + dq.getToTs());
+        if (null != dq.getFromTs() && null != dq.getToTs()) {
+            query = query.concat(wherePart);
+        }
+        query = query.concat(orderPart);
+        return query;
     }
 
     @Override
@@ -1368,7 +1536,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             LOG.error(e.getMessage());
         }
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,0,0,'system','{}');");) {
+                PreparedStatement pst = conn
+                        .prepareStatement("INSERT INTO applications values (0,0,0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
 
@@ -2059,7 +2228,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String query = "MERGE INTO devicechannels (eui, channels) KEY(eui) VALUES (?, ?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEUI);
-            pstmt.setString(2, channels); 
+            pstmt.setString(2, channels);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());

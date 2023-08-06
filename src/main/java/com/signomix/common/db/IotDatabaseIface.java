@@ -17,6 +17,7 @@ public interface IotDatabaseIface {
     public void setDatasource(AgroalDataSource ds);
     public void setQueryResultsLimit(int limit);
 
+    public List<List> getValues2(String userID, String deviceEUI, String dataQuery) throws IotDatabaseException;
 
     public List<List> getValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
     public List<List<List>> getValuesOfGroup(String userID, long organizationId, String groupEUI, String channelNames, long secondsBack) throws IotDatabaseException;
