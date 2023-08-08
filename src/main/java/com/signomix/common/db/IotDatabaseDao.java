@@ -819,6 +819,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    @CacheResult(cacheName = "devchannels-cache1")
     public LinkedHashMap<String, Integer> getDeviceChannelPositions(String deviceEUI) throws IotDatabaseException {
         LinkedHashMap<String, Integer> channels = new LinkedHashMap<String, Integer>();
         String query = "select channels from devicechannels where eui=?";
@@ -897,9 +898,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         ArrayList<List> values = new ArrayList<>();
         int idx = 1;
-        try {
-            Connection conn = dataSource.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query);
+        try(Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);) {
+            
             pstmt.setString(1, deviceEUI);
             idx = 2;
             if (null != dq.getProject()) {
@@ -922,16 +923,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
             List<ChannelData> row;
             ChannelData channelData;
             String eui;
-            String userid;
+            //String userid;
             //String project;
             long tstamp;
             //Double status;
-            String channelName;
-            Double value;
+            //String channelName;
+            //Double value;
             while (rs.next()) {
                 row = new ArrayList<>();
                 eui=rs.getString("eui");
-                userid=rs.getString("userid");
+                //userid=rs.getString("userid");
                 tstamp=rs.getTimestamp("tstamp").getTime();
                 //status=rs.getDouble("state"); //not used
                 //project=rs.getString("project"); //not used
