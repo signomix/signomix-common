@@ -17,6 +17,7 @@ public class User {
     public static final int ADMIN = 9; // organization admin
     public static final int ANONYMOUS = 10;
     public static final int SUBSCRIBER = 100;
+    public static final int ANY = 1000;
 
     public Integer type;
     public String uid;

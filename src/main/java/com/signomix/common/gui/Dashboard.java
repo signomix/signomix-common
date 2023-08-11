@@ -28,6 +28,7 @@ public class Dashboard {
     private String sharedToken;
     private String administrators;
     private int version = 0;
+    private long organizationId = 0;
 
     public Dashboard() {
         id = null;
@@ -229,6 +230,20 @@ public class Dashboard {
      */
     public void setSharedToken(String sharedToken) {
         this.sharedToken = sharedToken;
+    }
+
+    /**
+     * @return the organizationId
+     */
+    public long getOrganizationId() {
+        return organizationId;
+    }
+
+    /**
+     * @param organizationId the organizationId to set
+     */
+    public void setOrganizationId(long organizationId) {
+        this.organizationId = organizationId;
     }
 
     public String getWidgetsAsJson() {

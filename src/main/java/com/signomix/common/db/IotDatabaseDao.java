@@ -1677,9 +1677,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             LOG.error(e.getMessage());
         }
         query = "CREATE TABLE IF NOT EXISTS account_params "
-                + "(param VARCHAR, accounttype VARCHAR, text VARCHAR, value BIGINT); "
+                + "(param VARCHAR, accounttype INTEGER, text VARCHAR, value BIGINT); "
                 + "CREATE TABLE IF NOT EXISTS account_features "
-                + "(feature VARCHAR, accounttype VARCHAR, enabled BOOLEAN);"
+                + "(feature VARCHAR, accounttype INTEGER, enabled BOOLEAN);"
                 + "CREATE INDEX IF NOT EXISTS idx_account_params on account_params(param,accounttype);"
                 + "CREATE INDEX IF NOT EXISTS idx_account_features on account_features(feature,accounttype);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {

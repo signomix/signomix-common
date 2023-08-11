@@ -55,7 +55,8 @@ public class DashboardDao implements DashboardIface {
                 + "id VARCHAR PRIMARY KEY,"
                 + "title VARCHAR,"
                 + "widgets VARCHAR,"
-                + "items VARCHAR);";
+                + "items VARCHAR,"
+                + "organization BIGINT);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -67,7 +68,7 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void addDashboard(Dashboard dashboard) throws IotDatabaseException {
-        String query = "INSERT INTO dashboards (id,name,userid,title,team,widgets,token,shared,administrators,items) VALUES (?,?,?,?,?,?,?,?,?,?)";
+        String query = "INSERT INTO dashboards (id,name,userid,title,team,widgets,token,shared,administrators,items,organization) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getId());
             pstmt.setString(2, dashboard.getName());
@@ -79,6 +80,7 @@ public class DashboardDao implements DashboardIface {
             pstmt.setBoolean(8, dashboard.isShared());
             pstmt.setString(9, dashboard.getAdministrators());
             pstmt.setString(10, dashboard.getItemsAsJson());
+            pstmt.setLong(11, dashboard.getOrganizationId());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -118,6 +120,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
                     dashboard.setItemsFromJson(rs.getString("items"));
+                    dashboard.setOrganizationId(rs.getLong("organization"));
                     return dashboard;
                 }
             }
@@ -131,7 +134,7 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void updateDashboard(Dashboard dashboard) throws IotDatabaseException {
-        String query = "UPDATE dashboards SET name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=? WHERE id=?";
+        String query = "UPDATE dashboards SET name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=?,organization=? WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getName());
             pstmt.setString(2, dashboard.getUserID());
@@ -143,6 +146,7 @@ public class DashboardDao implements DashboardIface {
             pstmt.setString(8, dashboard.getAdministrators());
             pstmt.setString(9, dashboard.getItemsAsJson());
             pstmt.setString(10, dashboard.getId());
+            pstmt.setLong(11, dashboard.getOrganizationId());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -245,6 +249,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setSharedToken(rs.getString("token"));
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboard.setOrganizationId(rs.getLong("organization"));
                     itemsStr = rs.getString("items");
                     if (null == itemsStr || itemsStr.isEmpty()) {
                         itemsStr = "[]";
@@ -288,6 +293,42 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
                     dashboard.setItemsFromJson(rs.getString("items"));
+                    dashboard.setOrganizationId(rs.getLong("organization"));
+                    dashboards.add(dashboard);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return dashboards;
+    }
+
+    @Override
+    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset) throws IotDatabaseException{
+        String query = "SELECT * FROM dashboards WHERE organization= ?ORDER BY name LIMIT ? OFFSET ?";
+        List<Dashboard> dashboards = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setInt(1, limit);
+            pstmt.setInt(2, offset);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    logger.info("getDashboards: " + rs.getString("id"));
+                    Dashboard dashboard = new Dashboard();
+                    dashboard.setId(rs.getString("id"));
+                    dashboard.setName(rs.getString("name"));
+                    dashboard.setUserID(rs.getString("userid"));
+                    dashboard.setTitle(rs.getString("title"));
+                    dashboard.setTeam(rs.getString("team"));
+                    dashboard.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboard.setSharedToken(rs.getString("token"));
+                    dashboard.setShared(rs.getBoolean("shared"));
+                    dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboard.setItemsFromJson(rs.getString("items"));
+                    dashboard.setOrganizationId(rs.getLong("organization"));
                     dashboards.add(dashboard);
                 }
             }
