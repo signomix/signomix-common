@@ -17,5 +17,6 @@ public interface ApplicationDaoIface {
     public void removeApplication(long id) throws IotDatabaseException;
     public Application getApplication(long id) throws IotDatabaseException;
     public Application getApplication(String name) throws IotDatabaseException;
-    public List<Application> getAllApplications() throws IotDatabaseException;
+    public List<Application> getApplications(int limit, int offset) throws IotDatabaseException;
+    public List<Application> getApplications(long organizationId, int limit, int offset) throws IotDatabaseException;
 }

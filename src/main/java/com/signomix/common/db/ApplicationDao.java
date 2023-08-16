@@ -56,6 +56,14 @@ public class ApplicationDao implements ApplicationDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        String indexQuery="CREATE INDEX IF NOT EXISTS idx_applications_name ON applications (name);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(indexQuery);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,0,0,'system','{}');");) {
             pst.executeUpdate();
@@ -140,11 +148,33 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public List<Application> getAllApplications() throws IotDatabaseException {
+    public List<Application> getApplications(int limit, int offset) throws IotDatabaseException {
         ArrayList<Application> result = new ArrayList<>();
         Application app = null;
-        String query = "SELECT id,organization,version,name,configuration FROM applications;";
+        String query = "SELECT id,organization,version,name,configuration FROM applications LIMIT ? OFFSET ?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setInt(1, limit);
+            pst.setInt(2, offset);
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                result.add(
+                        new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
+        }
+        return result;
+    }
+
+    @Override
+    public List<Application> getApplications(long organizationId, int limit, int offset) throws IotDatabaseException {
+        ArrayList<Application> result = new ArrayList<>();
+        Application app = null;
+        String query = "SELECT id,organization,version,name,configuration FROM applications WHERE organization=? LIMIT ? OFFSET ?;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setLong(1, organizationId);
+            pst.setInt(2, limit);
+            pst.setInt(3, offset);
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 result.add(

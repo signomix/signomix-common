@@ -1725,6 +1725,30 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset)
+            throws IotDatabaseException {
+        ArrayList<Device> devices = new ArrayList<>();
+        String query = "SELECT * FROM devices WHERE organization=? LIMIT ? OFFSET ?";
+        Device device;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setLong(1, organizationId);
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                device = buildDevice(rs);
+                if (withStatus) {
+                    device = getDeviceStatusData(device);
+                }
+                devices.add(device);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return devices;
+    }
+
+    @Override
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus)
             throws IotDatabaseException {
         // TODO: withShared, withStatus
@@ -1830,47 +1854,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setWritable(rs.getBoolean("writable"));
         return device;
     }
-    /*
-     * private Device buildDevice(ResultSet rs) throws SQLException {
-     * Device d = new Device();
-     * d.setEUI(rs.getString(1));
-     * d.setName(rs.getString(2));
-     * d.setUserID(rs.getString(3));
-     * d.setType(rs.getString(4));
-     * d.setTeam(rs.getString(5));
-     * d.setChannels(rs.getString(6));
-     * d.setCode(rs.getString(7));
-     * d.setEncoder(rs.getString(8));
-     * d.setKey(rs.getString(9));
-     * d.setDescription(rs.getString(10));
-     * d.setLastSeen(rs.getLong(11));
-     * d.setTransmissionInterval(rs.getLong(12));
-     * d.setLastFrame(rs.getLong(13));
-     * d.setTemplate(rs.getString(14));
-     * d.setPattern(rs.getString(15));
-     * d.setDownlink(rs.getString(16));
-     * d.setCommandScript(rs.getString(17));
-     * d.setApplicationID(rs.getString(18));
-     * d.setGroups(rs.getString(19));
-     * d.setAlertStatus(rs.getInt(20));
-     * d.setApplicationEUI(rs.getString(21));
-     * d.setDeviceID(rs.getString(22));
-     * d.setActive(rs.getBoolean(23));
-     * d.setProject(rs.getString(24));
-     * d.setLatitude(rs.getDouble(25));
-     * d.setLongitude(rs.getDouble(26));
-     * d.setAltitude(rs.getDouble(27));
-     * d.setState(rs.getDouble(28));
-     * d.setRetentionTime(rs.getLong(29));
-     * d.setAdministrators(rs.getString(30));
-     * d.setCheckFrames(rs.getBoolean(31));
-     * d.setConfiguration(rs.getString(32));
-     * d.setOrganizationId(rs.getLong(33));
-     * d.setOrgApplicationId(rs.getLong(34));
-     * d.setApplicationConfig(rs.getString(35));
-     * return d;
-     * }
-     */
 
     @Override
     public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException {
