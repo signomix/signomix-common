@@ -117,6 +117,7 @@ public class UserDao implements UserDaoIface {
         user.credits = rs.getLong(20);
         user.autologin = rs.getBoolean(21);
         user.preferredLanguage = rs.getString(22);
+        user.organization=rs.getLong(23);
         return user;
     }
 
@@ -137,7 +138,7 @@ public class UserDao implements UserDaoIface {
     public User getUser(String uid) throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
         +"infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-        +"user_number,services,phoneprefix,credits,autologin,language from users "
+        +"user_number,services,phoneprefix,credits,autologin,language,organization from users "
         +"WHERE uid=?";
             try (Connection conn = dataSource.getConnection();PreparedStatement pstmt = conn.prepareStatement(query);) {
                 pstmt.setString(1, uid);
@@ -194,6 +195,7 @@ public class UserDao implements UserDaoIface {
                 return org;
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
         return null;
