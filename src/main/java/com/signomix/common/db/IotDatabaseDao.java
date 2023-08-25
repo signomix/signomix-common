@@ -1690,10 +1690,25 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    /**
+     * Get list of devices accessible for user.
+     * This method should not be used for users with organization different than default.
+     * 
+     * @param userID - user ID
+     * @param deviceEUI - device EUI
+     * @param channel - channel name
+     * @param scope - scope
+     * @param newValue - new value
+     * @return list of device data
+     */
     @Override
     public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset)
             throws IotDatabaseException {
         ArrayList<Device> devices = new ArrayList<>();
+
+        if(user.organization!=defaultOrganizationId){
+            return devices;
+        }
         // TODO: withShared, withStatus
         DeviceSelector selector = new DeviceSelector(user, false, withStatus, false, limit, offset);
         String query = selector.query;
@@ -1732,6 +1747,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         Device device;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, organizationId);
+            pst.setInt(2, limit);
+            pst.setInt(3, offset);
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 device = buildDevice(rs);
@@ -1782,44 +1799,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         return device;
     }
 
-    /*
-     * private Device builDevice(ResultSet rs) throws SQLException {
-     * Device device = new Device();
-     * device.setEUI(rs.getString(1));
-     * device.setName(rs.getString(2));
-     * device.setUserID(rs.getString(3));
-     * device.setType(rs.getString(4));
-     * device.setTeam(rs.getString(5));
-     * device.setChannels(rs.getString(6));
-     * device.setCode(rs.getString(7));
-     * device.setEncoder(rs.getString(8));
-     * device.setKey(rs.getString(9));
-     * device.setDescription(rs.getString(10));
-     * device.setTransmissionInterval(rs.getInt(11));
-     * device.setTemplate(rs.getString(12));
-     * device.setPattern(rs.getString(13));
-     * device.setCommandScript(rs.getString(14));
-     * device.setApplicationID(rs.getString(15));
-     * device.setGroups(rs.getString(16));
-     * device.setApplicationEUI(rs.getString(17));
-     * device.setActive(rs.getBoolean(18));
-     * device.setProject(rs.getString(19));
-     * device.setLatitude(rs.getDouble(20));
-     * device.setLongitude(rs.getDouble(21));
-     * device.setAltitude(rs.getDouble(22));
-     * device.setRetentionTime(rs.getInt(23));
-     * device.setAdministrators(rs.getString(24));
-     * device.setCheckFrames(rs.getBoolean(25));
-     * device.setConfiguration(rs.getString(26));
-     * device.setOrganizationId(rs.getLong(27));
-     * device.setOrgApplicationId(rs.getLong(28));
-     * device.setApplicationConfig(rs.getString(29));
-     * device.setWritable(rs.getBoolean(30));
-     * 
-     * return device;
-     * }
-     */
-
     private Device buildDevice(ResultSet rs) throws SQLException {
         Device device = new Device();
         device.setEUI(rs.getString("eui"));
@@ -1851,7 +1830,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setConfiguration(rs.getString("configuration"));
         device.setOrganizationId(rs.getLong("organization"));
         device.setOrgApplicationId(rs.getLong("organizationapp"));
+        try{
         device.setWritable(rs.getBoolean("writable"));
+        }catch(Exception e){
+            device.setWritable(true); //writable won't be used in new access logic
+        }
         return device;
     }
 
@@ -1945,6 +1928,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void createDevice(User user, Device device) throws IotDatabaseException {
+        LOG.info("createDevice: " + device.getEUI() + " for user: " + user.uid);
         String query = "INSERT INTO devices (eui, name, userid, type, team, channels, code, "
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "

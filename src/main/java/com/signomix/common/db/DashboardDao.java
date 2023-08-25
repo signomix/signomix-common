@@ -309,11 +309,13 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset) throws IotDatabaseException{
-        String query = "SELECT * FROM dashboards WHERE organization= ?ORDER BY name LIMIT ? OFFSET ?";
+        String query = "SELECT * FROM dashboards WHERE organization= ? ORDER BY name LIMIT ? OFFSET ?";
+        logger.info("getOrganizationDashboards: " + organizationId);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setInt(1, limit);
-            pstmt.setInt(2, offset);
+            pstmt.setLong(1, organizationId);
+            pstmt.setInt(2, limit);
+            pstmt.setInt(3, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     logger.info("getDashboards: " + rs.getString("id"));
@@ -323,12 +325,12 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setUserID(rs.getString("userid"));
                     dashboard.setTitle(rs.getString("title"));
                     dashboard.setTeam(rs.getString("team"));
-                    dashboard.setWidgetsFromJson(rs.getString("widgets"));
                     dashboard.setSharedToken(rs.getString("token"));
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
-                    dashboard.setItemsFromJson(rs.getString("items"));
                     dashboard.setOrganizationId(rs.getLong("organization"));
+                    dashboard.setItemsFromJson(rs.getString("items"));
+                    dashboard.setWidgetsFromJson(rs.getString("widgets"));
                     dashboards.add(dashboard);
                 }
             }

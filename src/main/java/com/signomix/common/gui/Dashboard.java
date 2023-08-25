@@ -260,24 +260,20 @@ public class Dashboard {
     }
 
     public void setWidgetsFromJson(String jsonString) {
-        if (jsonString.indexOf("@type") > 0) {
-            widgets = (ArrayList) JsonReader.jsonToJava(jsonString);
-        } else {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                widgets = objectMapper.readValue(jsonString, ArrayList.class);
-            } catch (JsonProcessingException ex) {
-                //
+        try {
+            if (jsonString.indexOf("@type") > 0) {
+                widgets = (ArrayList) JsonReader.jsonToJava(jsonString);
+            } else {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    widgets = objectMapper.readValue(jsonString, ArrayList.class);
+                } catch (JsonProcessingException ex) {
+                    //
+                }
             }
+        } catch (Exception e) {
+            //e.printStackTrace();
         }
-        /*
-         * ObjectMapper objectMapper = new ObjectMapper();
-         * try {
-         * widgets = objectMapper.readValue(jsonString, ArrayList.class);
-         * } catch (JsonProcessingException ex) {
-         * //
-         * }
-         */
     }
 
     public String getItemsAsJson() {
@@ -293,16 +289,19 @@ public class Dashboard {
     }
 
     public void setItemsFromJson(String jsonString) {
-        if (jsonString.indexOf("@type") > 0) {
-            items = (ArrayList) JsonReader.jsonToJava(jsonString);
-        } else {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                items = objectMapper.readValue(jsonString, ArrayList.class);
-            } catch (JsonProcessingException ex) {
-                ex.printStackTrace();
-                items = null;
+        try {
+            if (jsonString.indexOf("@type") > 0) {
+                items = (ArrayList) JsonReader.jsonToJava(jsonString);
+            } else {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    items = objectMapper.readValue(jsonString, ArrayList.class);
+                } catch (JsonProcessingException ex) {
+                    //ex.printStackTrace();
+                }
             }
+        } catch (Exception e) {
+            //e.printStackTrace();
         }
     }
 

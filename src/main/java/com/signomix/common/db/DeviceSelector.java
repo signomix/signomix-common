@@ -68,13 +68,13 @@ public class DeviceSelector {
                 // system admin
                 this.userSql = "";
                 this.writable = "true as writable";
-            } else if (user.organization != defaultOrganizationId && user.type == User.ADMIN) {
-                this.userSql = "";
-                this.writable = "true as writable";
-            } else if (user.organization != defaultOrganizationId && user.type != User.ADMIN) {
-                // organization admin
-                this.userSql = "";
-                this.writable = "false as writable";
+            //} else if (user.organization != defaultOrganizationId && user.type == User.ADMIN) {
+            //    this.userSql = "";
+            //    this.writable = "true as writable";
+            //} else if (user.organization != defaultOrganizationId && user.type != User.ADMIN) {
+            //    // organization admin
+            //    this.userSql = "";
+            //    this.writable = "false as writable";
             } else {
                 // default organization
                 this.userSql = "AND (d.userid=? OR d.team like ? OR d.administrators like ?) ";
