@@ -10,6 +10,10 @@ public interface UserDaoIface {
     public void setDatasource(AgroalDataSource ds);
     public void createStructure() throws IotDatabaseException;
     public User getUser(String uid) throws IotDatabaseException ;
+    public User getUser(long id) throws IotDatabaseException ;
+    public User getUser(String login, String password) throws IotDatabaseException ;
+    public List<User> getUsersByRole(String role) throws IotDatabaseException ;
+
     public void removeNotConfirmed(long since);
     public List<User> getAll();
     public void backupDb() throws IotDatabaseException;

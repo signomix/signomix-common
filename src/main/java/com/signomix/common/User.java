@@ -19,6 +19,12 @@ public class User {
     public static final int SUBSCRIBER = 100;
     public static final int ANY = 1000;
 
+    public static final int IS_REGISTERING = 0;
+    public static final int IS_ACTIVE = 1;
+    public static final int IS_UNREGISTERING = 2;
+    public static final int IS_LOCKED = 3;
+    public static final int IS_CREATED = 10;
+
     public Integer type;
     public String uid;
     public String email;
@@ -68,6 +74,10 @@ public class User {
             channel = "";
         }
         return channel.split(":");
+    }
+
+    public boolean checkPassword(String passToCheck) {
+        return password != null && password.equals(HashMaker.md5Java(passToCheck));
     }
 
 }
