@@ -811,7 +811,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 device.setLastSeen(rs.getTimestamp("ts").getTime());
                 device.setState(rs.getDouble("status"));
                 device.setAlertStatus(rs.getInt("alert"));
-                device.setTransmissionInterval(rs.getLong("tinterval"));
+                //device.setTransmissionInterval(rs.getLong("tinterval"));
             }
             return device;
         } catch (SQLException e) {
