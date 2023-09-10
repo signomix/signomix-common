@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.signomix.common.gui.Dashboard;
 import com.signomix.common.gui.DashboardTemplate;
+import com.signomix.common.iot.Device;
 
 import io.agroal.api.AgroalDataSource;
 
@@ -29,4 +30,10 @@ public interface DashboardIface {
      * @throws IotDatabaseException
      */
     public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset) throws IotDatabaseException;
+
+    //favourites
+    public void addFavouriteDashboard(String userID, String dashboardID) throws IotDatabaseException;
+    public void removeFavouriteDashboard(String userID, String dashboardID) throws IotDatabaseException;
+    public List<Dashboard> getFavouriteDashboards(String userID) throws IotDatabaseException;
+
 }

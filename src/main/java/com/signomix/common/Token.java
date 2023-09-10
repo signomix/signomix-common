@@ -24,11 +24,10 @@ import java.util.Base64;
 public class Token {
 
     private static final String PERMANENT_TOKEN_PREFIX = "~~";
-    private static long DEFAULT_SESSION_LIFETIME = 180*1000; //3 minutes
 
     private String uid;
     private long timestamp;
-    private long eofLife;
+    private long lifetime; // in minutes
     private String token;
     private String issuer;
     private String payload;
@@ -42,7 +41,7 @@ public class Token {
      */
     public Token(String userID, long lifetime, boolean permanent) {
         timestamp = System.currentTimeMillis();
-        setLifetime(lifetime, permanent);
+        setLifetime(lifetime);
         uid = userID;
         token = Base64.getUrlEncoder().encodeToString((uid + ":" + timestamp).getBytes());
         while(token.endsWith("=")){
@@ -53,8 +52,12 @@ public class Token {
         }
     }
 
-    public boolean isValid() {
-        return (eofLife < 0 || eofLife - System.currentTimeMillis() > 0);
+    public void setLifetime(long lifetime) {
+        this.lifetime = lifetime;
+    }
+
+    public long getLifetime() {
+        return lifetime;
     }
 
     /**
@@ -83,13 +86,6 @@ public class Token {
      */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
-    }
-
-    /**
-     * @return the eofLife
-     */
-    public long getEofLife() {
-        return eofLife;
     }
 
     /**
@@ -127,40 +123,13 @@ public class Token {
         this.payload = payload;
     }
 
-    /**
-     * Sets token lifetime
-     * 
-     * @param lifetime in seconds
-     * @param permanent true if token is permanent
-     */
-    public void setLifetime(long lifetime, boolean permanent) {
-        if (lifetime < 0 && permanent) {
-            eofLife = timestamp + 315360000000L; //~10 years
-            //eofLife = -1;
-        } else if (lifetime < 0) { // default session lifetime is 3 min
-            eofLife = timestamp + DEFAULT_SESSION_LIFETIME;
-        } else {
-            eofLife = timestamp + lifetime*1000;
-        }
-    }
-
-    public void setEndOfLife(long eofl) {
-        eofLife = eofl;
-    }
-
     public void setToken(String token) {
         this.token = token;
-    }
-
-    public void refresh() {
-        long lt = 600; //10 min
-        setTimestamp(System.currentTimeMillis());
-        setLifetime(lt,false);
     }
     
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append(getToken()).append(":").append(getUid()).append(":").append(getIssuer()).append(":").append(isValid());
+        sb.append(getToken()).append(":").append(getUid()).append(":").append(getIssuer());
         return sb.toString();
     }
 }

@@ -29,6 +29,7 @@ public class Dashboard {
     private String administrators;
     private int version = 0;
     private long organizationId = 0;
+    private boolean favourite = false;
 
     public Dashboard() {
         id = null;
@@ -244,6 +245,20 @@ public class Dashboard {
      */
     public void setOrganizationId(long organizationId) {
         this.organizationId = organizationId;
+    }
+
+    /**
+     * @return the favourite
+     */
+    public boolean isFavourite() {
+        return favourite;
+    }
+
+    /**
+     * @param favourite the favourite to set
+     */
+    public void setFavourite(boolean favourite) {
+        this.favourite = favourite;
     }
 
     public String getWidgetsAsJson() {

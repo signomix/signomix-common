@@ -61,17 +61,18 @@ public class UserDao implements UserDaoIface {
         query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
-            if (!updated) {
+            /* if (!updated) {
                 throw new IotDatabaseException(IotDatabaseException.CONFLICT, "Database structure not updated");
-            }
+            } */
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-        query="insert into organizations (id,name) values (0,'','','default');";
+        query="insert into organizations (id,code,name,description) values (0,'','default','default organization - for accounts without organization feature');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e2.getMessage(), e2);
+            LOG.warn("Error inserting default organization", e2);
+            //throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e2.getMessage(), e2);
         }
     }
 

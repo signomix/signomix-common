@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
+import com.signomix.common.gui.Dashboard;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.virtual.VirtualData;
@@ -77,4 +78,11 @@ public interface IotDatabaseIface {
     //system features
     public boolean isFeatureEnabled(String name, long accountType) throws IotDatabaseException;
     public void setFeature(String name, long accountType, boolean enabled) throws IotDatabaseException;
+
+    //favourites
+    public void addFavouriteDevice(String userID, String eui) throws IotDatabaseException;
+    public void removeFavouriteDevices(String userID, String eui) throws IotDatabaseException;
+    public List<Device> getFavouriteDevices(String userID) throws IotDatabaseException;
+
 }
+

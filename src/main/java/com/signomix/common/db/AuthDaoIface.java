@@ -1,15 +1,44 @@
 package com.signomix.common.db;
 
+import com.signomix.common.Token;
 import com.signomix.common.User;
 
 import io.agroal.api.AgroalDataSource;
 
 public interface AuthDaoIface {
     public void setDatasource(AgroalDataSource ds);
+
+    public AgroalDataSource getDataSource();
+
     public void createStructure() throws IotDatabaseException;
+
+    /**
+     * Returns user id for given token
+     * 
+     * @param token
+     * @return user id
+     */
     public String getUser(String token);
-    public String createSession(User user);
+
+    /**
+     * Creates new session token
+     * 
+     * @param user     user
+     * @param lifetime token lifetime in minutes
+     * @return token
+     */
+    public Token createSession(User user, long lifetime);
+
+    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent);
+
+    /**
+     * Removes session token
+     * 
+     * @param token
+     */
     public void removeSession(String token);
+
     public void clearExpiredTokens();
+
     public void backupDb() throws IotDatabaseException;
 }

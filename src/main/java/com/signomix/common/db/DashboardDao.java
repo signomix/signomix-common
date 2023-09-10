@@ -50,7 +50,8 @@ public class DashboardDao implements DashboardIface {
                 + "token VARCHAR,"
                 + "shared BOOLEAN,"
                 + "administrators VARCHAR,"
-                + "items VARCHAR);"
+                + "items VARCHAR,"
+                + "organization BIGINT);"
                 + "CREATE TABLE IF NOT EXISTS dashboardtemplates ("
                 + "id VARCHAR PRIMARY KEY,"
                 + "title VARCHAR,"
@@ -64,6 +65,8 @@ public class DashboardDao implements DashboardIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+
+        // "favourites" table is crrated in IotDatabaseDao class
     }
 
     @Override
@@ -209,7 +212,10 @@ public class DashboardDao implements DashboardIface {
     @Override
     public List<Dashboard> getUserDashboards(String userId, boolean withShared, boolean adminRole, Integer limit,
             Integer offset) throws IotDatabaseException {
-        String query = "SELECT * FROM dashboards ";
+        String query = "SELECT "
+        + "d.id,d.name,d.userid,d.title,d.team,d.widgets,d.token,d.shared,d.administrators,d.items,d.organization,"
+        + "(SELECT COUNT(*) FROM favourites as f where f.userid=? and f.id=d.id and f.is_device=false) AS favourite"
+        +" FROM dashboards AS d ";
         if (adminRole) {
             // do nothing
         } else if (withShared) {
@@ -221,20 +227,21 @@ public class DashboardDao implements DashboardIface {
         String itemsStr;
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userId);
             if (adminRole) {
-                pstmt.setInt(1, limit);
-                pstmt.setInt(2, offset);
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
             } else {
                 if(withShared){
-                    pstmt.setString(1, userId);
-                    pstmt.setString(2, "%," + userId + ",%");
+                    pstmt.setString(2, userId);
                     pstmt.setString(3, "%," + userId + ",%");
-                    pstmt.setInt(4, limit);
-                    pstmt.setInt(5, offset);
+                    pstmt.setString(4, "%," + userId + ",%");
+                    pstmt.setInt(5, limit);
+                    pstmt.setInt(6, offset);
                 }else{
-                    pstmt.setString(1, userId);
-                    pstmt.setInt(2, limit);
-                    pstmt.setInt(3, offset);
+                    pstmt.setString(2, userId);
+                    pstmt.setInt(3, limit);
+                    pstmt.setInt(4, offset);
                 }
             }
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -250,6 +257,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setShared(rs.getBoolean("shared"));
                     dashboard.setAdministrators(rs.getString("administrators"));
                     dashboard.setOrganizationId(rs.getLong("organization"));
+                    dashboard.setFavourite(rs.getInt("favourite") > 0);
                     itemsStr = rs.getString("items");
                     if (null == itemsStr || itemsStr.isEmpty()) {
                         itemsStr = "[]";
@@ -340,6 +348,62 @@ public class DashboardDao implements DashboardIface {
         } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return dashboards;
+    }
+
+    @Override
+    public void addFavouriteDashboard(String userID, String dashboardID) throws IotDatabaseException {
+        String query = "INSERT INTO favourites (userid,id,is_device) VALUES (?,?,?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setString(2, dashboardID);
+            pstmt.setBoolean(3, false);
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void removeFavouriteDashboard(String userID, String dashboardID) throws IotDatabaseException {
+        String query = "DELETE FROM favourites WHERE userid=? AND id=? AND is_device=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setString(2, dashboardID);
+            pstmt.setBoolean(3, false);
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Dashboard> getFavouriteDashboards(String userID) throws IotDatabaseException {
+        String query = "SELECT * FROM dashboards WHERE id IN (SELECT id FROM favourites WHERE userid=? AND is_device=?)";
+        List<Dashboard> dashboards = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setBoolean(2, false);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    Dashboard dashboard = new Dashboard();
+                    dashboard.setId(rs.getString("id"));
+                    dashboard.setName(rs.getString("name"));
+                    dashboard.setUserID(rs.getString("userid"));
+                    dashboard.setTitle(rs.getString("title"));
+                    dashboard.setTeam(rs.getString("team"));
+                    dashboard.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboard.setSharedToken(rs.getString("token"));
+                    dashboard.setShared(rs.getBoolean("shared"));
+                    dashboard.setAdministrators(rs.getString("administrators"));
+                    dashboard.setItemsFromJson(rs.getString("items"));
+                    dashboard.setOrganizationId(rs.getLong("organization"));
+                    dashboards.add(dashboard);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
         return dashboards;
     }
