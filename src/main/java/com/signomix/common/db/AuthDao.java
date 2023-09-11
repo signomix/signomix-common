@@ -50,6 +50,7 @@ public class AuthDao implements AuthDaoIface {
     @CacheResult(cacheName = "token-cache")
     public String getUser(String token) {
         try {
+            String userUid=null;
             LOG.info("getUser: " + token);
             if (null == token) {
                 return null;
@@ -73,18 +74,16 @@ public class AuthDao implements AuthDaoIface {
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUser: token found: " + token);
-                    return rs.getString("uid");
+                    userUid=rs.getString("uid");
                 } else {
                     LOG.warn("getUser: token not found: " + token);
-                    return null;
                 }
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
-                return null;
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
-                return null;
             }
+            return userUid;
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
@@ -104,14 +103,14 @@ public class AuthDao implements AuthDaoIface {
             pstmt.setLong(3, lifetime);
             int count = pstmt.executeUpdate();
             LOG.info("createSession: inserted " + count + " rows");
-            return t;
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
-            return null;
+            t=null;
         } catch (Exception ex) {
             LOG.error(ex.getMessage());
-            return null;
+            t=null;
         }
+        return t;
     }
 
     @Override

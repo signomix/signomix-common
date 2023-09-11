@@ -137,7 +137,8 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void updateDashboard(Dashboard dashboard) throws IotDatabaseException {
-        String query = "UPDATE dashboards SET name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=?,organization=? WHERE id=?";
+        String query = "UPDATE dashboards SET "
+        + "name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=?,organization=? WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getName());
             pstmt.setString(2, dashboard.getUserID());
@@ -148,12 +149,14 @@ public class DashboardDao implements DashboardIface {
             pstmt.setBoolean(7, dashboard.isShared());
             pstmt.setString(8, dashboard.getAdministrators());
             pstmt.setString(9, dashboard.getItemsAsJson());
-            pstmt.setString(10, dashboard.getId());
-            pstmt.setLong(11, dashboard.getOrganizationId());
-            pstmt.execute();
+            pstmt.setLong(10, dashboard.getOrganizationId());
+            pstmt.setString(11, dashboard.getId());
+            int count = pstmt.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
