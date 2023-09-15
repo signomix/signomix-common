@@ -397,7 +397,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List getAlerts(String userID, boolean descending) throws IotDatabaseException {
+    public List<Alert> getAlerts(String userID, boolean descending) throws IotDatabaseException {
         String query = "select id,name,category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic from alerts where userid = ? order by id ";
         if (descending) {
             query = query.concat(" desc");
@@ -408,6 +408,44 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pstmt.setLong(2, requestLimit);
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Alert> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildAlert(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Long getAlertsCount(String userID) throws IotDatabaseException {
+        Long result = 0L;
+        String query = "select count(*) from alerts where userid = ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                result = rs.getLong(1);
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Alert> getAlerts(String userID, int limit, int offset, boolean descending) throws IotDatabaseException {
+        ArrayList<Alert> list = new ArrayList<>();
+        String query = "select id,name,category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic from alerts where userid = ? order by id ";
+        if (descending) {
+            query = query.concat(" desc");
+        }
+        query = query.concat(" limit ? offset ?");
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setLong(2, limit);
+            pstmt.setLong(3, offset);
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 list.add(buildAlert(rs));
             }

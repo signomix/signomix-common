@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
-import com.signomix.common.gui.Dashboard;
+import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.virtual.VirtualData;
@@ -54,7 +54,9 @@ public interface IotDatabaseIface {
     public int getChannelIndex(String deviceEUI, String channel) throws IotDatabaseException;
     //notifications
     public void addAlert(IotEvent alert) throws IotDatabaseException;
-    public List getAlerts(String userID, boolean descending) throws IotDatabaseException;
+    public List<Alert> getAlerts(String userID, boolean descending) throws IotDatabaseException;
+    public Long getAlertsCount(String userID) throws IotDatabaseException;
+    public List<Alert> getAlerts(String userID, int limit, int offset, boolean descending) throws IotDatabaseException;
     public void removeAlert(long alertID) throws IotDatabaseException;
     public void removeAlerts(String userID) throws IotDatabaseException;
     public void removeAlerts(String userID, long checkpoint) throws IotDatabaseException;

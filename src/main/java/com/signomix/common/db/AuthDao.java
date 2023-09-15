@@ -48,7 +48,9 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     @CacheResult(cacheName = "token-cache")
-    public String getUser(String token) {
+    public String getUserId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
+        // TODO: update eoflife
+        // TODO: RETURNING can be used for PostgreSQL
         try {
             String userUid=null;
             LOG.info("getUser: " + token);
@@ -60,28 +62,48 @@ public class AuthDao implements AuthDaoIface {
             String queryPermanent = "SELECT uid FROM ptokens WHERE token=? AND"
                     + " eoflife>=CURRENT_TIMESTAMP";
 
-            String query;
+            String updateSession = "UPDATE tokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String updatePermanent = "UPDATE ptokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String query, updateQuery;
+            long lifetime = 0;
             LOG.debug("token:" + token);
             LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
             if (token.startsWith(permanentTokenPrefix)) {
                 query = queryPermanent;
+                updateQuery = updatePermanent;
+                lifetime = permanentTokenLifetime;
             } else {
                 query = querySession;
+                updateQuery = updateSession;
+                lifetime = sessionTokenLifetime;
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
                 pstmt.setString(1, token);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    LOG.info("getUser: token found: " + token);
+                    LOG.info("getUserId: token found: " + token);
                     userUid=rs.getString("uid");
                 } else {
-                    LOG.warn("getUser: token not found: " + token);
+                    LOG.warn("getUserId: token not found: " + token);
                 }
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
+            }
+            if (userUid!=null) {
+                try (Connection conn = dataSource.getConnection();
+                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                    pstmt.setLong(1, lifetime);
+                    pstmt.setString(2, token);
+                    int count = pstmt.executeUpdate();
+                    LOG.info("getUserId: updated " + count + " rows");
+                } catch (SQLException ex) {
+                    LOG.warn(ex.getMessage());
+                } catch (Exception ex) {
+                    LOG.error(ex.getMessage());
+                }
             }
             return userUid;
         } catch (Exception e) {
@@ -91,7 +113,7 @@ public class AuthDao implements AuthDaoIface {
         }
     }
 
-    @Override
+/*     @Override
     public Token createSession(User user, long lifetime) {
         String token = java.util.UUID.randomUUID().toString();
         Token t = new Token(user.uid, lifetime, false);
@@ -111,7 +133,7 @@ public class AuthDao implements AuthDaoIface {
             t=null;
         }
         return t;
-    }
+    } */
 
     @Override
     public void removeSession(String token) {

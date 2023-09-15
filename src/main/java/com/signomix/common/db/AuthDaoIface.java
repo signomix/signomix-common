@@ -18,7 +18,7 @@ public interface AuthDaoIface {
      * @param token
      * @return user id
      */
-    public String getUser(String token);
+    public String getUserId(String token, long sessionTokenLifetime, long permanentTokenLifetime);
 
     /**
      * Creates new session token
@@ -27,7 +27,7 @@ public interface AuthDaoIface {
      * @param lifetime token lifetime in minutes
      * @return token
      */
-    public Token createSession(User user, long lifetime);
+    //public Token createSession(User user, long lifetime);
 
     public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent);
 
