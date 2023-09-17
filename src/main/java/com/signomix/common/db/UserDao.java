@@ -61,18 +61,22 @@ public class UserDao implements UserDaoIface {
         query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
-            /* if (!updated) {
-                throw new IotDatabaseException(IotDatabaseException.CONFLICT, "Database structure not updated");
-            } */
+            /*
+             * if (!updated) {
+             * throw new IotDatabaseException(IotDatabaseException.CONFLICT,
+             * "Database structure not updated");
+             * }
+             */
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-        query="insert into organizations (id,code,name,description) values (0,'','default','default organization - for accounts without organization feature');";
+        query = "insert into organizations (id,code,name,description) values (0,'','default','default organization - for accounts without organization feature');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
             LOG.warn("Error inserting default organization", e2);
-            //throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e2.getMessage(), e2);
+            // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+            // e2.getMessage(), e2);
         }
     }
 
@@ -118,7 +122,7 @@ public class UserDao implements UserDaoIface {
         user.credits = rs.getLong(20);
         user.autologin = rs.getBoolean(21);
         user.preferredLanguage = rs.getString(22);
-        user.organization=rs.getLong(23);
+        user.organization = rs.getLong(23);
         return user;
     }
 
@@ -138,75 +142,111 @@ public class UserDao implements UserDaoIface {
     @Override
     public User getUser(String uid) throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-        +"infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-        +"user_number,services,phoneprefix,credits,autologin,language,organization from users "
-        +"WHERE uid=?";
-            try (Connection conn = dataSource.getConnection();PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, uid);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    return buildUser(rs);
-                }
-            } catch (SQLException e) {
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+                + "WHERE uid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, uid);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return buildUser(rs);
             }
-            return null;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return null;
     }
 
     @Override
     public User getUser(long id) throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-        +"infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-        +"user_number,services,phoneprefix,credits,autologin,language,organization from users "
-        +"WHERE user_number=?";
-            try (Connection conn = dataSource.getConnection();PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setLong(1, id);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    return buildUser(rs);
-                }
-            } catch (SQLException e) {
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+                + "WHERE user_number=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return buildUser(rs);
             }
-            return null;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return null;
     }
 
-    @Override 
-    public User getUser(String login, String password) throws IotDatabaseException{
+    @Override
+    public User getUser(String login, String password) throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-        +"infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-        +"user_number,services,phoneprefix,credits,autologin,language,organization from users "
-        +"WHERE uid=? AND password=?";
-            try (Connection conn = dataSource.getConnection();PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, login);
-                pstmt.setString(2, password);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    return buildUser(rs);
-                }
-            } catch (SQLException e) {
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+                + "WHERE uid=? AND password=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, login);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return buildUser(rs);
             }
-            return null;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return null;
     }
 
     @Override
     public List<User> getUsersByRole(String role) throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-        +"infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-        +"user_number,services,phoneprefix,credits,autologin,language,organization from users "
-        +"WHERE role LIKE ?";
-        ArrayList<User> users=new ArrayList<>();
-            try (Connection conn = dataSource.getConnection();PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, "%,"+role+",%");
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    users.add(buildUser(rs));
-                }
-            } catch (SQLException e) {
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+                + "WHERE role LIKE ?";
+        ArrayList<User> users = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, "%," + role + ",%");
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                users.add(buildUser(rs));
             }
-            return null;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public void updateUser(User user) throws IotDatabaseException {
+        String query = "UPDATE users SET "
+                + "type=?,email=?,name=?,surname=?,role=?,secret=?,password=?,generalchannel=?,"
+                + "infochannel=?,warningchannel=?,alertchannel=?,confirmed=?,unregisterreq=?,authstatus=?,created=?,"
+                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=? "
+                + "WHERE uid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setInt(1, user.type);
+            pstmt.setString(2, user.email);
+            pstmt.setString(3, user.name);
+            pstmt.setString(4, user.surname);
+            pstmt.setString(5, user.role);
+            pstmt.setString(6, user.confirmString);
+            pstmt.setString(7, user.password);
+            pstmt.setString(8, user.generalNotificationChannel);
+            pstmt.setString(9, user.infoNotificationChannel);
+            pstmt.setString(10, user.warningNotificationChannel);
+            pstmt.setString(11, user.alertNotificationChannel);
+            pstmt.setBoolean(12, user.confirmed);
+            pstmt.setBoolean(13, user.unregisterRequested);
+            pstmt.setInt(14, user.authStatus);
+            pstmt.setTimestamp(15, new java.sql.Timestamp(user.createdAt));
+            pstmt.setInt(16, user.services);
+            pstmt.setString(17, user.phonePrefix);
+            pstmt.setLong(18, user.credits);
+            pstmt.setBoolean(19, user.autologin);
+            pstmt.setString(20, user.preferredLanguage);
+            pstmt.setLong(21, user.organization);
+            pstmt.setString(22, user.uid);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
@@ -223,11 +263,10 @@ public class UserDao implements UserDaoIface {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 Organization org = new Organization(
-                rs.getLong("id"),
-                rs.getString("code"),
-                rs.getString("name"),
-                rs.getString("description")
-                );
+                        rs.getLong("id"),
+                        rs.getString("code"),
+                        rs.getString("name"),
+                        rs.getString("description"));
                 orgs.add(org);
             }
         } catch (SQLException e) {
@@ -244,11 +283,10 @@ public class UserDao implements UserDaoIface {
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 Organization org = new Organization(
-                rs.getLong("id"),
-                rs.getString("code"),
-                rs.getString("name"),
-                rs.getString("description")
-                );
+                        rs.getLong("id"),
+                        rs.getString("code"),
+                        rs.getString("name"),
+                        rs.getString("description"));
                 return org;
             }
         } catch (SQLException e) {
@@ -266,11 +304,10 @@ public class UserDao implements UserDaoIface {
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 Organization org = new Organization(
-                rs.getLong("id"),
-                rs.getString("code"),
-                rs.getString("name"),
-                rs.getString("description")
-                );
+                        rs.getLong("id"),
+                        rs.getString("code"),
+                        rs.getString("name"),
+                        rs.getString("description"));
                 return org;
             }
         } catch (SQLException e) {
@@ -315,6 +352,55 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+    }
+
+    @Override
+    public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
+            throws IotDatabaseException {
+        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+                + "WHERE organization=?";
+        if (limit != null) {
+            query += " LIMIT " + limit;
+        }
+        if (offset != null) {
+            query += " OFFSET " + offset;
+        }
+        ArrayList<User> users = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, organizationId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                users.add(buildUser(rs));
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return users;
+    }
+
+    @Override
+    public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException {
+        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "user_number,services,phoneprefix,credits,autologin,language,organization from users";
+        if (limit != null) {
+            query += " LIMIT " + limit;
+        }
+        if (offset != null) {
+            query += " OFFSET " + offset;
+        }
+        ArrayList<User> users = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                users.add(buildUser(rs));
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return users;
     }
 
 }

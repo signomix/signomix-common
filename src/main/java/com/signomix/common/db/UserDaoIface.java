@@ -13,6 +13,9 @@ public interface UserDaoIface {
     public User getUser(long id) throws IotDatabaseException ;
     public User getUser(String login, String password) throws IotDatabaseException ;
     public List<User> getUsersByRole(String role) throws IotDatabaseException ;
+    public void updateUser(User user) throws IotDatabaseException ;
+    public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset) throws IotDatabaseException ;
+    public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException ;
 
     public void removeNotConfirmed(long since);
     public List<User> getAll();
