@@ -1,4 +1,4 @@
-package com.signomix.common.db;
+package com.signomix.common.tsdb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,8 +9,11 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import com.signomix.common.HashMaker;
 import com.signomix.common.Organization;
 import com.signomix.common.User;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.UserDaoIface;
 
 import io.agroal.api.AgroalDataSource;
 
@@ -27,10 +30,10 @@ public class UserDao implements UserDaoIface {
     public void createStructure() throws IotDatabaseException {
         String query;
         StringBuilder sb = new StringBuilder();
-        sb.append("create sequence if not exists user_number_seq;");
-        sb.append("create sequence if not exists org_number_seq;");
+        // sb.append("create sequence if not exists user_number_seq;");
+        // sb.append("create sequence if not exists org_number_seq;");
         sb.append("create table if not exists organizations (")
-                .append("id bigint default org_number_seq.nextval primary key,")
+                .append("id SERIAL PRIMARY KEY,")
                 .append("code varchar unique,")
                 .append("name varchar,")
                 .append("description varchar);");
@@ -54,11 +57,12 @@ public class UserDao implements UserDaoIface {
                 .append("services int,")
                 .append("phoneprefix varchar,")
                 .append("credits bigint,")
-                .append("user_number bigint default user_number_seq.nextval,")
+                .append("user_number SERIAL,")
                 .append("autologin boolean,")
                 .append("language varchar,")
-                .append("organization bigint default 0 references organizations);");
+                .append("organization bigint default 1 references organizations(id));");
         query = sb.toString();
+        LOG.info("Creating database structure: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
             /*
@@ -70,7 +74,7 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-        query = "insert into organizations (id,code,name,description) values (0,'','default','default organization - for accounts without organization feature');";
+        query = "insert into organizations (id,code,name,description) values (1,'','default','default organization - for accounts without organization feature');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
@@ -78,12 +82,74 @@ public class UserDao implements UserDaoIface {
             // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
             // e2.getMessage(), e2);
         }
+
+        User user = new User();
+        user.uid = "admin";
+        user.type = User.OWNER;
+        user.email = "";
+        user.name = "admin";
+        user.surname = "admin";
+        user.role = "";
+        user.confirmString = "";
+        user.password = HashMaker.md5Java("test123");
+        user.generalNotificationChannel = "";
+        user.infoNotificationChannel = "";
+        user.warningNotificationChannel = "";
+        user.alertNotificationChannel = "";
+        user.confirmed = true;
+        user.unregisterRequested = false;
+        user.authStatus = 1;
+        user.createdAt = System.currentTimeMillis();
+        user.number = 0;
+        user.services = 0;
+        user.phonePrefix = "";
+        user.credits = 0;
+        user.autologin = false;
+        user.preferredLanguage = "en";
+        user.organization = 1;
+        try {
+            addUser(user);
+        } catch (IotDatabaseException e) {
+            LOG.warn("Error inserting default admin user", e);
+        }
+        user = new User();
+        user.uid = "tester1";
+        user.type = User.USER;
+        user.email = "";
+        user.name = "tester";
+        user.surname = "tester";
+        user.role = "";
+        user.confirmString = "";
+        user.password = HashMaker.md5Java("signomix");
+        user.generalNotificationChannel = "";
+        user.infoNotificationChannel = "";
+        user.warningNotificationChannel = "";
+        user.alertNotificationChannel = "";
+        user.confirmed = true;
+        user.unregisterRequested = false;
+        user.authStatus = 1;
+        user.createdAt = System.currentTimeMillis();
+        user.number = 0;
+        user.services = 0;
+        user.phonePrefix = "";
+        user.credits = 0;
+        user.autologin = false;
+        user.preferredLanguage = "en";
+        user.organization = 1;
+        try {
+            addUser(user);
+        } catch (IotDatabaseException e) {
+            LOG.warn("Error inserting default admin user", e);
+        }
+
     }
 
     @Override
     public void removeNotConfirmed(long days) {
-        String query = "DELETE FROM users WHERE confirmed=false AND " + days
-                + ">TIMESTAMPDIFF(DAY, CURRENT_TIMESTAMP, created) ";
+        long seconds = days * 24 * 60 * 60;
+        // SELECT uid from users as u where extract(epoch from(current_timestamp-u.created)) > days*24*60*60 and confirmed=false;
+        String query = "DELETE FROM users AS u WHERE extract(epoch from(current_timestamp-u.created)) > " + seconds
+                + " AND confirmed=false";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -128,15 +194,21 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/users.csv', 'SELECT * FROM users');"
-                + "CALL CSVWRITE('backup/organizations.csv', 'SELECT * FROM organizations');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.execute();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
+        // TODO: implement
+        /*
+         * String query = "CALL CSVWRITE('backup/users.csv', 'SELECT * FROM users');"
+         * +
+         * "CALL CSVWRITE('backup/organizations.csv', 'SELECT * FROM organizations');";
+         * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+         * conn.prepareStatement(query);) {
+         * pstmt.execute();
+         * } catch (SQLException e) {
+         * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+         * e.getMessage(), e);
+         * } catch (Exception e) {
+         * throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+         * }
+         */
     }
 
     @Override
@@ -405,14 +477,49 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public void addUser(User user) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addUser'");
+        String query = "INSERT INTO users "
+                + "(uid,type,email,name,surname,role,secret,password,generalchannel,"
+                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
+                + "services,phoneprefix,credits,autologin,language,organization) "
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, user.uid);
+            pstmt.setInt(2, user.type);
+            pstmt.setString(3, user.email);
+            pstmt.setString(4, user.name);
+            pstmt.setString(5, user.surname);
+            pstmt.setString(6, user.role);
+            pstmt.setString(7, user.confirmString);
+            pstmt.setString(8, user.password);
+            pstmt.setString(9, user.generalNotificationChannel);
+            pstmt.setString(10, user.infoNotificationChannel);
+            pstmt.setString(11, user.warningNotificationChannel);
+            pstmt.setString(12, user.alertNotificationChannel);
+            pstmt.setBoolean(13, user.confirmed);
+            pstmt.setBoolean(14, user.unregisterRequested);
+            pstmt.setInt(15, user.authStatus);
+            pstmt.setTimestamp(16, new java.sql.Timestamp(user.createdAt));
+            pstmt.setInt(17, user.services);
+            pstmt.setString(18, user.phonePrefix);
+            pstmt.setLong(19, user.credits);
+            pstmt.setBoolean(20, user.autologin);
+            pstmt.setString(21, user.preferredLanguage);
+            pstmt.setLong(22, user.organization);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
     public void deleteUser(long id) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteUser'");
+        String query = "DELETE FROM users WHERE user_number=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
 }
