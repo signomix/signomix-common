@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlElement.DEFAULT;
+
 import org.jboss.logging.Logger;
 
 import com.signomix.common.HashMaker;
@@ -18,6 +20,9 @@ import com.signomix.common.db.UserDaoIface;
 import io.agroal.api.AgroalDataSource;
 
 public class UserDao implements UserDaoIface {
+
+    public static final long DEFAULT_ORGANIZATION_ID = 1;
+    
     private static final Logger LOG = Logger.getLogger(UserDao.class);
 
     private AgroalDataSource dataSource;
@@ -60,7 +65,7 @@ public class UserDao implements UserDaoIface {
                 .append("user_number SERIAL,")
                 .append("autologin boolean,")
                 .append("language varchar,")
-                .append("organization bigint default 1 references organizations(id));");
+                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+" references organizations(id));");
         query = sb.toString();
         LOG.info("Creating database structure: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -106,7 +111,7 @@ public class UserDao implements UserDaoIface {
         user.credits = 0;
         user.autologin = false;
         user.preferredLanguage = "en";
-        user.organization = 1;
+        user.organization = DEFAULT_ORGANIZATION_ID;
         try {
             addUser(user);
         } catch (IotDatabaseException e) {
@@ -135,7 +140,7 @@ public class UserDao implements UserDaoIface {
         user.credits = 0;
         user.autologin = false;
         user.preferredLanguage = "en";
-        user.organization = 1;
+        user.organization = DEFAULT_ORGANIZATION_ID;
         try {
             addUser(user);
         } catch (IotDatabaseException e) {

@@ -49,6 +49,7 @@ public class User {
     public String preferredLanguage;
     public long organization;
     public String sessionToken;
+    public String organizationCode;
 
     public User() {
     }

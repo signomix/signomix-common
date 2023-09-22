@@ -17,6 +17,8 @@ import io.agroal.api.AgroalDataSource;
 
 public class ApplicationDao implements ApplicationDaoIface {
 
+    public static final long DEFAULT_ORGANIZATION_ID = 0;
+
     @Inject
     Logger logger;
 
@@ -46,7 +48,7 @@ public class ApplicationDao implements ApplicationDaoIface {
         sb.append("CREATE SEQUENCE IF NOT EXISTS id_app_seq;");
         sb.append("create table IF NOT EXISTS applications (")
                 .append("id bigint default id_app_seq.nextval primary key,")
-                .append("organization bigint default 0,")
+                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+",")
                 .append("version bigint default 0,")
                 .append("name varchar UNIQUE, configuration varchar);");
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sb.toString());) {
@@ -65,7 +67,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,0,0,'system','{}');");) {
+                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,"+DEFAULT_ORGANIZATION_ID+",0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);

@@ -35,6 +35,9 @@ import io.quarkus.cache.CacheResult;
 
 @Singleton
 public class IotDatabaseDao implements IotDatabaseIface {
+
+    public static final long DEFAULT_ORGANIZATION_ID = 0;
+
     private static final Logger LOG = Logger.getLogger(IotDatabaseDao.class);
 
     Long defaultOrganizationId = ConfigProvider.getConfig().getValue("signomix.default.organization.id", Long.class);
@@ -1563,7 +1566,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS applications (")
                 .append("id bigint default id_seq.nextval primary key,")
                 // .append("organization bigint default 0 references organizations,")
-                .append("organization bigint default 0,")
+                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+",")
                 .append("version bigint default 0,")
                 .append("name varchar UNIQUE, configuration varchar);");
         try (Connection conn = dataSource.getConnection();
@@ -1575,7 +1578,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pst = conn
-                        .prepareStatement("INSERT INTO applications values (0,0,0,'system','{}');");) {
+                        .prepareStatement("INSERT INTO applications values (0,"+DEFAULT_ORGANIZATION_ID+",0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
 
@@ -1626,7 +1629,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("administrators varchar,")
                 .append("framecheck boolean,")
                 .append("configuration varchar,")
-                .append("organization bigint default 0,")
+                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+",")
                 .append("organizationapp bigint default 0 references applications);");
         // dashboards
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (").append("id varchar primary key,")
@@ -1664,7 +1667,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("userid varchar,").append("team varchar,").append("channels varchar,")
                 .append("description varchar,")
                 .append("administrators varchar,")
-                .append("organization bigint default 0);");
+                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+");");
         // commands
         sb.append("CREATE TABLE IF NOT EXISTS commands (")
                 .append("id bigint,")
