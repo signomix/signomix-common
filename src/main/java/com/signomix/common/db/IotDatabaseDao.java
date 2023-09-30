@@ -19,6 +19,7 @@ import javax.inject.Singleton;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
+import com.arjuna.ats.jta.exceptions.NotImplementedException;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,11 +86,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<List<List>> getValuesOfGroup(String userID, long organizationId, String groupEUI, String channelNames,
-            long secondsBack)
-            throws IotDatabaseException {
-        String[] channels = channelNames.split(",");
-        return getGroupLastValues(userID, organizationId, groupEUI, channels, secondsBack);
+    public List<List<List>> getGroupValues(String userID, long organizationId, String groupEUI, String[] channelNames,
+            String dataQuery) throws IotDatabaseException {
+        throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "not implemented");
     }
 
     public List<String> getGroupChannels(String groupEUI) throws IotDatabaseException {
@@ -110,6 +109,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    @Override
     public List<List<List>> getGroupLastValues(String userID, long organizationID, String groupEUI,
             String[] channelNames, long secondsBack)
             throws IotDatabaseException {

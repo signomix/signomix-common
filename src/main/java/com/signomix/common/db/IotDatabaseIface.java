@@ -21,7 +21,8 @@ public interface IotDatabaseIface {
     public List<List> getValues2(String userID, String deviceEUI, String dataQuery) throws IotDatabaseException;
 
     public List<List> getValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
-    public List<List<List>> getValuesOfGroup(String userID, long organizationId, String groupEUI, String channelNames, long secondsBack) throws IotDatabaseException;
+    public List<List<List>> getGroupValues(String userID, long organizationId, String groupEUI, String[] channelNames, String dataQuery) throws IotDatabaseException;
+    public List<List<List>> getGroupLastValues(String userID, long organizationId, String groupEUI, String[] channelNames, long secondsBack) throws IotDatabaseException;
     public void putData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException;
     public void putVirtualData(Device device, VirtualData data) throws IotDatabaseException;
     

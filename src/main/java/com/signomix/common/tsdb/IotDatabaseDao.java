@@ -45,7 +45,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     private static final Logger LOG = Logger.getLogger(IotDatabaseDao.class);
 
     Long defaultOrganizationId = ConfigProvider.getConfig().getValue("signomix.default.organization.id", Long.class);
-    Long defaultApplicationId = ConfigProvider.getConfig().getValue("signomix.default.application.id", Long.class);
+
     private AgroalDataSource dataSource;
 
     // TODO: get requestLimit from config
@@ -88,7 +88,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-    @Override
+    @Deprecated
     public List<List<List>> getValuesOfGroup(String userID, long organizationId, String groupEUI, String channelNames,
             long secondsBack)
             throws IotDatabaseException {
@@ -114,6 +114,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    @Override
     public List<List<List>> getGroupLastValues(String userID, long organizationID, String groupEUI,
             String[] channelNames, long secondsBack)
             throws IotDatabaseException {
@@ -238,6 +239,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             return null;
         }
+    }
+
+    @Override
+    public List<List<List>> getGroupValues(String userID, long organizationId, String groupEUI, String[] channelNames,
+            String dataQuery) throws IotDatabaseException {
+        throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "not implemented");
     }
 
     @Override
@@ -1565,7 +1572,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         LOG.info("createStructure()");
         String query;
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE SEQUENCE IF NOT EXISTS id_seq;");
         // applications
         sb.append("CREATE TABLE IF NOT EXISTS applications (")
                 .append("id SERIAL primary key,")
@@ -1582,7 +1588,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pst = conn
-                        .prepareStatement("INSERT INTO applications values (1," + defaultOrganizationId
+                        .prepareStatement("INSERT INTO applications values ("+defaultOrganizationId+"," + defaultOrganizationId
                                 + ",0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -1667,10 +1673,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d18 double,").append("d19 double,").append("d20 double,").append("d21 double,")
                 .append("d22 double,").append("d23 double,").append("d24 double,").append("project varchar,")
                 .append("state double,")
-                .append("PRIMARY KEY (eui,tstamp) );");
+                .append("PRIMARY KEY (eui,tstamp) );")
+                .append("SELECT create_hypertable('devicedata', 'tstamp')");
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
-                .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);");
+                .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);")
+                .append("SELECT create_hypertable('virtualdevicedata', 'tstamp')");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,").append("name varchar,")
@@ -1978,7 +1986,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != updatedDevice.getOrgApplicationId()) {
                 pst.setLong(28, updatedDevice.getOrgApplicationId());
             } else {
-                pst.setLong(28, defaultApplicationId);
+                pst.setLong(28, defaultOrganizationId);
             }
             pst.setString(29, updatedDevice.getEUI());
             pst.executeUpdate();
@@ -2046,7 +2054,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != device.getOrgApplicationId()) {
                 pst.setLong(29, device.getOrgApplicationId());
             } else {
-                pst.setLong(29, defaultApplicationId);
+                pst.setLong(29, defaultOrganizationId);
             }
             pst.executeUpdate();
         } catch (SQLException e) {
