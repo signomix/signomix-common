@@ -69,7 +69,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return null;
         }
         String columnName = "d" + (channelIndex);
-        String query = "select eui,userid,day,dtime,tstamp," + columnName
+        String query = "select eui,userid,tstamp," + columnName
                 + " from devicedata where eui=? order by tstamp desc limit 1";
         ChannelData result = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -77,9 +77,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ResultSet rs = pst.executeQuery();
             Double d;
             if (rs.next()) {
-                d = rs.getDouble(6);
+                d = rs.getDouble(4);
                 if (!rs.wasNull()) {
-                    result = new ChannelData(deviceEUI, channel, d, rs.getTimestamp(5).getTime());
+                    result = new ChannelData(deviceEUI, channel, d, rs.getTimestamp(3).getTime());
                 }
             }
             return result;
@@ -126,7 +126,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             HashMap<String, List> devices = new HashMap<>();
             String query;
             query = "SELECT "
-                    + "eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 "
+                    + "eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 "
                     + "FROM devicedata "
                     + "WHERE eui IN "
                     + "(SELECT eui FROM devices WHERE groups like ?) "
@@ -165,10 +165,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
                         devEui = rs.getString(1);
                         channelName = groupChannels.get(i);
                         channelIndex = devices.get(devEui).indexOf(channelName);
-                        d = rs.getDouble(6 + channelIndex);
+                        d = rs.getDouble(4 + channelIndex);
                         if (!rs.wasNull()) {
                             tmpResult.add(new ChannelData(devEui, channelName, d,
-                                    rs.getTimestamp(5).getTime()));
+                                    rs.getTimestamp(3).getTime()));
                         }
                     }
                 }
@@ -743,18 +743,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
-        String query = "insert into devicedata (eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String query = "insert into devicedata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
-        java.sql.Date date = new java.sql.Date(timestamp);
-        java.sql.Time time = new java.sql.Time(timestamp);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getUserID());
-            pst.setDate(3, date);
-            pst.setTime(4, time);
-            pst.setTimestamp(5, new java.sql.Timestamp(timestamp));
+            pst.setTimestamp(3, new java.sql.Timestamp(timestamp));
             for (int i = 1; i <= limit; i++) {
-                pst.setNull(i + 5, java.sql.Types.DOUBLE);
+                pst.setNull(i + 3, java.sql.Types.DOUBLE);
             }
             int index = -1;
             // if (values.size() <= limit) {
@@ -769,15 +765,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     if (index >= 0 && index < limit) { // TODO: there must be control of mthe number of measures while
                         // defining device, not here
                         try {
-                            pst.setDouble(6 + index, values.get(i - 1).getValue());
+                            pst.setDouble(4 + index, values.get(i - 1).getValue());
                         } catch (NullPointerException e) {
-                            pst.setNull(6 + index, Types.DOUBLE);
+                            pst.setNull(4 + index, Types.DOUBLE);
                         }
                     }
                 }
             }
-            pst.setString(30, device.getProject());
-            pst.setDouble(31, device.getState());
+            pst.setString(28, device.getProject());
+            pst.setDouble(29, device.getState());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1543,7 +1539,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException {
-        String query = "select eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from devicedata where eui=? order by tstamp desc limit 1";
+        String query = "select eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from devicedata where eui=? order by tstamp desc limit 1";
         List<String> channels = getDeviceChannels(deviceEUI);
         ArrayList<ChannelData> row = new ArrayList<>();
         ArrayList<List> result = new ArrayList<>();
@@ -1553,10 +1549,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
             double d;
             if (rs.next()) {
                 for (int i = 0; i < channels.size(); i++) {
-                    d = rs.getDouble(6 + i);
+                    d = rs.getDouble(4 + i);
                     if (!rs.wasNull()) {
                         row.add(new ChannelData(deviceEUI, channels.get(i), d,
-                                rs.getTimestamp(5).getTime()));
+                                rs.getTimestamp(3).getTime()));
                     }
                 }
                 result.add(row);
@@ -1588,7 +1584,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pst = conn
-                        .prepareStatement("INSERT INTO applications values ("+defaultOrganizationId+"," + defaultOrganizationId
+                        .prepareStatement("INSERT INTO applications values (" + defaultOrganizationId + ","
+                                + defaultOrganizationId
                                 + ",0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -1629,15 +1626,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("commandscript varchar,")
                 .append("appid varchar,")
                 .append("groups varchar,")
-                .append("alert number,")
+                .append("alert INTEGER,")
                 .append("appeui varchar,")
                 .append("devid varchar,")
                 .append("active boolean,")
                 .append("project varchar,")
-                .append("latitude double,")
-                .append("longitude double,")
-                .append("altitude double,")
-                .append("state double,")
+                .append("latitude double precision,")
+                .append("longitude double precision,")
+                .append("altitude double precision,")
+                .append("state double precision,")
                 .append("retention bigint,")
                 .append("administrators varchar,")
                 .append("framecheck boolean,")
@@ -1664,24 +1661,36 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("eui varchar primary key,")
                 .append("channels varchar);");
         // devicedata
-        sb.append("CREATE TABLE IF NOT EXISTS devicedata (").append("eui varchar not null,").append("userid varchar,")
-                .append("day date,").append("dtime time,").append("tstamp timestamp not null,").append("d1 double,")
-                .append("d2 double,").append("d3 double,").append("d4 double,").append("d5 double,")
-                .append("d6 double,").append("d7 double,").append("d8 double,").append("d9 double,")
-                .append("d10 double,").append("d11 double,").append("d12 double,").append("d13 double,")
-                .append("d14 double,").append("d15 double,").append("d16 double,").append("d17 double,")
-                .append("d18 double,").append("d19 double,").append("d20 double,").append("d21 double,")
-                .append("d22 double,").append("d23 double,").append("d24 double,").append("project varchar,")
-                .append("state double,")
-                .append("PRIMARY KEY (eui,tstamp) );")
-                .append("SELECT create_hypertable('devicedata', 'tstamp')");
+        sb.append("CREATE TABLE IF NOT EXISTS devicedata (")
+                .append("eui varchar not null,")
+                .append("userid varchar,")
+                .append("tstamp timestamp,")
+                .append("d1 double precision,")
+                .append("d2 double precision,")
+                .append("d3 double precision,")
+                .append("d4 double precision,")
+                .append("d5 double precision,")
+                .append("d6 double precision,").append("d7 double precision,").append("d8 double precision,")
+                .append("d9 double precision,")
+                .append("d10 double precision,").append("d11 double precision,").append("d12 double precision,")
+                .append("d13 double precision,")
+                .append("d14 double precision,").append("d15 double precision,").append("d16 double precision,")
+                .append("d17 double precision,")
+                .append("d18 double precision,").append("d19 double precision,").append("d20 double precision,")
+                .append("d21 double precision,")
+                .append("d22 double precision,").append("d23 double precision,").append("d24 double precision,")
+                .append("project varchar,")
+                .append("state double precision);")
+                //.append("PRIMARY KEY (eui,tstamp) );");
+                .append("SELECT create_hypertable('devicedata', 'tstamp');");
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
-                .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);")
-                .append("SELECT create_hypertable('virtualdevicedata', 'tstamp')");
+                .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);");
+                //.append("SELECT create_hypertable('virtualdevicedata', 'tstamp');");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
-                .append("eui varchar primary key,").append("name varchar,")
+                .append("eui varchar primary key,")
+                .append("name varchar,")
                 .append("userid varchar,").append("team varchar,").append("channels varchar,")
                 .append("description varchar,")
                 .append("administrators varchar,")
@@ -1694,7 +1703,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("origin varchar,")
                 .append("payload varchar,")
                 .append("createdat bigint);");
-        sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(origin);");
+        // sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(origin);");
         // commandslog
         sb.append("CREATE TABLE IF NOT EXISTS commandslog (")
                 .append("id bigint,")
@@ -1703,33 +1712,39 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("origin varchar,")
                 .append("payload varchar,")
                 .append("createdat bigint);");
-        sb.append("CREATE INDEX IF NOT EXISTS idxcommandslog on commandslog(origin);");
+        // sb.append("CREATE INDEX IF NOT EXISTS idxcommandslog on
+        // commandslog(origin);");
         query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
         }
-        query = "CREATE INDEX IF NOT EXISTS idx_devicedata_eui_tstamp on devicedata(eui,tstamp);"
-                + "CREATE INDEX IF NOT EXISTS idx_devicedata_tstamp on devicedata(tstamp)";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            LOG.error(e.getMessage());
-        }
+        /*
+         * query =
+         * "CREATE INDEX IF NOT EXISTS idx_devicedata_eui_tstamp on devicedata(eui,tstamp);"
+         * + "CREATE INDEX IF NOT EXISTS idx_devicedata_tstamp on devicedata(tstamp)";
+         * try (Connection conn = dataSource.getConnection(); PreparedStatement pst =
+         * conn.prepareStatement(query);) {
+         * pst.executeUpdate();
+         * } catch (SQLException e) {
+         * e.printStackTrace();
+         * LOG.error(e.getMessage());
+         * }
+         */
         // TODO: devicestatus
         query = "CREATE TABLE IF NOT EXISTS devicestatus ( "
                 + "eui VARCHAR NOT NULL,"
                 + "tinterval BIGINT,"
                 + "ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," // lastseen from ts
-                + "status DOUBLE,"
-                + "alert NUMBER"
-                + ");"
-                + "CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts on devicestatus(eui,ts);";
+                + "status DOUBLE PRECISION,"
+                + "alert INTEGER"
+                + ");";
+        // + "CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts on
+        // devicestatus(eui,ts);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
