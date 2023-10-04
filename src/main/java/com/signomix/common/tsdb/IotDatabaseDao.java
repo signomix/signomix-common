@@ -1664,6 +1664,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS devicedata (")
                 .append("eui varchar not null,")
                 .append("userid varchar,")
+                .append("day date,")
+                .append("dtime time,")
                 .append("tstamp timestamp,")
                 .append("d1 double precision,")
                 .append("d2 double precision,")
