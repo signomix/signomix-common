@@ -275,6 +275,8 @@ public class Device {
             sb.append(key).append(",");
         });
         String result = sb.toString();
+        // just in case remove all whitespaces
+        result = result.replaceAll("\\s+","");
         if (!result.isEmpty()) {
             result = result.substring(0, result.length() - 1);
         }
