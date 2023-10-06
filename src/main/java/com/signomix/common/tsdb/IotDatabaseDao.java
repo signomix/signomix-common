@@ -1570,7 +1570,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         StringBuilder sb = new StringBuilder();
         // applications
         sb.append("CREATE TABLE IF NOT EXISTS applications (")
-                .append("id SERIAL primary key,")
+                .append("id BIGSERIAL primary key,")
                 .append("organization bigint default " + defaultOrganizationId + ",")
                 .append("version bigint default 0,")
                 .append("name varchar UNIQUE,")
@@ -1650,7 +1650,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("administrators varchar);");
         // alerts
         sb.append("CREATE TABLE IF NOT EXISTS alerts (")
-                .append("id SERIAL primary key ,")
+                .append("id BIGSERIAL primary key ,")
                 .append("name varchar,")
                 .append("category varchar,").append("type varchar,").append("deviceeui varchar,")
                 .append("userid varchar,").append("payload varchar,").append("timepoint varchar,")
@@ -1682,13 +1682,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d21 double precision,")
                 .append("d22 double precision,").append("d23 double precision,").append("d24 double precision,")
                 .append("project varchar,")
-                .append("state double precision);")
+                .append("state double precision);");
                 //.append("PRIMARY KEY (eui,tstamp) );");
-                .append("SELECT create_hypertable('devicedata', 'tstamp');");
+                
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
-                .append("eui VARCHAR PRIMARY KEY,tstamp TIMESTAMP NOT NULL, data VARCHAR);");
-                //.append("SELECT create_hypertable('virtualdevicedata', 'tstamp');");
+                .append("eui VARCHAR PRIMARY KEY,day date, dtime time, tstamp TIMESTAMP NOT NULL, data VARCHAR);");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,")
@@ -1775,6 +1774,21 @@ public class IotDatabaseDao implements IotDatabaseIface {
             e.printStackTrace();
             LOG.error(e.getMessage());
         }
+
+        // hypertables
+        query="SELECT create_hypertable('devicedata', 'tstamp');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            LOG.warn(e.getMessage());
+        }
+        query="SELECT create_hypertable('virtualdevicedata', 'tstamp');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            LOG.warn(e.getMessage());
+        }
+        
     }
 
     /**
