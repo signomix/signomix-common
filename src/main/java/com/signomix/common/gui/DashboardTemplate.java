@@ -6,6 +6,9 @@ package com.signomix.common.gui;
 
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -18,15 +21,19 @@ public class DashboardTemplate {
     private String id;
     private String title;
     private ArrayList<Widget> widgets;
+    private ArrayList<DashboardItem> items;
+    private long organizationId = 0;
 
     public DashboardTemplate() {
         id = null;
         widgets = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
     public DashboardTemplate(String newID) {
         id = newID;
         widgets = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
     public void addWidget(Widget widget) {
@@ -35,6 +42,58 @@ public class DashboardTemplate {
 
     public void setWidget(int index, Object widget) {
         widgets.add(index, (Widget) widget);
+    }
+
+    public ArrayList getItems() {
+        return items;
+    }
+
+    public void setItemsFromJson(String jsonString) {
+        try {
+            if (jsonString.indexOf("@type") > 0) {
+                items = (ArrayList) JsonReader.jsonToJava(jsonString);
+            } else {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    items = objectMapper.readValue(jsonString, ArrayList.class);
+                } catch (JsonProcessingException ex) {
+                    //ex.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+    }
+
+    public String getItemsAsJson() {
+        // return JsonWriter.objectToJson(items);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(items);
+        } catch (JsonProcessingException ex) {
+            ex.printStackTrace();
+            return "";
+        }
+    }
+
+    public long getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(long id) {
+        this.organizationId = id;
+    }
+
+    /**
+     * @param widgets the widgets to set
+     */
+    public void setItems(ArrayList items) {
+        this.items = items;
+    }
+
+    public void addItem(DashboardItem item) {
+        items.add(item);
     }
 
     /**

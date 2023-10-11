@@ -21,6 +21,8 @@ public interface DashboardIface {
     public void removeTemplate(String dashboardTemplateId) throws IotDatabaseException;
     public List<Dashboard> getUserDashboards(String userId, boolean withShared, boolean adminRole, Integer limit, Integer offset) throws IotDatabaseException;
     public List<Dashboard> getDashboards(Integer limit, Integer offset)throws IotDatabaseException;
+    public List<DashboardTemplate> getDashboardTemplates(Integer limit, Integer offset)throws IotDatabaseException;
+    public void addDashboardTemplate(DashboardTemplate dashboardTemplate) throws IotDatabaseException;
     /**
      * Gets dashboards for organization
      * @param organizationId

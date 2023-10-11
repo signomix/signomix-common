@@ -8,6 +8,7 @@ import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
+import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
 import io.agroal.api.AgroalDataSource;
@@ -37,6 +38,11 @@ public interface IotDatabaseIface {
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
     public List<Device> getInactiveDevices() throws IotDatabaseException;
+    //data migration
+    public List<Device> getAllDevices() throws IotDatabaseException;
+    public void addDevice(Device device) throws IotDatabaseException;
+    public List<DeviceTemplate> getAllDeviceTemplates() throws IotDatabaseException;
+    public void addDeviceTemplate(DeviceTemplate device) throws IotDatabaseException;
 
     public List<String> getDeviceChannels(String deviceEUI) throws IotDatabaseException;//public List<List<List>> getGroupValues(String userID, String deviceID,String dataQuery)  throws IotDatabaseException;
     public void clearDeviceData(String deviceEUI) throws IotDatabaseException;

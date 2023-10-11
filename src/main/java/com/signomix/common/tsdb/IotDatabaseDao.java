@@ -34,6 +34,7 @@ import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
+import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
 import io.agroal.api.AgroalDataSource;
@@ -1596,10 +1597,17 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS devicetemplates (")
                 .append("eui varchar primary key,")
                 .append("appid varchar,")
-                .append("appeui varchar,").append("type varchar,").append("channels varchar,")
-                .append("code varchar,").append("decoder varchar,").append("description varchar,")
-                .append("tinterval bigint,").append("pattern varchar,").append("commandscript varchar,")
-                .append("producer varchar,").append("configuration varchar);");
+                .append("appeui varchar,")
+                .append("type varchar,")
+                .append("channels varchar,")
+                .append("code varchar,")
+                .append("decoder varchar,")
+                .append("description varchar,")
+                .append("tinterval bigint,")
+                .append("pattern varchar,")
+                .append("commandscript varchar,")
+                .append("producer varchar,")
+                .append("configuration varchar);");
         // dashboardtemplates
         sb.append("CREATE TABLE IF NOT EXISTS dashboardtemplates (")
                 .append("id varchar primary key,")
@@ -1645,8 +1653,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (")
                 .append("id varchar primary key,")
                 .append("name varchar,")
-                .append("userid varchar,").append("title varchar,").append("team varchar,")
-                .append("widgets varchar,").append("token varchar,").append("shared boolean,")
+                .append("userid varchar,")
+                .append("title varchar,")
+                .append("team varchar,")
+                .append("widgets varchar,")
+                .append("items varchar,")
+                .append("token varchar,")
+                .append("shared boolean,")
+                .append("organization bigint default " + defaultOrganizationId + ",")
                 .append("administrators varchar);");
         // alerts
         sb.append("CREATE TABLE IF NOT EXISTS alerts (")
@@ -2307,19 +2321,194 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void addFavouriteDevice(String userID, String eui) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addFavouriteDevice'");
+        String query = "INSERT INTO favourites (userid, id, is_device) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setString(2, eui);
+            pstmt.setBoolean(3, true);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
     public void removeFavouriteDevices(String userID, String eui) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeFavouriteDevices'");
+        String query = "DELETE FROM favourites WHERE userid=? AND id=? AND is_device=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setString(2, eui);
+            pstmt.setBoolean(3, true);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
     public List<Device> getFavouriteDevices(String userID) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFavouriteDevices'");
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT id FROM favourites WHERE userid=? AND is_device=?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userID);
+            pstmt.setBoolean(2, true);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildDevice(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Device> getAllDevices() throws IotDatabaseException {
+        String query = "SELECT * FROM devices";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildDevice(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public void addDevice(Device device) throws IotDatabaseException {
+        String query = "INSERT INTO devices (eui, name, userid, type, team, channels, code, "
+                + "decoder, devicekey, description, tinterval, template, pattern, "
+                + "commandscript, appid, groups, appeui, devid, active, project, "
+                + "latitude, longitude, altitude, retention, administrators, "
+                + "framecheck, configuration, organization, organizationapp) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, device.getEUI());
+            pstmt.setString(2, device.getName());
+            pstmt.setString(3, device.getUserID());
+            pstmt.setString(4, device.getType());
+            pstmt.setString(5, device.getTeam());
+            pstmt.setString(6, device.getChannelsAsString());
+            pstmt.setString(7, device.getCode());
+            pstmt.setString(8, device.getEncoder());
+            pstmt.setString(9, device.getKey());
+            pstmt.setString(10, device.getDescription());
+            pstmt.setLong(11, device.getTransmissionInterval());
+            pstmt.setString(12, device.getTemplate());
+            pstmt.setString(13, device.getPattern());
+            pstmt.setString(14, device.getCommandScript());
+            pstmt.setString(15, device.getApplicationID());
+            pstmt.setString(16, device.getGroups());
+            pstmt.setString(17, device.getApplicationEUI());
+            pstmt.setString(18, device.getDeviceID());
+            pstmt.setBoolean(19, device.isActive());
+            pstmt.setString(20, device.getProject());
+            if (null != device.getLatitude()) {
+                pstmt.setDouble(21, device.getLatitude());
+            } else {
+                pstmt.setNull(21, java.sql.Types.DOUBLE);
+            }
+            if (null != device.getLongitude()) {
+                pstmt.setDouble(22, device.getLongitude());
+            } else {
+                pstmt.setNull(22, java.sql.Types.DOUBLE);
+            }
+            if (null != device.getAltitude()) {
+                pstmt.setDouble(23, device.getAltitude());
+            } else {
+                pstmt.setNull(23, java.sql.Types.DOUBLE);
+            }
+            pstmt.setLong(24, device.getRetentionTime());
+            pstmt.setString(25, device.getAdministrators());
+            pstmt.setBoolean(26, device.isCheckFrames());
+            pstmt.setString(27, device.getConfiguration());
+            if (null != device.getOrganizationId()) {
+                pstmt.setLong(28, device.getOrganizationId());
+            } else {
+                pstmt.setLong(28, defaultOrganizationId);
+            }
+            if (null != device.getOrgApplicationId()) {
+                pstmt.setLong(29, device.getOrgApplicationId());
+            } else {
+                pstmt.setLong(29, defaultOrganizationId);
+            }
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+/*
+     private String eui; //product type
+    private String appid;
+    private String appeui;
+    private String type;
+    private String channels;
+    private String code;
+    private String decoder;
+    private String description;
+    private int interval;
+    private String pattern; //required fields
+    private String commandScript;
+    private String producer; //producer name
+    private String configuration;
+ */
+
+    @Override
+    public List<DeviceTemplate> getAllDeviceTemplates() throws IotDatabaseException {
+        String query = "SELECT * FROM devicetemplates";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<DeviceTemplate> list = new ArrayList<>();
+            while (rs.next()) {
+                DeviceTemplate template = new DeviceTemplate();
+                template.setEui(rs.getString("eui"));
+                template.setAppid(rs.getString("appid"));
+                template.setAppeui(rs.getString("appeui"));
+                template.setDecoder(rs.getString("decoder"));
+                template.setCode((rs.getString("code")));
+                template.setPattern(rs.getString("pattern"));
+                template.setCommandScript(rs.getString("commandscript"));
+                template.setConfiguration(rs.getString("configuration"));
+                template.setChannels(rs.getString("channels"));
+                template.setDescription(rs.getString("description"));
+                template.setInterval(rs.getInt("tinterval"));
+                template.setPattern(rs.getString("pattern"));
+                template.setProducer(rs.getString("producer"));
+                template.setType(rs.getString("type"));
+                list.add(template);
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public void addDeviceTemplate(DeviceTemplate device) throws IotDatabaseException {
+        String query = "INSERT INTO devicetemplates (eui, appid, appeui, type, channels, code, "
+                + "decoder, description, tinterval, pattern, commandscript, producer, configuration) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, device.getEui());
+            pstmt.setString(2, device.getAppid());
+            pstmt.setString(3, device.getAppeui());
+            pstmt.setString(4, device.getType());
+            pstmt.setString(5, device.getChannels());
+            pstmt.setString(6, device.getCode());
+            pstmt.setString(7, device.getDecoder());
+            pstmt.setString(8, device.getDescription());
+            pstmt.setInt(9, device.getInterval());
+            pstmt.setString(10, device.getPattern());
+            pstmt.setString(11, device.getCommandScript());
+            pstmt.setString(12, device.getProducer());
+            pstmt.setString(13, device.getConfiguration());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 }

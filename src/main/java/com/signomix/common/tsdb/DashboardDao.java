@@ -1,4 +1,4 @@
-package com.signomix.common.db;
+package com.signomix.common.tsdb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.logging.Logger;
+
+import com.signomix.common.db.DashboardIface;
+import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.gui.Dashboard;
 import com.signomix.common.gui.DashboardTemplate;
 
@@ -26,7 +29,7 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');";
+        /* String query = "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');";
         String query2 = "CALL CSVWRITE('backup/dashboardtemplates.csv', 'SELECT * FROM dashboardtemplates');";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query + query2);) {
@@ -35,12 +38,12 @@ public class DashboardDao implements DashboardIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
+        } */
     }
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        String query = "CREATE TABLE IF NOT EXISTS dashboards ("
+        /* String query = "CREATE TABLE IF NOT EXISTS dashboards ("
                 + "id VARCHAR PRIMARY KEY,"
                 + "name VARCHAR,"
                 + "userid VARCHAR,"
@@ -66,7 +69,7 @@ public class DashboardDao implements DashboardIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
-        // "favourites" table is crrated in IotDatabaseDao class
+        // "favourites" table is crrated in IotDatabaseDao class */
     }
 
     @Override
@@ -283,11 +286,11 @@ public class DashboardDao implements DashboardIface {
     @Override
     public List<Dashboard> getDashboards(Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT * FROM dashboards ORDER BY name LIMIT ? OFFSET ?";
-        //logger.info("getDashboards: " + query);
-        //logger.info("getDashboards: " + offset + " " + limit);
+        logger.info("getDashboards: " + query);
+        logger.info("getDashboards: " + offset + " " + limit);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            //logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
+            logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
             pstmt.setInt(1, limit);
             pstmt.setInt(2, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -425,6 +428,7 @@ public class DashboardDao implements DashboardIface {
                     dashboardTemplate.setTitle(rs.getString("title"));
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
                     dashboardTemplate.setItemsFromJson(rs.getString("items"));
+                    dashboardTemplate.setOrganizationId(rs.getLong("organization"));
                     dashboardTemplates.add(dashboardTemplate);
                 }
             }

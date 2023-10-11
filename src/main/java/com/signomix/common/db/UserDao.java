@@ -74,7 +74,7 @@ public class UserDao implements UserDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
-            LOG.warn("Error inserting default organization", e2);
+            LOG.warn("Error inserting default organization");
             // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
             // e2.getMessage(), e2);
         }
