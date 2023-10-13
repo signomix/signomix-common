@@ -1,4 +1,4 @@
-package com.signomix.common.db;
+package com.signomix.common.tsdb;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -16,6 +16,7 @@ public class DeviceSelector {
     public String query;
     public String limitSql;
     public String offsetSql;
+    public String orderSql="";
 
     /**
      * Constructor for DeviceSelector.
@@ -30,7 +31,7 @@ public class DeviceSelector {
                 .append("d.framecheck, d.configuration, d.organization, d.organizationapp, a.configuration, ")
                 .append(this.writable)
                 .append(" FROM devices AS d ")
-                .append(" LEFT JOIN applications AS a WHERE d.organizationapp=a.id AND d.active = true  AND d.tinterval>0 ");
+                .append(" LEFT JOIN applications AS a ON d.organizationapp=a.id WHERE d.active = true  AND d.tinterval>0 ");
         query = sb.toString();
     }
 
@@ -67,7 +68,7 @@ ORDER BY d.eui DESC LIMIT 100 OFFSET 0
                 .append(" LEFT JOIN applications AS a ON d.organizationapp=a.id ")
                 .append(" AND EXISTS ")
                 .append(q0)
-                .append("  ORDER BY d.eui )");
+                .append("  ORDER BY d.eui");
         query = sb.toString();
     }
 
@@ -76,6 +77,7 @@ ORDER BY d.eui DESC LIMIT 100 OFFSET 0
         numberOfUserParams = 0;
         limitSql="";
         offsetSql="";
+        orderSql=" ORDER BY d.name ";
         if (user == null) {
             // anonymous
             this.userSql = "";
@@ -118,9 +120,22 @@ ORDER BY d.eui DESC LIMIT 100 OFFSET 0
                 .append(" LEFT JOIN applications AS a ON d.organizationapp=a.id ")
                 .append( (single ? "AND d.eui=? " : ""))
                 .append(this.userSql)
+                .append(this.orderSql)
                 .append(this.limitSql)
                 .append(this.offsetSql);
         query = sb.toString();
+    }
+
+    public DeviceSelector(String deviceEui, boolean withStatus){
+        String writable = "false as writable ";
+        query="SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,"
+                + "d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,"
+                + "d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,"
+                + "d.framecheck, d.configuration, d.organization, d.organizationapp, a.configuration, "
+                + writable
+                + "FROM devices AS d "
+                + "LEFT JOIN applications AS a ON d.organizationapp=a.id "
+                + "WHERE d.eui=? ";
     }
 
 }

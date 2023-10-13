@@ -230,6 +230,7 @@ public class DashboardDao implements DashboardIface {
             query = query + "WHERE userid=?";
         }
         query = query + " ORDER BY name LIMIT ? OFFSET ?";
+        logger.error("getUserDashboards: " + query);
         String itemsStr;
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -279,7 +280,7 @@ public class DashboardDao implements DashboardIface {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        logger.info("getUserDashboards size: " + dashboards.size());
+        logger.error("getUserDashboards size: " + dashboards.size());
         return dashboards;
     }
 

@@ -8,6 +8,7 @@ import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
+import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
@@ -27,6 +28,13 @@ public interface IotDatabaseIface {
     public void putData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException;
     public void putVirtualData(Device device, VirtualData data) throws IotDatabaseException;
     
+    //GROUPS
+    public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException;
+    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset) throws IotDatabaseException;
+    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException;
+    public void updateGroup(DeviceGroup group) throws IotDatabaseException;
+    public void createGroup(DeviceGroup group) throws IotDatabaseException;
+    public void deleteGroup(String groupEUI) throws IotDatabaseException;
     //DEVICES
     public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;
     public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;

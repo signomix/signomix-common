@@ -19,7 +19,7 @@ import io.agroal.api.AgroalDataSource;
 
 public class ApplicationDao implements ApplicationDaoIface {
 
-    public static final long DEFAULT_ORGANIZATION_ID = 0;
+    public static final long DEFAULT_ORGANIZATION_ID = 1;
 
     @Inject
     Logger logger;

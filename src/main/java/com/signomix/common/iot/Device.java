@@ -280,13 +280,13 @@ public class Device {
         if (!result.isEmpty()) {
             result = result.substring(0, result.length() - 1);
         }
-        return result;
+        return result.toLowerCase();
     }
 
     public void setChannelsAsString(String channels) {
         if (null != channels && !channels.isEmpty()) {
             this.channels = new LinkedHashMap();
-            String[] ch = channels.split(",");
+            String[] ch = channels.toLowerCase().split(",");
             for (String channel : ch) {
                 this.channels.put(channel, new Channel(channel));
             }
@@ -303,7 +303,7 @@ public class Device {
     }
 
     public void setChannels(String channels) {
-        this.channels = parseChannels(channels);
+        this.channels = parseChannels(channels.toLowerCase());
     }
 
     /**

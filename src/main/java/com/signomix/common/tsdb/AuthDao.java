@@ -64,8 +64,8 @@ public class AuthDao implements AuthDaoIface {
             String queryPermanent = "SELECT uid FROM ptokens WHERE token=? AND"
                     + " eoflife>=CURRENT_TIMESTAMP";
 
-            String updateSession = "UPDATE tokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
-            String updatePermanent = "UPDATE ptokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
             String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + token);
@@ -188,9 +188,9 @@ public class AuthDao implements AuthDaoIface {
             t.setIssuer(issuer.uid);
             String query;
             if (permanent) {
-                query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
+                query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?)";
             } else {
-                query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
+                query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?)";
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {

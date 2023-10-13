@@ -144,14 +144,14 @@ public class Widget {
      * @return the dev_id
      */
     public String getDev_id() {
-        return dev_id;
+        return dev_id.toUpperCase();
     }
 
     /**
      * @param dev_id the dev_id to set
      */
     public void setDev_id(String dev_id) {
-        this.dev_id = dev_id;
+        this.dev_id = dev_id.toUpperCase();
     }
 
     /**
@@ -165,7 +165,7 @@ public class Widget {
      * @param channel the channel to set
      */
     public void setChannel(String channel) {
-        this.channel = channel.replaceAll("\\s", "");
+        this.channel = channel.replaceAll("\\s", "").toLowerCase();
     }
 
     /**
@@ -284,14 +284,14 @@ public class Widget {
      * @return the group
      */
     public String getGroup() {
-        return group;
+        return group.toUpperCase();
     }
 
     /**
      * @param group the group to set
      */
     public void setGroup(String group) {
-        this.group = group;
+        this.group = group.toUpperCase();
     }
     
     public void normalize(){

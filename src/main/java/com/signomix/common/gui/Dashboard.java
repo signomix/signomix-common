@@ -85,14 +85,14 @@ public class Dashboard {
      * @return the id
      */
     public String getId() {
-        return id;
+        return id.toUpperCase();
     }
 
     /**
      * @param id the id to set
      */
     public void setId(String id) {
-        this.id = id;
+        this.id = id.toUpperCase();
     }
 
     /**

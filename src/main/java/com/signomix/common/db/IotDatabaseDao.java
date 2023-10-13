@@ -29,6 +29,7 @@ import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.Device;
+import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
@@ -2456,5 +2457,42 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setProducer(rs.getString("producer"));
         device.setConfiguration(rs.getString("configuration"));
         return device;
+    }
+
+    @Override
+    public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getGroup'");
+    }
+
+    @Override
+    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationGroups'");
+    }
+
+    @Override
+    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUserGroups'");
+    }
+
+    @Override
+    public void updateGroup(DeviceGroup group) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateGroup'");
+    }
+
+    @Override
+    public void createGroup(DeviceGroup group) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createGroup'");
+    }
+
+    @Override
+    public void deleteGroup(String groupEUI) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteGroup'");
     }
 }
