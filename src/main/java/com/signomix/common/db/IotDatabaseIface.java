@@ -35,6 +35,8 @@ public interface IotDatabaseIface {
     public void updateGroup(DeviceGroup group) throws IotDatabaseException;
     public void createGroup(DeviceGroup group) throws IotDatabaseException;
     public void deleteGroup(String groupEUI) throws IotDatabaseException;
+    public List<Device> getGroupDevices(boolean fullData, String userID, long organizationID, String groupID) throws IotDatabaseException;
+
     //DEVICES
     public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;
     public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;
