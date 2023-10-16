@@ -2536,7 +2536,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException {
-        String query = "SELECT * FROM devicegroups WHERE eui=?";
+        String query = "SELECT * FROM groups WHERE eui=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, groupEUI);
             ResultSet rs = pstmt.executeQuery();
@@ -2561,7 +2561,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset)
             throws IotDatabaseException {
-        String query = "SELECT * FROM devicegroups WHERE organization=? LIMIT ? OFFSET ?";  
+        String query = "SELECT * FROM groups WHERE organization=? LIMIT ? OFFSET ?";  
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
             pstmt.setInt(2, limit);
@@ -2588,7 +2588,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException {
-        String query = "SELECT * FROM devicegroups WHERE userid=? LIMIT ? OFFSET ?";
+        String query = "SELECT * FROM groups WHERE userid=? LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userID);
             pstmt.setInt(2, limit);
@@ -2615,7 +2615,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void updateGroup(DeviceGroup group) throws IotDatabaseException {
-        String query = "UPDATE devicegroups SET name=?, userid=?, administrators=?, channels=?, "
+        String query = "UPDATE groups SET name=?, userid=?, administrators=?, channels=?, "
                 + "description=?, organization=?, team=? WHERE eui=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, group.getName());
@@ -2634,7 +2634,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void createGroup(DeviceGroup group) throws IotDatabaseException {
-        String query = "INSERT INTO devicegroups (eui, name, userid, administrators, channels, "
+        String query = "INSERT INTO groups (eui, name, userid, administrators, channels, "
                 + "description, organization, team) VALUES (?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, group.getEUI());
@@ -2653,7 +2653,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void deleteGroup(String groupEUI) throws IotDatabaseException {
-        String query = "DELETE FROM devicegroups WHERE eui=?";
+        String query = "DELETE FROM groups WHERE eui=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, groupEUI);
             pstmt.executeUpdate();
