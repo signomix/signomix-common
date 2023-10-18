@@ -2589,6 +2589,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM groups WHERE userid=? LIMIT ? OFFSET ?";
+        LOG.info(query);
+        LOG.info(userID+" "+limit+" "+offset);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userID);
             pstmt.setInt(2, limit);
@@ -2607,6 +2609,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 group.setTeam(rs.getString("team"));
                 list.add(group);
             }
+            LOG.info("getUserGroups: " + list.size());
             return list;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
