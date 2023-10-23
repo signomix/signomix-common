@@ -21,6 +21,14 @@ public interface AuthDaoIface {
     public String getUserId(String token, long sessionTokenLifetime, long permanentTokenLifetime);
 
     /**
+     * Returns issuer ID for given token
+     * @param token
+     * @return issuer ID
+     */
+    public String getIssuerId(String token, long sessionTokenLifetime, long permanentTokenLifetime);
+
+    public Token getToken(String token, long sessionTokenLifetime, long permanentTokenLifetime);
+    /**
      * Creates new session token
      * 
      * @param user     user

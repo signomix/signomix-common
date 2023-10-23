@@ -54,7 +54,7 @@ public class AuthDao implements AuthDaoIface {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
         try {
-            String userUid=null;
+            String userUid = null;
             LOG.info("getUser: " + token);
             if (null == token) {
                 return null;
@@ -85,7 +85,7 @@ public class AuthDao implements AuthDaoIface {
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + token);
-                    userUid=rs.getString("uid");
+                    userUid = rs.getString("uid");
                 } else {
                     LOG.warn("getUserId: token not found: " + token);
                 }
@@ -94,7 +94,7 @@ public class AuthDao implements AuthDaoIface {
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
             }
-            if (userUid!=null) {
+            if (userUid != null) {
                 try (Connection conn = dataSource.getConnection();
                         PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
                     pstmt.setLong(1, lifetime);
@@ -115,27 +115,166 @@ public class AuthDao implements AuthDaoIface {
         }
     }
 
-/*     @Override
-    public Token createSession(User user, long lifetime) {
-        String token = java.util.UUID.randomUUID().toString();
-        Token t = new Token(user.uid, lifetime, false);
-        String query = "INSERT INTO tokens (token,uid,eoflife) VALUES (?,?,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP))";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, token);
-            pstmt.setString(2, user.uid);
-            pstmt.setLong(3, lifetime);
-            int count = pstmt.executeUpdate();
-            LOG.info("createSession: inserted " + count + " rows");
-        } catch (SQLException ex) {
-            LOG.warn(ex.getMessage());
-            t=null;
-        } catch (Exception ex) {
-            LOG.error(ex.getMessage());
-            t=null;
+    public String getIssuerId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
+        // TODO: update eoflife
+        // TODO: RETURNING can be used for PostgreSQL
+        try {
+            String userUid = null;
+            LOG.info("getIssuer: " + token);
+            if (null == token) {
+                return null;
+            }
+            String querySession = "SELECT uid FROM tokens WHERE token=? AND"
+                    + " eoflife>=CURRENT_TIMESTAMP";
+            String queryPermanent = "SELECT uid FROM ptokens WHERE token=? AND"
+                    + " eoflife>=CURRENT_TIMESTAMP";
+
+            String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String query, updateQuery;
+            long lifetime = 0;
+            LOG.debug("token:" + token);
+            LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
+            if (token.startsWith(permanentTokenPrefix)) {
+                query = queryPermanent;
+                updateQuery = updatePermanent;
+                lifetime = permanentTokenLifetime;
+            } else {
+                query = querySession;
+                updateQuery = updateSession;
+                lifetime = sessionTokenLifetime;
+            }
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, token);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    LOG.info("getUserId: token found: " + token);
+                    userUid = rs.getString("uid");
+                } else {
+                    LOG.warn("getUserId: token not found: " + token);
+                }
+            } catch (SQLException ex) {
+                LOG.warn(ex.getMessage());
+            } catch (Exception ex) {
+                LOG.error(ex.getMessage());
+            }
+            if (userUid != null) {
+                try (Connection conn = dataSource.getConnection();
+                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                    pstmt.setLong(1, lifetime);
+                    pstmt.setString(2, token);
+                    int count = pstmt.executeUpdate();
+                    LOG.info("getUserId: updated " + count + " rows");
+                } catch (SQLException ex) {
+                    LOG.warn(ex.getMessage());
+                } catch (Exception ex) {
+                    LOG.error(ex.getMessage());
+                }
+            }
+            return userUid;
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            return null;
         }
-        return t;
-    } */
+    }
+
+    public Token getToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
+        // TODO: update eoflife
+        // TODO: RETURNING can be used for PostgreSQL
+        Token token = null;
+        try {
+            LOG.info("getIssuer: " + tokenID);
+            if (null == tokenID) {
+                return null;
+            }
+            String querySession = "SELECT * FROM tokens WHERE token=? AND"
+                    + " eoflife>=CURRENT_TIMESTAMP";
+            String queryPermanent = "SELECT * FROM ptokens WHERE token=? AND"
+                    + " eoflife>=CURRENT_TIMESTAMP";
+
+            String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String query, updateQuery;
+            long lifetime = 0;
+            LOG.debug("token:" + tokenID);
+            LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
+            if (tokenID.startsWith(permanentTokenPrefix)) {
+                query = queryPermanent;
+                updateQuery = updatePermanent;
+                lifetime = permanentTokenLifetime;
+            } else {
+                query = querySession;
+                updateQuery = updateSession;
+                lifetime = sessionTokenLifetime;
+            }
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, tokenID);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    LOG.info("getUserId: token found: " + tokenID);
+                    token = new Token(rs.getString("uid"), rs.getLong("eoflife"),
+                            tokenID.startsWith(permanentTokenPrefix));
+                    token.setIssuer(rs.getString("issuer"));
+                    token.setPayload(rs.getString("payload"));
+                    token.setTimestamp(rs.getTimestamp("tstamp").getTime());
+                    token.setToken(rs.getString("token"));
+                } else {
+                    LOG.warn("getUserId: token not found: " + tokenID);
+                }
+            } catch (SQLException ex) {
+                LOG.warn(ex.getMessage());
+            } catch (Exception ex) {
+                LOG.error(ex.getMessage());
+            }
+            if (token != null) {
+                try (Connection conn = dataSource.getConnection();
+                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                    pstmt.setLong(1, lifetime);
+                    pstmt.setString(2, tokenID);
+                    int count = pstmt.executeUpdate();
+                    LOG.info("getUserId: updated " + count + " rows");
+                } catch (SQLException ex) {
+                    LOG.warn(ex.getMessage());
+                } catch (Exception ex) {
+                    LOG.error(ex.getMessage());
+                }
+            }
+            return token;
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error(e.getMessage());
+            return null;
+        }
+    }
+
+    /*
+     * @Override
+     * public Token createSession(User user, long lifetime) {
+     * String token = java.util.UUID.randomUUID().toString();
+     * Token t = new Token(user.uid, lifetime, false);
+     * String query =
+     * "INSERT INTO tokens (token,uid,eoflife) VALUES (?,?,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP))"
+     * ;
+     * try (Connection conn = dataSource.getConnection();
+     * PreparedStatement pstmt = conn.prepareStatement(query);) {
+     * pstmt.setString(1, token);
+     * pstmt.setString(2, user.uid);
+     * pstmt.setLong(3, lifetime);
+     * int count = pstmt.executeUpdate();
+     * LOG.info("createSession: inserted " + count + " rows");
+     * } catch (SQLException ex) {
+     * LOG.warn(ex.getMessage());
+     * t=null;
+     * } catch (Exception ex) {
+     * LOG.error(ex.getMessage());
+     * t=null;
+     * }
+     * return t;
+     * }
+     */
 
     @Override
     public void removeSession(String token) {
@@ -168,22 +307,26 @@ public class AuthDao implements AuthDaoIface {
     @Override
     public void backupDb() throws IotDatabaseException {
         // TODO: implement
-        /* String query = "CALL CSVWRITE('backup/tokens.csv', 'SELECT * FROM tokens');"
-                + "CALL CSVWRITE('backup/ptokens.csv', 'SELECT * FROM ptokens');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.execute();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        } */
+        /*
+         * String query = "CALL CSVWRITE('backup/tokens.csv', 'SELECT * FROM tokens');"
+         * + "CALL CSVWRITE('backup/ptokens.csv', 'SELECT * FROM ptokens');";
+         * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+         * conn.prepareStatement(query);) {
+         * pstmt.execute();
+         * } catch (SQLException e) {
+         * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+         * e.getMessage(), e);
+         * } catch (Exception e) {
+         * throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+         * }
+         */
     }
 
     @Override
     public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent) {
         try {
             LOG.info("createTokenForUser: " + userId + " " + lifetime + " " + permanent);
-            //String token = java.util.UUID.randomUUID().toString();
+            // String token = java.util.UUID.randomUUID().toString();
             Token t = new Token(userId, lifetime, permanent);
             t.setIssuer(issuer.uid);
             String query;

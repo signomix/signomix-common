@@ -2536,6 +2536,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException {
+        LOG.info("getGroup: " + groupEUI);
         String query = "SELECT * FROM groups WHERE eui=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, groupEUI);
@@ -2550,6 +2551,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 group.setDescription(rs.getString("description"));
                 group.setOrganization(rs.getLong("organization"));
                 group.setTeam(rs.getString("team"));
+                LOG.info("found "+group.getEUI()+" "+group.getName()+" "+group.getUserID()+" "+group.getAdministrators()+" "+group.getChannelsAsString()+" "+group.getDescription()+" "+group.getOrganization()+" "+group.getTeam());
                 return group;
             }
             return null;

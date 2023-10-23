@@ -18,7 +18,8 @@ public class DeviceGroup {
     private String userID;
     private String team;
     private String administrators;
-    private HashMap channels;
+    private transient HashMap channels;
+    private String channelsAsString;
     private String description;
     private boolean open;
     private long organization;
@@ -39,6 +40,7 @@ public class DeviceGroup {
         administrators = "";
         description = "";
         open=true;
+        channelsAsString="";
     }
 
     public boolean userIsTeamMember(String userID) {
@@ -151,14 +153,12 @@ public class DeviceGroup {
         this.name = name;
     }
 
-    /**
-     * @return the channels
-     */
+
     public HashMap getChannels() {
         return channels;
     }
     
-    public String getChannelsAsString() {
+/*     public String getChannelsAsString() {
         if(null==channels){
             return "";
         }
@@ -171,17 +171,23 @@ public class DeviceGroup {
             result = result.substring(0, result.length() - 1);
         }
         return result.toLowerCase();
+    } */
+
+    public String getChannelsAsString() {
+        return channelsAsString;
     }
     
-    /**
-     * @param channels the channels to set
-     */
     public void setChannels(LinkedHashMap channels) {
         this.channels = channels;
     }
 
     public void setChannels(String channels) {
         this.channels = parseChannels(channels.toLowerCase());
+    }
+
+    public void setChannelsAsString(String channels) {
+        this.channelsAsString = channels;
+        setChannels(channels);
     }
     
     private LinkedHashMap parseChannels(String channelsDeclaration) {
