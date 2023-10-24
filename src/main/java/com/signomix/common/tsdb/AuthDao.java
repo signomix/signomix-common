@@ -215,7 +215,7 @@ public class AuthDao implements AuthDaoIface {
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
-                    token = new Token(rs.getString("uid"), rs.getLong("eoflife"),
+                    token = new Token(rs.getString("uid"), lifetime,
                             tokenID.startsWith(permanentTokenPrefix));
                     token.setIssuer(rs.getString("issuer"));
                     token.setPayload(rs.getString("payload"));
@@ -226,8 +226,10 @@ public class AuthDao implements AuthDaoIface {
                 }
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
+                ex.printStackTrace();
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
+                ex.printStackTrace();
             }
             if (token != null) {
                 try (Connection conn = dataSource.getConnection();
@@ -238,8 +240,10 @@ public class AuthDao implements AuthDaoIface {
                     LOG.info("getUserId: updated " + count + " rows");
                 } catch (SQLException ex) {
                     LOG.warn(ex.getMessage());
+                    ex.printStackTrace();
                 } catch (Exception ex) {
                     LOG.error(ex.getMessage());
+                    ex.printStackTrace();
                 }
             }
             return token;
