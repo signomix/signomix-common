@@ -38,8 +38,8 @@ public interface IotDatabaseIface {
     public List<Device> getGroupDevices(boolean fullData, String userID, long organizationID, String groupID) throws IotDatabaseException;
 
     //DEVICES
-    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;
-    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset) throws IotDatabaseException;
+    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset, String searcString) throws IotDatabaseException;
+    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset, String searchString) throws IotDatabaseException;
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
     public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
     //public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;

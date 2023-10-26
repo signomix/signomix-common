@@ -1778,8 +1778,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
      * @return list of device data
      */
     @Override
-    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset)
+    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset, String searchString )
             throws IotDatabaseException {
+                //TODO: implement searchString
         ArrayList<Device> devices = new ArrayList<>();
 
         if (user.organization != defaultOrganizationId) {
@@ -1816,8 +1817,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset)
+    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset, String searchString)
             throws IotDatabaseException {
+                //TODO: implement searchString 
         ArrayList<Device> devices = new ArrayList<>();
         String query = "SELECT * FROM devices WHERE organization=? LIMIT ? OFFSET ?";
         Device device;

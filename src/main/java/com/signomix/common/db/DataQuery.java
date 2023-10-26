@@ -34,6 +34,7 @@ public class DataQuery {
     private Timestamp toTs;
     private boolean virtual;
     private boolean dateParamPresent;
+    private long offset;
 
     public Timestamp getFromTs() {
         return fromTs;
@@ -72,6 +73,7 @@ public class DataQuery {
         toTs = null;
         virtual = false;
         dateParamPresent = false;
+        offset = 0;
     }
 
     public static DataQuery parse(String query) throws DataQueryException {
@@ -381,6 +383,7 @@ public class DataQuery {
             fromTs = DateTool.parseTimestamp(fromStr, null, false);
             if (null != fromTs) {
                 dateParamPresent = true;
+                offset = System.currentTimeMillis() - fromTs.getTime();
             }
         } catch (Exception ex) {
 
@@ -401,6 +404,14 @@ public class DataQuery {
         } catch (Exception ex) {
 
         }
+    }
+
+    /**
+     * Get offset in milliseconds as calculated from fromTs parameter.
+     * @return the offset - milliseconds from fromTs to current time
+     */
+    public long getOffset() {
+        return offset;
     }
 
 }
