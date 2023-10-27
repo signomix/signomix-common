@@ -1859,12 +1859,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setString(2, user.uid);
             }
             if (selector.numberOfSearchParams > 0) {
-                pst.setString(selector.numberOfWritableParams + 1, "%"+searchParams[1]+"%");
+                pst.setString(selector.numberOfWritableParams + 1, "%" + searchParams[1] + "%");
             }
             if (selector.numberOfUserParams > 0) {
                 pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 1, user.uid);
-                pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 2, "%," + user.uid + ",%");
-                pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 3, "%," + user.uid + ",%");
+                pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 2,
+                        "%," + user.uid + ",%");
+                pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 3,
+                        "%," + user.uid + ",%");
             }
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
@@ -1888,13 +1890,19 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String searchString)
             throws IotDatabaseException {
         ArrayList<Device> devices = new ArrayList<>();
-        String[] searchParts = searchString.split(":");
+
         String searchCondition = "";
-        if (searchParts.length == 2) {
-            if (searchParts[0].equals("eui")) {
-                searchCondition = "AND eui LIKE '%?%' ";
-            } else if (searchParts[0].equals("name")) {
-                searchCondition = "AND name LIKE '%?%' ";
+        String[] searchParts;
+        if (null == searchString || searchString.isEmpty()) {
+            searchParts = new String[0];
+        } else {
+            searchParts = searchString.split(":");
+            if (searchParts.length == 2) {
+                if (searchParts[0].equals("eui")) {
+                    searchCondition = "AND eui LIKE ? ";
+                } else if (searchParts[0].equals("name")) {
+                    searchCondition = "AND name LIKE ? ";
+                }
             }
         }
         String query = "SELECT * FROM devices WHERE organization=? " + searchCondition + " LIMIT ? OFFSET ?";
@@ -1902,7 +1910,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, organizationId);
             if (!searchCondition.isEmpty()) {
-                pst.setString(2, searchString);
+                pst.setString(2, "%" + searchString + "%");
                 pst.setInt(3, limit);
                 pst.setInt(4, offset);
             } else {
@@ -2595,13 +2603,32 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset)
+    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset, String searchString)
             throws IotDatabaseException {
-        String query = "SELECT * FROM groups WHERE organization=? LIMIT ? OFFSET ?";
+        String[] searchParts = new String[0];
+        String searchCondition = "";
+        if (null != searchString && !searchString.isEmpty()) {
+            searchParts = searchString.split(":");
+            if (searchParts.length == 2) {
+                if (searchParts[0].equals("eui")) {
+                    searchCondition = "AND eui LIKE ? ";
+                } else if (searchParts[0].equals("name")) {
+                    searchCondition = "AND name LIKE ? ";
+                }
+            }
+        } else {
+        }
+        String query = "SELECT * FROM groups WHERE organization=? " + searchCondition + " LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
+            if (searchCondition.isEmpty()) {
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
+            } else {
+                pstmt.setString(2, "%" + searchParts[1] + "%");
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }
             ResultSet rs = pstmt.executeQuery();
             ArrayList<DeviceGroup> list = new ArrayList<>();
             while (rs.next()) {
@@ -2623,14 +2650,33 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException {
-        String query = "SELECT * FROM groups WHERE userid=? LIMIT ? OFFSET ?";
+    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset,
+            String searchString, boolean includeShared) throws IotDatabaseException {
+        String[] searchParts = new String[0];
+        String searchCondition = "";
+        if (null != searchString && !searchString.isEmpty()) {
+            searchParts = searchString.split(":");
+            if (searchParts.length == 2) {
+                if (searchParts[0].equals("eui")) {
+                    searchCondition = "AND eui LIKE ? ";
+                } else if (searchParts[0].equals("name")) {
+                    searchCondition = "AND name LIKE ? ";
+                }
+            }
+        }
+        String query = "SELECT * FROM groups WHERE userid=? " + searchCondition + " LIMIT ? OFFSET ?";
         // logger.info(query);
         // logger.info(userID+" "+limit+" "+offset);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userID);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
+            if (searchCondition.isEmpty()) {
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
+            } else {
+                pstmt.setString(2, "%" + searchParts[1] + "%");
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }
             ResultSet rs = pstmt.executeQuery();
             ArrayList<DeviceGroup> list = new ArrayList<>();
             while (rs.next()) {
@@ -2648,6 +2694,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             // logger.info("getUserGroups: " + list.size());
             return list;
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }

@@ -2468,14 +2468,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset)
+    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset, String searchString)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationGroups'");
     }
 
     @Override
-    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException {
+    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset, String searchString, boolean includeShared) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getUserGroups'");
     }

@@ -30,8 +30,8 @@ public interface IotDatabaseIface {
     
     //GROUPS
     public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException;
-    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset) throws IotDatabaseException;
-    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset) throws IotDatabaseException;
+    public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset, String searchString) throws IotDatabaseException;
+    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset, String searchString, boolean includeShared) throws IotDatabaseException;
     public void updateGroup(DeviceGroup group) throws IotDatabaseException;
     public void createGroup(DeviceGroup group) throws IotDatabaseException;
     public void deleteGroup(String groupEUI) throws IotDatabaseException;
