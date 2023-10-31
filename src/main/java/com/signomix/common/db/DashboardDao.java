@@ -276,7 +276,7 @@ public class DashboardDao implements DashboardIface {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        logger.info("getUserDashboards size: " + dashboards.size());
+        logger.debug("getUserDashboards size: " + dashboards.size());
         return dashboards;
     }
 
@@ -425,6 +425,7 @@ public class DashboardDao implements DashboardIface {
                     dashboardTemplate.setTitle(rs.getString("title"));
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
                     dashboardTemplate.setItemsFromJson(rs.getString("items"));
+                    dashboardTemplate.setOrganizationId(rs.getLong("organization"));
                     dashboardTemplates.add(dashboardTemplate);
                 }
             }

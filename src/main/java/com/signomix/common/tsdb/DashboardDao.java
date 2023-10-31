@@ -29,16 +29,7 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        /* String query = "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');";
-        String query2 = "CALL CSVWRITE('backup/dashboardtemplates.csv', 'SELECT * FROM dashboardtemplates');";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query + query2);) {
-            pstmt.execute();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        } */
+        //TODO: implement
     }
 
     @Override
@@ -230,7 +221,6 @@ public class DashboardDao implements DashboardIface {
             query = query + "WHERE userid=?";
         }
         query = query + " ORDER BY name LIMIT ? OFFSET ?";
-        logger.error("getUserDashboards: " + query);
         String itemsStr;
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -280,18 +270,18 @@ public class DashboardDao implements DashboardIface {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        logger.error("getUserDashboards size: " + dashboards.size());
+        logger.debug("getUserDashboards size: " + dashboards.size());
         return dashboards;
     }
 
     @Override
     public List<Dashboard> getDashboards(Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT * FROM dashboards ORDER BY name LIMIT ? OFFSET ?";
-        logger.info("getDashboards: " + query);
-        logger.info("getDashboards: " + offset + " " + limit);
+        //logger.info("getDashboards: " + query);
+        //logger.info("getDashboards: " + offset + " " + limit);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
+            //logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
             pstmt.setInt(1, limit);
             pstmt.setInt(2, offset);
             try (ResultSet rs = pstmt.executeQuery();) {

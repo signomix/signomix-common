@@ -44,6 +44,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     private static final Logger logger = Logger.getLogger(IotDatabaseDao.class);
 
     Long defaultOrganizationId = 1L;
+    Long defaultApplicationId = 1L;
 
     private AgroalDataSource dataSource;
 
@@ -1630,6 +1631,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS dashboardtemplates (")
                 .append("id varchar primary key,")
                 .append("title varchar,")
+                .append("items varchar,")
                 .append("widgets varchar);");
         // devices
         sb.append("CREATE TABLE IF NOT EXISTS devices (")
@@ -1704,19 +1706,28 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d3 double precision,")
                 .append("d4 double precision,")
                 .append("d5 double precision,")
-                .append("d6 double precision,").append("d7 double precision,").append("d8 double precision,")
+                .append("d6 double precision,")
+                .append("d7 double precision,")
+                .append("d8 double precision,")
                 .append("d9 double precision,")
-                .append("d10 double precision,").append("d11 double precision,").append("d12 double precision,")
+                .append("d10 double precision,")
+                .append("d11 double precision,")
+                .append("d12 double precision,")
                 .append("d13 double precision,")
-                .append("d14 double precision,").append("d15 double precision,").append("d16 double precision,")
+                .append("d14 double precision,")
+                .append("d15 double precision,")
+                .append("d16 double precision,")
                 .append("d17 double precision,")
-                .append("d18 double precision,").append("d19 double precision,").append("d20 double precision,")
+                .append("d18 double precision,")
+                .append("d19 double precision,")
+                .append("d20 double precision,")
                 .append("d21 double precision,")
-                .append("d22 double precision,").append("d23 double precision,").append("d24 double precision,")
+                .append("d22 double precision,")
+                .append("d23 double precision,")
+                .append("d24 double precision,")
                 .append("project varchar,")
                 .append("state double precision);");
         // .append("PRIMARY KEY (eui,tstamp) );");
-
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
                 .append("eui VARCHAR PRIMARY KEY,day date, dtime time, tstamp TIMESTAMP NOT NULL, data VARCHAR);");
@@ -1724,7 +1735,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,")
                 .append("name varchar,")
-                .append("userid varchar,").append("team varchar,")
+                .append("userid varchar,")
+                .append("team varchar,")
                 .append("channels varchar,")
                 .append("description varchar,")
                 .append("administrators varchar,")
@@ -2151,7 +2163,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != device.getOrgApplicationId()) {
                 pst.setLong(29, device.getOrgApplicationId());
             } else {
-                pst.setLong(29, defaultOrganizationId);
+                pst.setLong(29, defaultApplicationId);
             }
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -2494,7 +2506,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != device.getOrgApplicationId()) {
                 pstmt.setLong(29, device.getOrgApplicationId());
             } else {
-                pstmt.setLong(29, defaultOrganizationId);
+                pstmt.setLong(29, defaultApplicationId);
             }
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -2651,7 +2663,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<DeviceGroup> getUserGroups(String userID, int limit, int offset,
-            String searchString, boolean includeShared) throws IotDatabaseException {
+            String searchString) throws IotDatabaseException {
         String[] searchParts = new String[0];
         String searchCondition = "";
         if (null != searchString && !searchString.isEmpty()) {
