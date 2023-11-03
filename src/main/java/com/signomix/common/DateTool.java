@@ -1,5 +1,6 @@
 package com.signomix.common;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.DateTimeException;
 import java.time.Instant;
@@ -106,43 +107,43 @@ public class DateTool {
                 ts = new Timestamp(millis);
                 return ts;
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(1)"+e.getMessage());
             }
             try {
                 return getTimestamp(timeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(2)"+e.getMessage());
             }
             try {
                 return getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ssX");
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(3)"+e.getMessage());
             }
             try {
                 return getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ss.SSSX");
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(4)"+e.getMessage());
             }
             try {
                 return getTimestamp(timeString, "yyyy-MM-dd'T'HHmmssX");
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(5)"+e.getMessage());
             }
             try {
                 return getTimestamp(timeString, "yyyy-MM-dd'T'HHmmss.SSSX");
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(6)"+e.getMessage());
             }
             try {
                 return getTimestamp(timeString, CHIRPSTACK_TIME_FORMAT);
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(7)"+e.getMessage());
             }
             try {
                 ts = Timestamp.from(Instant.parse(secondaryInput));
                 return ts;
             } catch (Exception e) {
-                LOG.warn(e.getMessage());
+                LOG.debug("(8)"+e.getMessage());
             }
         }
         if (useSystemTimeOnError) {
@@ -201,6 +202,19 @@ public class DateTool {
         result = Timestamp.valueOf(startOfDayInEurope2.toLocalDateTime()).getTime() - offset;
         return result;
     }
+
+    public static String getTimestampAsIsoInstant(Timestamp timestamp) {
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+        ZonedDateTime zdtInstanceAtOffset = ZonedDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
+        return zdtInstanceAtOffset.format(formatter);
+    }
+
+    public static String getTimestampAsIsoInstant(long timestamp, String zoneId) {
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        ZonedDateTime zdtInstanceAtOffset = ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of(zoneId));
+        return zdtInstanceAtOffset.format(formatter);
+    }
+
 
     private static boolean isInSeconds(long timestamp) {
         // Instant instant = Instant.ofEpochMilli(timestamp);
