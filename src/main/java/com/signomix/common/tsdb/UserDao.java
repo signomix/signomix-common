@@ -46,8 +46,6 @@ public class UserDao implements UserDaoIface {
                 .append("uid varchar primary key,")
                 .append("type int,")
                 .append("email varchar,")
-                .append("name varchar,")
-                .append("surname varchar,")
                 .append("role varchar,")
                 .append("secret varchar,")
                 .append("password varchar,")
@@ -59,10 +57,12 @@ public class UserDao implements UserDaoIface {
                 .append("unregisterreq boolean,")
                 .append("authstatus int,")
                 .append("created timestamp,")
+                .append("user_number SERIAL,")
+                .append("name varchar,")
+                .append("surname varchar,")
                 .append("services int,")
                 .append("phoneprefix varchar,")
                 .append("credits bigint,")
-                .append("user_number SERIAL,")
                 .append("autologin boolean,")
                 .append("language varchar,")
                 .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+" references organizations(id));");
@@ -169,31 +169,32 @@ public class UserDao implements UserDaoIface {
     }
 
     User buildUser(ResultSet rs) throws SQLException {
-        // uid,type,email,name,surname,role,secret,password,generalchannel,infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,number,services,phoneprefix,credits,autologin
+        //// uid,type,email,name,surname,role,secret,password,generalchannel,infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,number,services,phoneprefix,credits,autologin
+        //"UID","TYPE","EMAIL","ROLE","SECRET","PASSWORD","GENERALCHANNEL","INFOCHANNEL","WARNINGCHANNEL","ALERTCHANNEL","CONFIRMED","UNREGISTERREQ","AUTHSTATUS","CREATED","USER_NUMBER","NAME","SURNAME","SERVICES","PHONEPREFIX","CREDITS","AUTOLOGIN","LANGUAGE","ORGANIZATION"
         User user = new User();
-        user.uid = rs.getString(1);
-        user.type = rs.getInt(2);
-        user.email = rs.getString(3);
-        user.name = rs.getString(4);
-        user.surname = rs.getString(5);
-        user.role = rs.getString(6);
-        user.confirmString = rs.getString(7);
-        user.password = rs.getString(8);
-        user.generalNotificationChannel = rs.getString(9);
-        user.infoNotificationChannel = rs.getString(10);
-        user.warningNotificationChannel = rs.getString(11);
-        user.alertNotificationChannel = rs.getString(12);
-        user.confirmed = rs.getBoolean(13);
-        user.unregisterRequested = rs.getBoolean(14);
-        user.authStatus = rs.getInt(15);
-        user.createdAt = rs.getTimestamp(16).getTime();
-        user.number = rs.getLong(17);
-        user.services = rs.getInt(18);
-        user.phonePrefix = rs.getString(19);
-        user.credits = rs.getLong(20);
-        user.autologin = rs.getBoolean(21);
-        user.preferredLanguage = rs.getString(22);
-        user.organization = rs.getLong(23);
+        user.uid = rs.getString("uid");
+        user.type = rs.getInt("type");
+        user.email = rs.getString("email");
+        user.name = rs.getString("name");
+        user.surname = rs.getString("surname");
+        user.role = rs.getString("role");
+        user.confirmString = rs.getString("secret");
+        user.password = rs.getString("password");
+        user.generalNotificationChannel = rs.getString("generalchannel");
+        user.infoNotificationChannel = rs.getString("infochannel");
+        user.warningNotificationChannel = rs.getString("warningchannel");
+        user.alertNotificationChannel = rs.getString("alertchannel");
+        user.confirmed = rs.getBoolean("confirmed");
+        user.unregisterRequested = rs.getBoolean("unregisterreq");
+        user.authStatus = rs.getInt("authstatus");
+        user.createdAt = rs.getTimestamp("created").getTime();
+        user.number = rs.getLong("user_number");
+        user.services = rs.getInt("services");
+        user.phonePrefix = rs.getString("phoneprefix");
+        user.credits = rs.getLong("credits");
+        user.autologin = rs.getBoolean("autologin");
+        user.preferredLanguage = rs.getString("language");
+        user.organization = rs.getLong("organization");
         return user;
     }
 

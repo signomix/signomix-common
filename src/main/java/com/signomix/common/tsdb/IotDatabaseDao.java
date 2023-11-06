@@ -1698,8 +1698,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS devicedata (")
                 .append("eui varchar not null,")
                 .append("userid varchar,")
-                .append("day date,")
-                .append("dtime time,")
+                //.append("day date,")
+                //.append("dtime time,")
                 .append("tstamp timestamp,")
                 .append("d1 double precision,")
                 .append("d2 double precision,")
@@ -1729,8 +1729,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("state double precision);");
         // .append("PRIMARY KEY (eui,tstamp) );");
         // virtualdevicedata
-        sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
-                .append("eui VARCHAR PRIMARY KEY,day date, dtime time, tstamp TIMESTAMP NOT NULL, data VARCHAR);");
+        sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (eui TEXT,tstamp TIMESTAMP NOT NULL default current_timestamp, data TEXT);");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,")
@@ -1831,6 +1830,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
+        query = "SELECT create_hypertable('devicestatus', 'ts');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
+        //TODO: indexes
+        // create index devices_userid on devices (userid);
 
     }
 
