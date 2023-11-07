@@ -33,7 +33,7 @@ public class ApplicationDao implements ApplicationDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/applications.csv', 'SELECT * FROM applications');";
+        String query = "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();

@@ -69,7 +69,7 @@ public class ShortenerDao implements ShortenerDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/urls.csv', 'SELECT * FROM urls');";
+        String query = "COPY urls to '/var/lib/postgresql/data/export/urls.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {

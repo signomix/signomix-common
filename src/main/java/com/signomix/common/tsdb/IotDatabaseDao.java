@@ -685,22 +685,21 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/alerts.csv', 'SELECT * FROM alerts');"
-                + "CALL CSVWRITE('backup/applications.csv', 'SELECT * FROM applications');"
-                + "CALL CSVWRITE('backup/commands.csv', 'SELECT * FROM commands');"
-                + "CALL CSVWRITE('backup/commandslog.csv', 'SELECT * FROM commandslog');"
-                + "CALL CSVWRITE('backup/dashboards.csv', 'SELECT * FROM dashboards');"
-                + "CALL CSVWRITE('backup/dashboardtemplates.csv', 'SELECT * FROM dashboardtemplates');"
-                + "CALL CSVWRITE('backup/devicechannels.csv', 'SELECT * FROM devicechannels');"
-                + "CALL CSVWRITE('backup/devicedata.csv', 'SELECT * FROM devicedata');"
-                + "CALL CSVWRITE('backup/devicestatus.csv', 'SELECT * FROM devicestatus');"
-                + "CALL CSVWRITE('backup/devices.csv', 'SELECT * FROM devices');"
-                + "CALL CSVWRITE('backup/devicetemplates.csv', 'SELECT * FROM devicetemplates');"
-                + "CALL CSVWRITE('backup/groups.csv', 'SELECT * FROM groups');"
-                + "CALL CSVWRITE('backup/virtualdevicedata.csv', 'SELECT * FROM virtualdevicedata');"
-                + "CALL CSVWRITE('backup/devicestatus.csv', 'SELECT * FROM devicestatus');"
-                + "CALL CSVWRITE('backup/account_params.csv', 'SELECT * FROM account_params');"
-                + "CALL CSVWRITE('backup/account_features.csv', 'SELECT * FROM account_features');";
+        String query = "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY commands to '/var/lib/postgresql/data/export/commands.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY commandslog to '/var/lib/postgresql/data/export/commandslog.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY dashboards to '/var/lib/postgresql/data/export/dashboards.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY dashboardtemplates to '/var/lib/postgresql/data/export/dashboardtemplates.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicechannels to '/var/lib/postgresql/data/export/devicechannels.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicedata to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicestatus to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devices to '/var/lib/postgresql/data/export/devices.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicetemplates to '/var/lib/postgresql/data/export/devicetemplates.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY groups to '/var/lib/postgresql/data/export/groups.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY virtualdevicedata to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_params to '/var/lib/postgresql/data/export/account_params.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
