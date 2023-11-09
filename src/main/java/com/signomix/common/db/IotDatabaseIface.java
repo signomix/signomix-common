@@ -18,6 +18,7 @@ public interface IotDatabaseIface {
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
     public void setDatasource(AgroalDataSource ds);
+    public void setAnalyticDatasource(AgroalDataSource ds);
     public void setQueryResultsLimit(int limit);
 
     public List<List> getValues2(String userID, String deviceEUI, String dataQuery) throws IotDatabaseException;
@@ -27,6 +28,7 @@ public interface IotDatabaseIface {
     public List<List<List>> getGroupLastValues(String userID, long organizationId, String groupEUI, String[] channelNames, long secondsBack) throws IotDatabaseException;
     public void putData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException;
     public void putVirtualData(Device device, VirtualData data) throws IotDatabaseException;
+    public void saveAnalyticData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException;
     
     //GROUPS
     public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException;

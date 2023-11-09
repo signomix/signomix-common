@@ -47,6 +47,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     Long defaultApplicationId = 1L;
 
     private AgroalDataSource dataSource;
+    private AgroalDataSource analyticDataSource;
 
     // TODO: get requestLimit from config
     private long requestLimit = 500;
@@ -54,6 +55,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public void setDatasource(AgroalDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    @Override
+    public void setAnalyticDatasource(AgroalDataSource dataSource) {
+        this.analyticDataSource = dataSource;
     }
 
     @Override
@@ -756,6 +762,53 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String query = "insert into devicedata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, device.getEUI());
+            pst.setString(2, device.getUserID());
+            pst.setTimestamp(3, new java.sql.Timestamp(timestamp));
+            for (int i = 1; i <= limit; i++) {
+                pst.setNull(i + 3, java.sql.Types.DOUBLE);
+            }
+            int index = -1;
+            // if (values.size() <= limit) {
+            // limit = values.size();
+            // }
+            if (values.size() > limit) {
+                // TODO: send notification to the user?
+            }
+            for (int i = 1; i <= limit; i++) {
+                if (i <= values.size()) {
+                    index = channelNames.indexOf(values.get(i - 1).getName());
+                    if (index >= 0 && index < limit) { // TODO: there must be control of mthe number of measures while
+                        // defining device, not here
+                        try {
+                            pst.setDouble(4 + index, values.get(i - 1).getValue());
+                        } catch (NullPointerException e) {
+                            pst.setNull(4 + index, Types.DOUBLE);
+                        }
+                    }
+                }
+            }
+            pst.setString(28, device.getProject());
+            pst.setDouble(29, device.getState());
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+
+    }
+
+    @Override
+    public void saveAnalyticData(Device device, ArrayList<ChannelData> values) throws IotDatabaseException {
+        if (values == null || values.isEmpty()) {
+            System.out.println("no values");
+            return;
+        }
+        int limit = 24;
+        List channelNames = getDeviceChannels(device.getEUI());
+        String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        long timestamp = values.get(0).getTimestamp();
+        try (Connection conn = analyticDataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getUserID());
             pst.setTimestamp(3, new java.sql.Timestamp(timestamp));
@@ -1726,6 +1779,36 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d24 double precision,")
                 .append("project varchar,")
                 .append("state double precision);");
+        sb.append("CREATE TABLE IF NOT EXISTS analyticdata (")
+                .append("eui text not null,")
+                .append("userid text,")
+                .append("tstamp timestamptz,")
+                .append("d1 double precision,")
+                .append("d2 double precision,")
+                .append("d3 double precision,")
+                .append("d4 double precision,")
+                .append("d5 double precision,")
+                .append("d6 double precision,")
+                .append("d7 double precision,")
+                .append("d8 double precision,")
+                .append("d9 double precision,")
+                .append("d10 double precision,")
+                .append("d11 double precision,")
+                .append("d12 double precision,")
+                .append("d13 double precision,")
+                .append("d14 double precision,")
+                .append("d15 double precision,")
+                .append("d16 double precision,")
+                .append("d17 double precision,")
+                .append("d18 double precision,")
+                .append("d19 double precision,")
+                .append("d20 double precision,")
+                .append("d21 double precision,")
+                .append("d22 double precision,")
+                .append("d23 double precision,")
+                .append("d24 double precision,")
+                .append("project text,")
+                .append("state double precision);");
         // .append("PRIMARY KEY (eui,tstamp) );");
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (eui TEXT,tstamp TIMESTAMP NOT NULL default current_timestamp, data TEXT);");
@@ -1823,6 +1906,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
+        query = "SELECT create_hypertable('analyticdata', 'tstamp');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
         query = "SELECT create_hypertable('virtualdevicedata', 'tstamp');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();

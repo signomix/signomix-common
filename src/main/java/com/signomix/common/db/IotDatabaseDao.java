@@ -45,6 +45,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     Long defaultApplicationId = 0L;
 
     private AgroalDataSource dataSource;
+    private AgroalDataSource analyticDataSource;
 
     // TODO: get requestLimit from config
     private long requestLimit = 500;
@@ -52,6 +53,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public void setDatasource(AgroalDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    @Override
+    public void setAnalyticDatasource(AgroalDataSource dataSource) {
+        this.analyticDataSource = dataSource;
     }
 
     @Override
@@ -2527,5 +2533,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getGroupDevices'");
+    }
+
+    @Override
+    public void saveAnalyticData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'saveAnalyticData'");
     }
 }
