@@ -705,7 +705,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "COPY groups to '/var/lib/postgresql/data/export/groups.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY virtualdevicedata to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY account_params to '/var/lib/postgresql/data/export/account_params.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;";
+                + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY device_tags to '/var/lib/postgresql/data/export/device_tags.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -808,7 +809,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         List channelNames = getDeviceChannels(device.getEUI());
         String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
-        try (Connection conn = analyticDataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        try (Connection conn = analyticDataSource.getConnection();
+                PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getUserID());
             pst.setTimestamp(3, new java.sql.Timestamp(timestamp));
@@ -1750,8 +1752,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS devicedata (")
                 .append("eui varchar not null,")
                 .append("userid varchar,")
-                //.append("day date,")
-                //.append("dtime time,")
+                // .append("day date,")
+                // .append("dtime time,")
                 .append("tstamp timestamp,")
                 .append("d1 double precision,")
                 .append("d2 double precision,")
@@ -1811,7 +1813,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("state double precision);");
         // .append("PRIMARY KEY (eui,tstamp) );");
         // virtualdevicedata
-        sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (eui TEXT,tstamp TIMESTAMP NOT NULL default current_timestamp, data TEXT);");
+        sb.append(
+                "CREATE TABLE IF NOT EXISTS virtualdevicedata (eui TEXT,tstamp TIMESTAMP NOT NULL default current_timestamp, data TEXT);");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,")
@@ -1899,6 +1902,19 @@ public class IotDatabaseDao implements IotDatabaseIface {
             logger.error(e.getMessage());
         }
 
+        query = "CREATE TABLE IF NOT EXISTS device_tags ("
+                + "eui TEXT,"
+                + "tag_name TEXT,"
+                + "tag_value TEXT,"
+                + "PRIMARY KEY (eui,tag_name));";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+        }
+
         // hypertables
         query = "SELECT create_hypertable('devicedata', 'tstamp');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -1926,7 +1942,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             logger.warn(e.getMessage());
         }
 
-        //TODO: indexes
+        // TODO: indexes
         // create index devices_userid on devices (userid);
 
     }
@@ -2882,5 +2898,53 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+    }
+
+    @Override
+    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addDeviceTag'");
+    }
+
+    @Override
+    public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDeviceTag'");
+    }
+
+    @Override
+    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateDeviceTag'");
+    }
+
+    @Override
+    public void removeAllDeviceTags(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeAllDeviceTags'");
+    }
+
+    @Override
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUserDevicesByTag'");
+    }
+
+    @Override
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDevicesByTag'");
+    }
+
+    @Override
+    public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUserDeviceEuisByTag'");
+    }
+
+    @Override
+    public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDeviceEuisByTag'");
     }
 }

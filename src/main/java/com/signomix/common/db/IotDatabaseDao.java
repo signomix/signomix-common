@@ -2540,4 +2540,52 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveAnalyticData'");
     }
+
+    @Override
+    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addDeviceTag'");
+    }
+
+    @Override
+    public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDeviceTag'");
+    }
+
+    @Override
+    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateDeviceTag'");
+    }
+
+    @Override
+    public void removeAllDeviceTags(User user, String deviceEui, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeAllDeviceTags'");
+    }
+
+    @Override
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUserDevicesByTag'");
+    }
+
+    @Override
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDevicesByTag'");
+    }
+
+    @Override
+    public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUserDeviceEuisByTag'");
+    }
+
+    @Override
+    public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDeviceEuisByTag'");
+    }
 }

@@ -2,7 +2,7 @@ package com.signomix.common.iot.sentry;
 
 import java.util.List;
 
-public class SentryConfig {
+public class SentinelConfig {
     public static final int TYPE_DEVICE = 0;
     public static final int TYPE_GROUP = 1;
     public static final int TYPE_TAG = 2;
@@ -23,7 +23,7 @@ public class SentryConfig {
     public boolean conditionOkMessage;
     public List<AlarmCondition> conditions;
 
-    public SentryConfig() {
+    public SentinelConfig() {
         conditions=new java.util.ArrayList<>();
     }
 }

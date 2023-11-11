@@ -50,6 +50,16 @@ public interface IotDatabaseIface {
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
     public List<Device> getInactiveDevices() throws IotDatabaseException;
+    //tags
+    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue);
+    public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue);
+    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue);
+    public void removeAllDeviceTags(User user, String deviceEui, String tagName, String tagValue);
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue);
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue);
+    public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue);
+    public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue);
+    
     //data migration
     public List<Device> getAllDevices() throws IotDatabaseException;
     public void addDevice(Device device) throws IotDatabaseException;

@@ -9,11 +9,11 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import com.signomix.common.iot.sentry.SentryConfig;
+import com.signomix.common.iot.sentry.SentinelConfig;
 
 import io.agroal.api.AgroalDataSource;
 
-public class SentryDao implements SentryDaoIface {
+public class SentinelDao implements SentinelDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
@@ -47,13 +47,13 @@ public class SentryDao implements SentryDaoIface {
     }
 
     @Override
-    public void addConfig(SentryConfig config) throws IotDatabaseException {
+    public void addConfig(SentinelConfig config) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addConfig'");
     }
 
     @Override
-    public void updateConfig(SentryConfig config) throws IotDatabaseException {
+    public void updateConfig(SentinelConfig config) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'updateConfig'");
     }
@@ -65,22 +65,29 @@ public class SentryDao implements SentryDaoIface {
     }
 
     @Override
-    public SentryConfig getConfig(long id) throws IotDatabaseException {
+    public SentinelConfig getConfig(long id) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfig'");
     }
 
     @Override
-    public List<SentryConfig> getConfigs(long userId, int limit, int offset) throws IotDatabaseException {
+    public List<SentinelConfig> getConfigs(long userId, int limit, int offset) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigs'");
     }
 
     @Override
-    public List<SentryConfig> getOrganizationConfigs(long organizationId, int limit, int offset)
+    public List<SentinelConfig> getOrganizationConfigs(long organizationId, int limit, int offset)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationConfigs'");
+    }
+
+    @Override
+    public List<SentinelConfig> getConfigsByDevice(String deviceEui, int limit, int offset)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getConfigsByDevice'");
     }
 
 
