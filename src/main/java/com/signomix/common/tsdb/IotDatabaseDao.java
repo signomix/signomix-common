@@ -1944,6 +1944,41 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
         // TODO: indexes
         // create index devices_userid on devices (userid);
+        query="CREATE INDEX IF NOT EXISTS idx_devicedata_eui_tstamp ON devicedata (eui, tstamp DESC);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
+        query="CREATE INDEX IF NOT EXISTS idx_analyticdata_eui_tstamp ON analyticdata (eui, tstamp DESC);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
+        query="CREATE INDEX IF NOT EXISTS idx_virtualdevicedata_eui_tstamp ON virtualdevicedata (eui, tstamp DESC);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
+        query="CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts ON devicestatus (eui, tstamp DESC);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
+        query="CREATE INDEX IF NOT EXISTS idx_alerts_uuid_id ON alerts (uuid, id DESC);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
 
     }
 
@@ -2947,4 +2982,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDeviceEuisByTag'");
     }
+
+    @Override
+    public List<Device> getDevicesByTag(boolean fullData, String userID, long organizationID, String tagName,
+            String tagValue) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
+    }
+
+    
 }

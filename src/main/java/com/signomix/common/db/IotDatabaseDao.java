@@ -2588,4 +2588,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDeviceEuisByTag'");
     }
+
+    @Override
+    public List<Device> getDevicesByTag(boolean fullData, String userID, long organizationID, String tagName,
+            String tagValue) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
+    }
 }

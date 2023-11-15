@@ -1,4 +1,4 @@
-package com.signomix.common.iot.sentry;
+package com.signomix.common.iot.sentinel;
 
 public class AlarmCondition {
     public static final int CONDITION_EQUAL = 0;

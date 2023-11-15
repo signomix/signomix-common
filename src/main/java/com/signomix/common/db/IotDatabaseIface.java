@@ -38,7 +38,8 @@ public interface IotDatabaseIface {
     public void createGroup(DeviceGroup group) throws IotDatabaseException;
     public void deleteGroup(String groupEUI) throws IotDatabaseException;
     public List<Device> getGroupDevices(boolean fullData, String userID, long organizationID, String groupID) throws IotDatabaseException;
-
+    public List<Device> getDevicesByTag(boolean fullData, String userID, long organizationID, String tagName, String tagValue) throws IotDatabaseException;
+    
     //DEVICES
     public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset, String searcString) throws IotDatabaseException;
     public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset, String searchString) throws IotDatabaseException;
@@ -81,6 +82,7 @@ public interface IotDatabaseIface {
     public long getMaxCommandId() throws IotDatabaseException;
     public long getMaxCommandId(String deviceEui) throws IotDatabaseException;
     public int getChannelIndex(String deviceEUI, String channel) throws IotDatabaseException;
+    
     //notifications
     public void addAlert(IotEvent alert) throws IotDatabaseException;
     public List<Alert> getAlerts(String userID, boolean descending) throws IotDatabaseException;
@@ -114,6 +116,7 @@ public interface IotDatabaseIface {
     public void addFavouriteDevice(String userID, String eui) throws IotDatabaseException;
     public void removeFavouriteDevices(String userID, String eui) throws IotDatabaseException;
     public List<Device> getFavouriteDevices(String userID) throws IotDatabaseException;
+
 
 }
 

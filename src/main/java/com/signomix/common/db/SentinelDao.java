@@ -4,12 +4,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import com.signomix.common.iot.sentry.SentinelConfig;
+import com.signomix.common.iot.sentinel.SentinelConfig;
 
 import io.agroal.api.AgroalDataSource;
 
@@ -88,6 +89,35 @@ public class SentinelDao implements SentinelDaoIface {
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigsByDevice'");
+    }
+
+    @Override
+    public Map<String,Map<String,String>> getDevicesByConfigId(long configId, int limit, int offset) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByConfigId'");
+    }
+
+    public List<List> getLastValuesByConfigId(long sentinelConfigId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLastValuesByConfigId'");
+    }
+
+    @Override
+    public void addDevice(long configId, String deviceEui, String channelMapping) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addDevice'");
+    }
+
+    @Override
+    public void removeDevice(long configId, String deviceEui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDevice'");
+    }
+
+    @Override
+    public Map<String, String> getDevices(long configId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevices'");
     }
 
 

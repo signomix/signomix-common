@@ -1,4 +1,4 @@
-package com.signomix.common.iot.sentry;
+package com.signomix.common.iot.sentinel;
 
 import java.util.List;
 
@@ -22,6 +22,8 @@ public class SentinelConfig {
     public boolean everyTime;
     public boolean conditionOkMessage;
     public List<AlarmCondition> conditions;
+    public String team;
+    public String administrators;
 
     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();
