@@ -18,13 +18,12 @@ import com.signomix.common.iot.sentinel.Signal;
 
 import io.agroal.api.AgroalDataSource;
 
-@ApplicationScoped
+
 public class SignalDao implements SignalDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
-    @Inject
-    Logger logger;
+    public static final Logger logger = Logger.getLogger(SignalDao.class);
 
     private AgroalDataSource dataSource;
 

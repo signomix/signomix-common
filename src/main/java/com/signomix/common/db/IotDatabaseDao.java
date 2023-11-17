@@ -2595,4 +2595,5 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
     }
+
 }

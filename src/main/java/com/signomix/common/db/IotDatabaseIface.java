@@ -51,6 +51,7 @@ public interface IotDatabaseIface {
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
     public List<Device> getInactiveDevices() throws IotDatabaseException;
+
     //tags
     public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue);
     public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue);

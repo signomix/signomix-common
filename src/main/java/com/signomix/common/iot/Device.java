@@ -74,6 +74,7 @@ public class Device {
     private HashMap<String, Object> applicationConfig;
     private Long organizationId;
     private boolean writable;
+    private HashMap<String, String> tags;
 
     // TODO: change uid to uidHex and add validation (is it hex value)
     /**
@@ -108,6 +109,7 @@ public class Device {
         applicationConfig = null;
         organizationId = 0L;
         writable=false;
+        tags = new HashMap<>();
     }
 
     public void print() {
@@ -733,6 +735,14 @@ public class Device {
             LOG.warn("Error parsing configuration: " + ex.getMessage());
             return new HashMap<>();
         }
+    }
+
+    public void setTags(HashMap<String, String> tags) {
+        this.tags = tags;
+    }
+
+    public HashMap<String, String> getTags() {
+        return tags;
     }
 
     /* public void setStatusData(DeviceStatus statusData) {

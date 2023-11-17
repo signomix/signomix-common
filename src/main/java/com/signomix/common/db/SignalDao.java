@@ -8,7 +8,6 @@ import com.signomix.common.iot.sentinel.Signal;
 
 import io.agroal.api.AgroalDataSource;
 
-@ApplicationScoped
 public class SignalDao implements SignalDaoIface {
 
     @Override

@@ -22,8 +22,7 @@ public class SentinelDao implements SentinelDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
-    @Inject
-    Logger logger;
+    Logger logger = Logger.getLogger(SentinelDao.class);
 
     private AgroalDataSource dataSource;
 
