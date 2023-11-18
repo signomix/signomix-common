@@ -10,7 +10,7 @@ public class SentinelConfig {
     public Long id;
     public String name;
     public boolean active;
-    public Long userId;
+    public String userId;
     public Long organizationId;
     public int type;
     public String deviceEui;
@@ -20,12 +20,13 @@ public class SentinelConfig {
     public int alertLevel;
     public String alertMessage;
     public boolean everyTime;
+    public boolean conditionOk;
     public boolean conditionOkMessage;
-    public List<AlarmCondition> conditions;
+    public List<AlarmCondition> conditions=new java.util.ArrayList<>();
     public String team;
     public String administrators;
 
-    public SentinelConfig() {
+/*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();
-    }
+    } */
 }

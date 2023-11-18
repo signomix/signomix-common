@@ -2,12 +2,11 @@ package com.signomix.common.tsdb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
@@ -48,12 +47,13 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
+        logger.info("Creating sentinel tables...");
         String query = "CREATE TABLE IF NOT EXISTS sentinels ("
                 + "id BIGSERIAL PRIMARY KEY,"
                 + "tstamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                 + "name VARCHAR(255) NOT NULL,"
                 + "active BOOLEAN NOT NULL,"
-                + "user_id BIGINT NOT NULL,"
+                + "user_id VARCHAR(255),"
                 + "organization_id BIGINT NOT NULL,"
                 + "type INTEGER NOT NULL,"
                 + "device_eui VARCHAR(255),"
@@ -63,6 +63,7 @@ public class SentinelDao implements SentinelDaoIface {
                 + "alert_level INTEGER NOT NULL,"
                 + "alert_message VARCHAR(255),"
                 + "every_time BOOLEAN NOT NULL,"
+                + "alert_ok BOOLEAN NOT NULL DEFAULT FALSE,"
                 + "condition_ok_message BOOLEAN NOT NULL,"
                 + "conditions JSON NOT NULL DEFAULT '[]',"
                 + "team TEXT NOT NULL DEFAULT '',"
@@ -70,10 +71,13 @@ public class SentinelDao implements SentinelDaoIface {
                 + ");"
                 + "CREATE TABLE IF NOT EXISTS sentinel_events ("
                 + "id BIGSERIAL PRIMARY KEY,"
+                + "device_eui VARCHAR(255) NOT NULL,"
                 + "sentinel_id BIGINT NOT NULL,"
                 + "tstamp TIMESTAMPTZ NOT NULL,"
                 + "level INTEGER NOT NULL,"
-                + "message VARCHAR(255) NOT NULL"
+                + "message_pl VARCHAR(255) NOT NULL,"
+                + "message_en VARCHAR(255) NOT NULL,"
+                + "propagated BOOLEAN NOT NULL DEFAULT FALSE"
                 + ");"
                 + "CREATE TABLE IF NOT EXISTS sentinel_devices ("
                 + "sentinel_id BIGINT,"
@@ -89,17 +93,24 @@ public class SentinelDao implements SentinelDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+
+        query = "SELECT create_hypertable('sentinel_events', 'tstamp');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
     }
 
     @Override
-    public void addConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group, tag_name, tag_value, alert_level, alert_message, alert_ok, condition_ok_message, conditions, team, administrators) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?)";
+    public long addConfig(SentinelConfig config) throws IotDatabaseException {
+        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?)";
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
+                PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
             pstmt.setString(1, config.name);
             pstmt.setBoolean(2, config.active);
-            pstmt.setLong(3, config.userId);
+            pstmt.setString(3, config.userId);
             pstmt.setLong(4, config.organizationId);
             pstmt.setInt(5, config.type);
             pstmt.setString(6, config.deviceEui);
@@ -109,11 +120,18 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setInt(10, config.alertLevel);
             pstmt.setString(11, config.alertMessage);
             pstmt.setBoolean(12, config.everyTime);
-            pstmt.setBoolean(13, config.conditionOkMessage);
-            pstmt.setObject(14, new ObjectMapper().writeValueAsString(config.conditions));
-            pstmt.setString(15, config.team);
-            pstmt.setString(16, config.administrators);
+            pstmt.setBoolean(13, config.conditionOk);
+            pstmt.setBoolean(14, config.conditionOkMessage);
+            pstmt.setObject(15, new ObjectMapper().writeValueAsString(config.conditions));
+            pstmt.setString(16, config.team);
+            pstmt.setString(17, config.administrators);
             pstmt.execute();
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if(rs.next()){
+                return rs.getLong(1);
+            }else{
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "No generated key");
+            }
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
@@ -128,7 +146,7 @@ public class SentinelDao implements SentinelDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, config.name);
             pstmt.setBoolean(2, config.active);
-            pstmt.setLong(3, config.userId);
+            pstmt.setString(3, config.userId);
             pstmt.setLong(4, config.organizationId);
             pstmt.setInt(5, config.type);
             pstmt.setString(6, config.deviceEui);
@@ -177,7 +195,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.id = rs.getLong("id");
                     config.name = rs.getString("name");
                     config.active = rs.getBoolean("active");
-                    config.userId = rs.getLong("user_id");
+                    config.userId = rs.getString("user_id");
                     config.organizationId = rs.getLong("organization_id");
                     config.type = rs.getInt("type");
                     config.deviceEui = rs.getString("device_eui");
@@ -203,11 +221,11 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public List<SentinelConfig> getConfigs(long userId, int limit, int offset) throws IotDatabaseException {
+    public List<SentinelConfig> getConfigs(String userId, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE user_id=? OR team LIKE ? OR administrators LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, userId);
+            pstmt.setString(1, userId);
             pstmt.setString(2, "%,"+userId+",%");
             pstmt.setString(3, "%,"+userId+",%");
             pstmt.setInt(4, limit);
@@ -219,7 +237,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.id = rs.getLong("id");
                     config.name = rs.getString("name");
                     config.active = rs.getBoolean("active");
-                    config.userId = rs.getLong("user_id");
+                    config.userId = rs.getString("user_id");
                     config.organizationId = rs.getLong("organization_id");
                     config.type = rs.getInt("type");
                     config.deviceEui = rs.getString("device_eui");
@@ -240,6 +258,7 @@ public class SentinelDao implements SentinelDaoIface {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
@@ -261,7 +280,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.id = rs.getLong("id");
                     config.name = rs.getString("name");
                     config.active = rs.getBoolean("active");
-                    config.userId = rs.getLong("user_id");
+                    config.userId = rs.getString("user_id");
                     config.organizationId = rs.getLong("organization_id");
                     config.type = rs.getInt("type");
                     config.deviceEui = rs.getString("device_eui");
@@ -302,7 +321,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.id = rs.getLong("id");
                     config.name = rs.getString("name");
                     config.active = rs.getBoolean("active");
-                    config.userId = rs.getLong("user_id");
+                    config.userId = rs.getString("user_id");
                     config.organizationId = rs.getLong("organization_id");
                     config.type = rs.getInt("type");
                     config.deviceEui = rs.getString("device_eui");
@@ -477,6 +496,26 @@ public class SentinelDao implements SentinelDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+    }
+
+    @Override
+    public void addSentinelEvent(long configId, String deviceEui, int level, String message_pl, String message_en)
+            throws IotDatabaseException {
+        String query = "INSERT INTO sentinel_events (sentinel_id, device_eui, level, message_pl, message_en) VALUES (?,?,?,?,?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, configId);
+            pstmt.setString(2, deviceEui);
+            pstmt.setInt(3, level);
+            pstmt.setString(4, message_pl);
+            pstmt.setString(5, message_en);
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+
     }
 
 }

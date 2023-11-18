@@ -30,8 +30,9 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/alert_definitions.csv', 'SELECT * FROM alert_definitions');"
-                + "CALL CSVWRITE('backup/alert_events.csv', 'SELECT * FROM alert_events');";
+        String query = "CALL CSVWRITE('backup/sentinelss.csv', 'SELECT * FROM sentinelss');"
+                + "CALL CSVWRITE('backup/sentinel_events.csv', 'SELECT * FROM sentinel_events');"
+                + "CALL CSVWRITE('backup/sentinel_devices.csv', 'SELECT * FROM sentinel_devices');";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
@@ -48,7 +49,7 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public void addConfig(SentinelConfig config) throws IotDatabaseException {
+    public long addConfig(SentinelConfig config) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addConfig'");
     }
@@ -72,7 +73,7 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public List<SentinelConfig> getConfigs(long userId, int limit, int offset) throws IotDatabaseException {
+    public List<SentinelConfig> getConfigs(String userId, int limit, int offset) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigs'");
     }
@@ -118,6 +119,13 @@ public class SentinelDao implements SentinelDaoIface {
     public Map<String, String> getDevices(long configId) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevices'");
+    }
+
+    @Override
+    public void addSentinelEvent(long configId, String deviceEui, int level, String message_pl, String message_en)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addSentinelEvent'");
     }
 
 

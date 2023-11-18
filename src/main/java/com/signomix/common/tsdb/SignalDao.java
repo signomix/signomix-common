@@ -79,7 +79,7 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
-        query = "CREATE TABLE IF NOT EXISTS user_signals ("
+/*         query = "CREATE TABLE IF NOT EXISTS user_signals ("
                 + "id BIGSERIAL PRIMARY KEY, "
                 + "created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                 + "read_at TIMESTAMPTZ,"
@@ -100,7 +100,7 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
+        } */
 
         // hypertables
         query = "SELECT create_hypertable('signals', 'created_at');";
@@ -109,12 +109,12 @@ public class SignalDao implements SignalDaoIface {
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
-        query = "SELECT create_hypertable('user_signals', 'created_at');";
+/*         query = "SELECT create_hypertable('user_signals', 'created_at');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
-        }
+        } */
 
         // indexes
         query = "CREATE INDEX IF NOT EXISTS signals_org_created_idx ON signals(organization_id, created_at);";
