@@ -17,6 +17,7 @@ public interface SentinelDaoIface {
     public long addConfig(SentinelConfig config) throws IotDatabaseException;
     public void addDevice(long configId, String deviceEui, String channelMapping) throws IotDatabaseException;
     public void removeDevice(long configId, String deviceEui) throws IotDatabaseException;
+    public void removeDevices(long configId) throws IotDatabaseException;
     public Map<String,String> getDevices(long configId) throws IotDatabaseException;
     public void updateConfig(SentinelConfig config) throws IotDatabaseException;
     public void removeConfig(long id) throws IotDatabaseException;

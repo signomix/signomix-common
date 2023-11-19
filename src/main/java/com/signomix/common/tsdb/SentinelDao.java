@@ -73,10 +73,10 @@ public class SentinelDao implements SentinelDaoIface {
                 + "id BIGSERIAL PRIMARY KEY,"
                 + "device_eui VARCHAR(255) NOT NULL,"
                 + "sentinel_id BIGINT NOT NULL,"
-                + "tstamp TIMESTAMPTZ NOT NULL,"
+                + "tstamp TIMESTAMPTZ NOT NULL DEFAULT now(),"
                 + "level INTEGER NOT NULL,"
-                + "message_pl VARCHAR(255) NOT NULL,"
-                + "message_en VARCHAR(255) NOT NULL,"
+                + "message_pl VARCHAR(255) NOT NULL DEFAULT '',"
+                + "message_en VARCHAR(255) NOT NULL DEFAULT '',"
                 + "propagated BOOLEAN NOT NULL DEFAULT FALSE"
                 + ");"
                 + "CREATE TABLE IF NOT EXISTS sentinel_devices ("
@@ -470,6 +470,20 @@ public class SentinelDao implements SentinelDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, configId);
             pstmt.setString(2, deviceEui);
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeDevices(long configId) throws IotDatabaseException {
+        String query = "DELETE FROM sentinel_devices WHERE sentinel_id=?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, configId);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);

@@ -128,5 +128,11 @@ public class SentinelDao implements SentinelDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'addSentinelEvent'");
     }
 
+    @Override
+    public void removeDevices(long configId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDevices'");
+    }
+
 
 }
