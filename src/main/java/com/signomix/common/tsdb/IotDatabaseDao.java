@@ -423,6 +423,36 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public void addAlert(String type, String deviceEui, String userId, String payload, long createdAt) throws IotDatabaseException {
+        String query = "insert into alerts (category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic) values (?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, "IOT");
+            pstmt.setString(2, type);
+            pstmt.setString(3, deviceEui);
+            pstmt.setString(4, userId);
+            pstmt.setString(5, payload);
+            pstmt.setString(6, "");
+            pstmt.setString(7, "");
+            pstmt.setString(8, "");
+            pstmt.setLong(9, 0);
+            pstmt.setLong(10, createdAt);
+            pstmt.setLong(11, -1);
+            pstmt.setBoolean(12, false);
+            int updated = pstmt.executeUpdate();
+            if (updated < 1) {
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
+                        "Unable to create alert", null);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage(), null);
+        }
+    }
+
+    @Override
     public List<Alert> getAlerts(String userID, boolean descending) throws IotDatabaseException {
         String query = "select id,name,category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic from alerts where userid = ? order by id ";
         if (descending) {
@@ -2437,6 +2467,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public long getParameterValue(String name, long accountType) throws IotDatabaseException {
+        logger.info("getParameterValue: " + name + " for accountType: " + accountType);
         String query = "SELECT value FROM account_params WHERE param=? AND accounttype=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, name);

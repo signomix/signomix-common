@@ -2596,4 +2596,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
     }
 
+    @Override
+    public void addAlert(String type, String deviceEui, String userId, String payload, long createdAt)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addAlert'");
+    }
+
 }

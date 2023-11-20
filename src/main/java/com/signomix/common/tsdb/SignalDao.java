@@ -79,7 +79,7 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
-/*         query = "CREATE TABLE IF NOT EXISTS user_signals ("
+         query = "CREATE TABLE IF NOT EXISTS user_signals ("
                 + "id BIGSERIAL PRIMARY KEY, "
                 + "created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                 + "read_at TIMESTAMPTZ,"
@@ -100,7 +100,7 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        } */
+        }
 
         // hypertables
         query = "SELECT create_hypertable('signals', 'created_at');";
@@ -109,12 +109,12 @@ public class SignalDao implements SignalDaoIface {
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
-/*         query = "SELECT create_hypertable('user_signals', 'created_at');";
+        query = "SELECT create_hypertable('user_signals', 'created_at');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
-        } */
+        } 
 
         // indexes
         query = "CREATE INDEX IF NOT EXISTS signals_org_created_idx ON signals(organization_id, created_at);";
@@ -140,7 +140,7 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public void saveSignal(Signal signal) throws IotDatabaseException {
-        String query = "INSERT INTO signals (user_id, organization_id, sentinel_config_id, device_eui, level, message_en, message_pl) VALUES (?,?,?,?,?,?,?)";
+        String query = "INSERT INTO user_signals (user_id, organization_id, sentinel_config_id, device_eui, level, message_en, message_pl) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, signal.userId);
@@ -160,7 +160,7 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public Signal getSignalById(long id) throws IotDatabaseException {
-        String query = "SELECT * FROM signals WHERE id=?";
+        String query = "SELECT * FROM user_signals WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
@@ -191,7 +191,7 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public void updateSignal(Signal signal) throws IotDatabaseException {
-        String query = "UPDATE signals SET read_at=?, sent_at=?, delivered_at=? WHERE id=?";
+        String query = "UPDATE user_signals SET read_at=?, sent_at=?, delivered_at=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
                     //TODO: null timestamps
@@ -209,7 +209,7 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public void deleteSignal(long id) throws IotDatabaseException {
-        String query = "DELETE FROM signals WHERE id=?";
+        String query = "DELETE FROM user_signals WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
@@ -223,7 +223,7 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException {
-        String query = "SELECT * FROM signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        String query = "SELECT * FROM user_signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
@@ -231,7 +231,7 @@ public class SignalDao implements SignalDaoIface {
             pstmt.setInt(3, offset);
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Signal> signals = new ArrayList<>();
-            if(rs.next()){
+            while(rs.next()){
                 Signal signal = new Signal();
                 signal.id = rs.getLong("id");
                 signal.createdAt = rs.getTimestamp("created_at");
@@ -257,7 +257,7 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public List<Signal> getOrganizationSignals(long organizationId, int limit, int offset) throws IotDatabaseException {
-        String query = "SELECT * FROM signals WHERE organization_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        String query = "SELECT * FROM user_signals WHERE organization_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
@@ -265,7 +265,7 @@ public class SignalDao implements SignalDaoIface {
             pstmt.setInt(3, offset);
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Signal> signals = new ArrayList<>();
-            if(rs.next()){
+            while(rs.next()){
                 Signal signal = new Signal();
                 signal.id = rs.getLong("id");
                 signal.createdAt = rs.getTimestamp("created_at");

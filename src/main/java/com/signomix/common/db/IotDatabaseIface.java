@@ -86,6 +86,7 @@ public interface IotDatabaseIface {
     
     //notifications
     public void addAlert(IotEvent alert) throws IotDatabaseException;
+    public void addAlert(String type, String deviceEui, String userId, String payload, long createdAt) throws IotDatabaseException;
     public List<Alert> getAlerts(String userID, boolean descending) throws IotDatabaseException;
     public Long getAlertsCount(String userID) throws IotDatabaseException;
     public List<Alert> getAlerts(String userID, int limit, int offset, boolean descending) throws IotDatabaseException;
