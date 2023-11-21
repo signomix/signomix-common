@@ -2547,22 +2547,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'addDeviceTag'");
     }
 
-    @Override
-    public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeDeviceTag'");
-    }
 
     @Override
     public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'updateDeviceTag'");
-    }
-
-    @Override
-    public void removeAllDeviceTags(User user, String deviceEui, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeAllDeviceTags'");
     }
 
     @Override
@@ -2590,17 +2579,29 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesByTag(boolean fullData, String userID, long organizationID, String tagName,
-            String tagValue) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
-    }
-
-    @Override
     public void addAlert(String type, String deviceEui, String userId, String payload, long createdAt)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addAlert'");
+    }
+
+    @Override
+    public void removeDeviceTag(User user, String deviceEui, String tagName) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDeviceTag'");
+    }
+
+    @Override
+    public void removeAllDeviceTags(User user, String deviceEui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeAllDeviceTags'");
+    }
+
+    @Override
+    public List<Device> getDevicesByTag(String userID, long organizationID, String tagName, String tagValue)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
     }
 
 }

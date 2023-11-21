@@ -21,7 +21,7 @@ public class SentinelConfig {
     public String alertMessage;
     public boolean everyTime;
     public boolean conditionOk;
-    public boolean conditionOkMessage;
+    public String conditionOkMessage;
     public List<AlarmCondition> conditions=new java.util.ArrayList<>();
     public String team;
     public String administrators;

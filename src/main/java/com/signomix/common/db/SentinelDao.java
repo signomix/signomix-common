@@ -134,5 +134,11 @@ public class SentinelDao implements SentinelDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'removeDevices'");
     }
 
+    @Override
+    public int getSentinelStatus(long configId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getSentinelStatus'");
+    }
+
 
 }

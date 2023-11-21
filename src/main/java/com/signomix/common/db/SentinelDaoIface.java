@@ -28,4 +28,5 @@ public interface SentinelDaoIface {
     public Map<String,Map<String,String>> getDevicesByConfigId(long configId, int limit, int offset) throws IotDatabaseException;
     public List<List> getLastValuesByConfigId(long sentinelConfigId) throws IotDatabaseException;
     public void addSentinelEvent(long configId, String deviceEui, int level, String message_pl, String message_en) throws IotDatabaseException;
+    public int getSentinelStatus(long configId) throws IotDatabaseException;
 }

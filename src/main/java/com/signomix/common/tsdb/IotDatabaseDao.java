@@ -2967,58 +2967,171 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addDeviceTag'");
+    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException {
+        String query = "INSERT INTO device_tags (eui, tagname, tagvalue) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            pstmt.setString(2, tagName);
+            pstmt.setString(3, tagValue);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
-    public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeDeviceTag'");
+    public void removeDeviceTag(User user, String deviceEui, String tagName) throws IotDatabaseException {
+        String query = "DELETE FROM device_tags WHERE eui=? AND tagname=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            pstmt.setString(2, tagName);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
-    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateDeviceTag'");
+    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException {
+        String query = "UPDATE device_tags SET tagvalue=? WHERE eui=? AND tagname=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tagValue);
+            pstmt.setString(2, deviceEui);
+            pstmt.setString(3, tagName);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
-    public void removeAllDeviceTags(User user, String deviceEui, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeAllDeviceTags'");
+    public void removeAllDeviceTags(User user, String deviceEui) throws IotDatabaseException {
+        String query = "DELETE FROM device_tags WHERE eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
-    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUserDevicesByTag'");
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) throws IotDatabaseException {
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND userid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tagName);
+            pstmt.setString(2, tagValue);
+            pstmt.setString(3, user.uid);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildDevice(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDevicesByTag'");
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException {
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tagname=? AND tagvalue=?) AND organization=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, organizationId);
+            pstmt.setString(2, tagName);
+            pstmt.setString(3, tagValue);
+            pstmt.setLong(4, organizationId);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildDevice(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     @Override
     public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUserDeviceEuisByTag'");
+        String query = "SELECT eui FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND userid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tagName);
+            pstmt.setString(2, tagValue);
+            pstmt.setString(3, user.uid);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<String> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(rs.getString("eui"));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            return null;
+        }
     }
 
     @Override
     public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDeviceEuisByTag'");
+        String query = "SELECT eui FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND organization=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tagName);
+            pstmt.setString(2, tagValue);
+            pstmt.setLong(3, organizationId);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<String> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(rs.getString("eui"));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            return null;
+        }
     }
 
     @Override
-    public List<Device> getDevicesByTag(boolean fullData, String userID, long organizationID, String tagName,
+    public List<Device> getDevicesByTag(String userID, long organizationID, String tagName,
             String tagValue) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
+        String query;
+        if(organizationID == defaultOrganizationId) {
+            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) and userid=?";
+        } else {
+            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND organization=?";
+        }
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tagName);
+            pstmt.setString(2, tagValue);
+            if(organizationID == defaultOrganizationId) {
+                pstmt.setString(3, userID);
+            } else {
+                pstmt.setLong(3, organizationID);
+            }
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildDevice(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
     

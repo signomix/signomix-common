@@ -38,8 +38,7 @@ public interface IotDatabaseIface {
     public void createGroup(DeviceGroup group) throws IotDatabaseException;
     public void deleteGroup(String groupEUI) throws IotDatabaseException;
     public List<Device> getGroupDevices(boolean fullData, String userID, long organizationID, String groupID) throws IotDatabaseException;
-    public List<Device> getDevicesByTag(boolean fullData, String userID, long organizationID, String tagName, String tagValue) throws IotDatabaseException;
-    
+       
     //DEVICES
     public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset, String searcString) throws IotDatabaseException;
     public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset, String searchString) throws IotDatabaseException;
@@ -53,14 +52,15 @@ public interface IotDatabaseIface {
     public List<Device> getInactiveDevices() throws IotDatabaseException;
 
     //tags
-    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue);
-    public void removeDeviceTag(User user, String deviceEui, String tagName, String tagValue);
-    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue);
-    public void removeAllDeviceTags(User user, String deviceEui, String tagName, String tagValue);
-    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue);
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue);
-    public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue);
-    public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue);
+    public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException;
+    public void removeDeviceTag(User user, String deviceEui, String tagName) throws IotDatabaseException;
+    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException;
+    public void removeAllDeviceTags(User user, String deviceEui) throws IotDatabaseException;
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) throws IotDatabaseException;
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException;
+    public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) throws IotDatabaseException;
+    public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException    ;
+    public List<Device> getDevicesByTag(String userID, long organizationID, String tagName, String tagValue) throws IotDatabaseException;
     
     //data migration
     public List<Device> getAllDevices() throws IotDatabaseException;
