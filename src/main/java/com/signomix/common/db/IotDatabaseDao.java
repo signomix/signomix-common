@@ -24,6 +24,7 @@ import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.signomix.common.Tag;
 import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
@@ -2602,6 +2603,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesByTag'");
+    }
+
+    @Override
+    public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeviceTags'");
     }
 
 }

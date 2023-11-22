@@ -3,6 +3,7 @@ package com.signomix.common.db;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.signomix.common.Tag;
 import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
@@ -52,6 +53,7 @@ public interface IotDatabaseIface {
     public List<Device> getInactiveDevices() throws IotDatabaseException;
 
     //tags
+    public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException;
     public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException;
     public void removeDeviceTag(User user, String deviceEui, String tagName) throws IotDatabaseException;
     public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException;

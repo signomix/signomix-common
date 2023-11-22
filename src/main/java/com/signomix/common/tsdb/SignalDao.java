@@ -224,6 +224,8 @@ public class SignalDao implements SignalDaoIface {
     @Override
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM user_signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        logger.info(query);
+        logger.info("userId: "+userId); 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
@@ -247,6 +249,7 @@ public class SignalDao implements SignalDaoIface {
                 signal.messagePl = rs.getString("message_pl");
                 signals.add(signal);
             }
+            logger.info("found signals: "+signals.size());
             return signals;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);

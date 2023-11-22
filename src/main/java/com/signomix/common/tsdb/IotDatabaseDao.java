@@ -22,6 +22,7 @@ import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.signomix.common.Tag;
 import com.signomix.common.User;
 import com.signomix.common.db.DataQuery;
 import com.signomix.common.db.DataQueryException;
@@ -2967,8 +2968,29 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException {
+        String query = "SELECT * FROM device_tags WHERE eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Tag> list = new ArrayList<>();
+            while (rs.next()) {
+                Tag tag = new Tag();
+                tag.name=(rs.getString("tag_name"));
+                tag.value=(rs.getString("tag_value"));
+                list.add(tag);
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
     public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException {
-        String query = "INSERT INTO device_tags (eui, tagname, tagvalue) VALUES (?, ?, ?)";
+        String query = "INSERT INTO device_tags (eui, tag_name, tag_value) VALUES (?, ?, ?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
             pstmt.setString(2, tagName);
@@ -2983,7 +3005,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void removeDeviceTag(User user, String deviceEui, String tagName) throws IotDatabaseException {
-        String query = "DELETE FROM device_tags WHERE eui=? AND tagname=?";
+        String query = "DELETE FROM device_tags WHERE eui=? AND tag_name=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
             pstmt.setString(2, tagName);
@@ -2997,7 +3019,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException {
-        String query = "UPDATE device_tags SET tagvalue=? WHERE eui=? AND tagname=?";
+        String query = "UPDATE device_tags SET tag_value=? WHERE eui=? AND tag_name=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagValue);
             pstmt.setString(2, deviceEui);
@@ -3025,7 +3047,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) throws IotDatabaseException {
-        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND userid=?";
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND userid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
             pstmt.setString(2, tagValue);
@@ -3045,7 +3067,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException {
-        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tagname=? AND tagvalue=?) AND organization=?";
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tag_name=? AND tag_value=?) AND organization=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
             pstmt.setString(2, tagName);
@@ -3066,7 +3088,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) {
-        String query = "SELECT eui FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND userid=?";
+        String query = "SELECT eui FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND userid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
             pstmt.setString(2, tagValue);
@@ -3086,7 +3108,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) {
-        String query = "SELECT eui FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND organization=?";
+        String query = "SELECT eui FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND organization=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
             pstmt.setString(2, tagValue);
@@ -3109,9 +3131,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String tagValue) throws IotDatabaseException {
         String query;
         if(organizationID == defaultOrganizationId) {
-            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) and userid=?";
+            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) and userid=?";
         } else {
-            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tagname=? AND tagvalue=?) AND organization=?";
+            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND organization=?";
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);

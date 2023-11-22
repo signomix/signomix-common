@@ -141,7 +141,7 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public void updateConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=? WHERE id=?";
+        String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, every_time=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, config.name);
@@ -155,12 +155,13 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setString(9, config.tagValue);
             pstmt.setInt(10, config.alertLevel);
             pstmt.setString(11, config.alertMessage);
-            pstmt.setBoolean(12, config.everyTime);
+            pstmt.setBoolean(12, config.conditionOk);
             pstmt.setString(13, config.conditionOkMessage);
             pstmt.setObject(14, new ObjectMapper().writeValueAsString(config.conditions));
             pstmt.setString(15, config.team);
             pstmt.setString(16, config.administrators);
-            pstmt.setLong(17, config.id);
+            pstmt.setBoolean(17, config.everyTime);
+            pstmt.setLong(18, config.id);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -205,6 +206,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOk=rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
                     config.team = rs.getString("team");
@@ -331,6 +333,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOk=rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
                     config.team=rs.getString("team");

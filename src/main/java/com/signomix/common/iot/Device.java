@@ -7,12 +7,14 @@ package com.signomix.common.iot;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.signomix.common.Tag;
 
 /**
  * Description
@@ -74,7 +76,7 @@ public class Device {
     private HashMap<String, Object> applicationConfig;
     private Long organizationId;
     private boolean writable;
-    private HashMap<String, String> tags;
+    private String tags;
 
     // TODO: change uid to uidHex and add validation (is it hex value)
     /**
@@ -109,7 +111,7 @@ public class Device {
         applicationConfig = null;
         organizationId = 0L;
         writable=false;
-        tags = new HashMap<>();
+        tags = "";
     }
 
     public void print() {
@@ -737,11 +739,11 @@ public class Device {
         }
     }
 
-    public void setTags(HashMap<String, String> tags) {
+    public void setTags(String tags) {
         this.tags = tags;
     }
 
-    public HashMap<String, String> getTags() {
+    public String getTags() {
         return tags;
     }
 
