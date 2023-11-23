@@ -451,6 +451,55 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
+    public List<List> getLastValuesByDeviceEui(String deviceEui) throws IotDatabaseException {
+        String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
+                + "WHERE eui=? "
+                + "AND tstamp > now() - INTERVAL '15 minutes' ORDER BY eui, tstamp DESC;";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            try (java.sql.ResultSet rs = pstmt.executeQuery();) {
+                java.util.ArrayList<List> values = new java.util.ArrayList<>();
+                while (rs.next()) {
+                    java.util.ArrayList<Object> row = new java.util.ArrayList<>();
+                    row.add(rs.getString("eui"));
+                    row.add(rs.getTimestamp("tstamp"));
+                    row.add(rs.getDouble("d1"));
+                    row.add(rs.getDouble("d2"));
+                    row.add(rs.getDouble("d3"));
+                    row.add(rs.getDouble("d4"));
+                    row.add(rs.getDouble("d5"));
+                    row.add(rs.getDouble("d6"));
+                    row.add(rs.getDouble("d7"));
+                    row.add(rs.getDouble("d8"));
+                    row.add(rs.getDouble("d9"));
+                    row.add(rs.getDouble("d10"));
+                    row.add(rs.getDouble("d11"));
+                    row.add(rs.getDouble("d12"));
+                    row.add(rs.getDouble("d13"));
+                    row.add(rs.getDouble("d14"));
+                    row.add(rs.getDouble("d15"));
+                    row.add(rs.getDouble("d16"));
+                    row.add(rs.getDouble("d17"));
+                    row.add(rs.getDouble("d18"));
+                    row.add(rs.getDouble("d19"));
+                    row.add(rs.getDouble("d20"));
+                    row.add(rs.getDouble("d21"));
+                    row.add(rs.getDouble("d22"));
+                    row.add(rs.getDouble("d23"));
+                    row.add(rs.getDouble("d24"));
+                    values.add(row);
+                }
+                return values;
+            } catch (Exception e) {
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
     public void addDevice(long configId, String deviceEui, String channelMapping) throws IotDatabaseException {
         String query = "INSERT INTO sentinel_devices (sentinel_id, eui, channels) VALUES (?,?,?)";
         try (Connection conn = dataSource.getConnection();
@@ -467,12 +516,26 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public void removeDevice(long configId, String deviceEui) throws IotDatabaseException {
+    public void removeConfigDevice(long configId, String deviceEui) throws IotDatabaseException {
         String query = "DELETE FROM sentinel_devices WHERE sentinel_id=? AND eui=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, configId);
             pstmt.setString(2, deviceEui);
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeDevice(String deviceEui) throws IotDatabaseException {
+        String query = "DELETE FROM sentinel_devices WHERE eui=?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -552,6 +615,88 @@ public class SentinelDao implements SentinelDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return 0;
+    }
+
+    @Override
+    public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset)
+            throws IotDatabaseException {
+        String query = "SELECT * FROM sentinels WHERE tag_name=? AND tag_value=? ORDER BY id DESC LIMIT ? OFFSET ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tagName);
+            pstmt.setString(2, tagValue);
+            pstmt.setInt(3, limit);
+            pstmt.setInt(4, offset);
+            try (java.sql.ResultSet rs = pstmt.executeQuery();) {
+                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+                while (rs.next()) {
+                    SentinelConfig config = new SentinelConfig();
+                    config.id = rs.getLong("id");
+                    config.name = rs.getString("name");
+                    config.active = rs.getBoolean("active");
+                    config.userId = rs.getString("user_id");
+                    config.organizationId = rs.getLong("organization_id");
+                    config.type = rs.getInt("type");
+                    config.deviceEui = rs.getString("device_eui");
+                    config.groupEui = rs.getString("group_eui");
+                    config.tagName = rs.getString("tag_name");
+                    config.tagValue = rs.getString("tag_value");
+                    config.alertLevel = rs.getInt("alert_level");
+                    config.alertMessage = rs.getString("alert_message");
+                    config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOkMessage = rs.getString("condition_ok_message");
+                    config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
+                    config.team=rs.getString("team");
+                    config.administrators=rs.getString("administrators");
+                    configs.add(config);
+                }
+                return configs;
+            } catch (Exception e) {
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset) throws IotDatabaseException {
+        String query = "SELECT * FROM sentinels WHERE group_eui=? ORDER BY id DESC LIMIT ? OFFSET ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, groupName);
+            pstmt.setInt(2, limit);
+            pstmt.setInt(3, offset);
+            try (java.sql.ResultSet rs = pstmt.executeQuery();) {
+                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+                while (rs.next()) {
+                    SentinelConfig config = new SentinelConfig();
+                    config.id = rs.getLong("id");
+                    config.name = rs.getString("name");
+                    config.active = rs.getBoolean("active");
+                    config.userId = rs.getString("user_id");
+                    config.organizationId = rs.getLong("organization_id");
+                    config.type = rs.getInt("type");
+                    config.deviceEui = rs.getString("device_eui");
+                    config.groupEui = rs.getString("group_eui");
+                    config.tagName = rs.getString("tag_name");
+                    config.tagValue = rs.getString("tag_value");
+                    config.alertLevel = rs.getInt("alert_level");
+                    config.alertMessage = rs.getString("alert_message");
+                    config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOkMessage = rs.getString("condition_ok_message");
+                    config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
+                    config.team=rs.getString("team");
+                    config.administrators=rs.getString("administrators");
+                    configs.add(config);
+                }
+                return configs;
+            } catch (Exception e) {
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
     }
 
 }

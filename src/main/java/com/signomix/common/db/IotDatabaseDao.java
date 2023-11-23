@@ -2530,7 +2530,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getGroupDevices(boolean fullData, String userID, long organizationID, String groupID)
+    public List<Device> getGroupDevices(String userID, long organizationID, String groupID)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getGroupDevices'");

@@ -110,7 +110,7 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public void removeDevice(long configId, String deviceEui) throws IotDatabaseException {
+    public void removeConfigDevice(long configId, String deviceEui) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'removeDevice'");
     }
@@ -138,6 +138,31 @@ public class SentinelDao implements SentinelDaoIface {
     public int getSentinelStatus(long configId) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getSentinelStatus'");
+    }
+
+    @Override
+    public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getConfigsByTag'");
+    }
+
+    @Override
+    public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getConfigsByGroup'");
+    }
+
+    @Override
+    public List<List> getLastValuesByDeviceEui(String deviceEui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLastValuesByDeviceEui'");
+    }
+
+    @Override
+    public void removeDevice(String deviceEui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDevice'");
     }
 
 

@@ -2941,28 +2941,31 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getGroupDevices(boolean fullData, String userID, long organizationID, String groupID)
+    public List<Device> getGroupDevices(String userID, long organizationID, String groupID)
             throws IotDatabaseException {
         ;
         String query;
-        if (organizationID == defaultOrganizationId) {
-            query = "SELECT * FROM devices WHERE eui IN (SELECT id FROM groups WHERE groupid=? AND organization=?)";
+        if (organizationID != defaultOrganizationId) {
+            query = "SELECT * FROM devices WHERE groups LIKE ? AND organization=?";
         } else {
-            query = "SELECT * FROM devices WHERE eui IN (SELECT id FROM groups WHERE groupid=? AND userID=?)";
+            query = "SELECT * FROM devices WHERE groups LIKE ? AND userid=?";
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, groupID);
+            pstmt.setString(1, "%,"+groupID+",%");
+            if (organizationID != defaultOrganizationId) {
+                pstmt.setLong(2, organizationID);
+            } else {
+                pstmt.setString(2, userID);
+            }
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {
                 Device device = buildDevice(rs);
-                if (fullData) {
-                    device = getDeviceStatusData(device);
-                }
                 list.add(device);
             }
             return list;
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }

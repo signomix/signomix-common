@@ -7,7 +7,7 @@
 
   <groupId>com.signomix</groupId>
   <artifactId>signomix-common</artifactId>
-  <version>1.8.7</version><!--versionCommon-->
+  <version>1.8.8</version><!--versionCommon-->
 
   <name>signomix-common</name>
   <!-- FIXME change it to the project's website -->
