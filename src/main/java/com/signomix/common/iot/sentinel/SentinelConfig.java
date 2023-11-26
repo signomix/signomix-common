@@ -25,6 +25,7 @@ public class SentinelConfig {
     public List<AlarmCondition> conditions=new java.util.ArrayList<>();
     public String team;
     public String administrators;
+    public int timeShift;
 
 /*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();

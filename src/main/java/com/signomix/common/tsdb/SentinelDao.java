@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
@@ -67,7 +69,8 @@ public class SentinelDao implements SentinelDaoIface {
                 + "condition_ok_message TEXT NOT NULL DEFAULT '',"
                 + "conditions JSON NOT NULL DEFAULT '[]',"
                 + "team TEXT NOT NULL DEFAULT '',"
-                + "administrators TEXT NOT NULL DEFAULT ''"
+                + "administrators TEXT NOT NULL DEFAULT '',"
+                + "time_shift INTEGER NOT NULL DEFAULT 1"
                 + ");"
                 + "CREATE TABLE IF NOT EXISTS sentinel_events ("
                 + "id BIGSERIAL PRIMARY KEY,"
@@ -104,8 +107,8 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public long addConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?)";
+        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators, time_shift) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
             pstmt.setString(1, config.name);
@@ -125,11 +128,12 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setObject(15, new ObjectMapper().writeValueAsString(config.conditions));
             pstmt.setString(16, config.team);
             pstmt.setString(17, config.administrators);
+            pstmt.setInt(18, config.timeShift);
             pstmt.execute();
             ResultSet rs = pstmt.getGeneratedKeys();
-            if(rs.next()){
+            if (rs.next()) {
                 return rs.getLong(1);
-            }else{
+            } else {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "No generated key");
             }
         } catch (SQLException e) {
@@ -141,7 +145,7 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public void updateConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, every_time=? WHERE id=?";
+        String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, every_time=?, time_shift=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, config.name);
@@ -161,7 +165,8 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setString(15, config.team);
             pstmt.setString(16, config.administrators);
             pstmt.setBoolean(17, config.everyTime);
-            pstmt.setLong(18, config.id);
+            pstmt.setInt(18, config.timeShift);
+            pstmt.setLong(19, config.id);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -206,11 +211,12 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
-                    config.conditionOk=rs.getBoolean("alert_ok");
+                    config.conditionOk = rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
+                    config.timeShift = rs.getInt("time_shift");
                     return config;
                 }
             } catch (Exception e) {
@@ -228,8 +234,8 @@ public class SentinelDao implements SentinelDaoIface {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
-            pstmt.setString(2, "%,"+userId+",%");
-            pstmt.setString(3, "%,"+userId+",%");
+            pstmt.setString(2, "%," + userId + ",%");
+            pstmt.setString(3, "%," + userId + ",%");
             pstmt.setInt(4, limit);
             pstmt.setInt(5, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
@@ -249,10 +255,12 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOk = rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
-                    config.team=rs.getString("team");
-                    config.administrators=rs.getString("administrators");
+                    config.team = rs.getString("team");
+                    config.administrators = rs.getString("administrators");
+                    config.timeShift = rs.getInt("time_shift");
                     configs.add(config);
                 }
                 return configs;
@@ -292,10 +300,12 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOk = rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
-                    config.team=rs.getString("team");
-                    config.administrators=rs.getString("administrators");
+                    config.team = rs.getString("team");
+                    config.administrators = rs.getString("administrators");
+                    config.timeShift = rs.getInt("time_shift");
                     configs.add(config);
                 }
                 return configs;
@@ -333,11 +343,12 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
-                    config.conditionOk=rs.getBoolean("alert_ok");
+                    config.conditionOk = rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
-                    config.team=rs.getString("team");
-                    config.administrators=rs.getString("administrators");
+                    config.team = rs.getString("team");
+                    config.administrators = rs.getString("administrators");
+                    config.timeShift = rs.getInt("time_shift");
                     configs.add(config);
                 }
                 return configs;
@@ -359,14 +370,12 @@ public class SentinelDao implements SentinelDaoIface {
      * @param offset   query offset
      */
     @Override
-    public Map<String, Map<String, String>> getDevicesByConfigId(long configId, int limit, int offset)
+    public Map<String, Map<String, String>> getDeviceChannelsByConfigId(long configId)
             throws IotDatabaseException {
-        String query = "SELECT eui,channels FROM sentinel_devices WHERE sentinel_id=? ORDER BY eui ASC LIMIT ? OFFSET ?";
+        String query = "SELECT eui,channels FROM sentinel_devices WHERE sentinel_id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, configId);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 HashMap<String, String> channels = new HashMap<>();
                 HashMap<String, Map<String, String>> devices = new HashMap<>();
@@ -376,10 +385,11 @@ public class SentinelDao implements SentinelDaoIface {
                     String[] ch = channelsStr.split(";");
                     channels = new HashMap<>();
                     for (int i = 0; i < ch.length; i++) {
-                        if (ch[i].isEmpty())
+                        if (ch[i].isEmpty()) {
                             continue;
+                        }
                         String[] ch2 = ch[i].split(":"); // exaple: temperature:d1
-                        channels.put(ch2[1], ch2[0]); // exaple: d1:temperature
+                        channels.put(ch2[0], ch2[1]); // exaple: temperature:d1
                     }
                     devices.put(rs.getString("eui"), channels);
                 }
@@ -446,6 +456,67 @@ public class SentinelDao implements SentinelDaoIface {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    /**
+     * Returns last values for given devices.
+     * Result is list of lists. Each list contains: deviceEui, timestamp, d1, d2,
+     * d3, d4, d5, d6, d7, d8, d9, d10,
+     * Example result: [ [ "eui1", "2020-01-01 00:00:00", 1.0, 2.0, 3.0 ], [ "eui2",    
+     * * "2020-01-01 00:00:00", 4.0, 5.0, 6.0 ] ]
+     * 
+     * @param euis        set of device euis
+     * @param secondsBack number of seconds to look back for data
+     */
+    @Override
+    public List<List> getLastValuesOfDevices(Set<String> euis, long secondsBack) throws IotDatabaseException{
+        String euiList = String.join(",", euis.stream().map(eui -> "'" + eui + "'").collect(Collectors.toList()));
+        String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
+                + "WHERE eui IN ("+euiList+") "
+                + "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;";
+        logger.info(query);
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (java.sql.ResultSet rs = pstmt.executeQuery();) {
+                java.util.ArrayList<List> values = new java.util.ArrayList<>();
+                while (rs.next()) {
+                    java.util.ArrayList<Object> row = new java.util.ArrayList<>();
+                    row.add(rs.getString("eui"));
+                    row.add(rs.getTimestamp("tstamp"));
+                    row.add(rs.getDouble("d1"));
+                    row.add(rs.getDouble("d2"));
+                    row.add(rs.getDouble("d3"));
+                    row.add(rs.getDouble("d4"));
+                    row.add(rs.getDouble("d5"));
+                    row.add(rs.getDouble("d6"));
+                    row.add(rs.getDouble("d7"));
+                    row.add(rs.getDouble("d8"));
+                    row.add(rs.getDouble("d9"));
+                    row.add(rs.getDouble("d10"));
+                    row.add(rs.getDouble("d11"));
+                    row.add(rs.getDouble("d12"));
+                    row.add(rs.getDouble("d13"));
+                    row.add(rs.getDouble("d14"));
+                    row.add(rs.getDouble("d15"));
+                    row.add(rs.getDouble("d16"));
+                    row.add(rs.getDouble("d17"));
+                    row.add(rs.getDouble("d18"));
+                    row.add(rs.getDouble("d19"));
+                    row.add(rs.getDouble("d20"));
+                    row.add(rs.getDouble("d21"));
+                    row.add(rs.getDouble("d22"));
+                    row.add(rs.getDouble("d23"));
+                    row.add(rs.getDouble("d24"));
+                    values.add(row);
+                }
+                return values;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
@@ -644,10 +715,12 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOk = rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
-                    config.team=rs.getString("team");
-                    config.administrators=rs.getString("administrators");
+                    config.team = rs.getString("team");
+                    config.administrators = rs.getString("administrators");
+                    config.timeShift = rs.getInt("time_shift");
                     configs.add(config);
                 }
                 return configs;
@@ -684,10 +757,12 @@ public class SentinelDao implements SentinelDaoIface {
                     config.alertLevel = rs.getInt("alert_level");
                     config.alertMessage = rs.getString("alert_message");
                     config.everyTime = rs.getBoolean("every_time");
+                    config.conditionOk = rs.getBoolean("alert_ok");
                     config.conditionOkMessage = rs.getString("condition_ok_message");
                     config.conditions = new ObjectMapper().readValue(rs.getString("conditions"), List.class);
-                    config.team=rs.getString("team");
-                    config.administrators=rs.getString("administrators");
+                    config.team = rs.getString("team");
+                    config.administrators = rs.getString("administrators");
+                    config.timeShift = rs.getInt("time_shift");
                     configs.add(config);
                 }
                 return configs;

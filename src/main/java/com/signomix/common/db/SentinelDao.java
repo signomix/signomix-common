@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -92,12 +93,6 @@ public class SentinelDao implements SentinelDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'getConfigsByDevice'");
     }
 
-    @Override
-    public Map<String,Map<String,String>> getDevicesByConfigId(long configId, int limit, int offset) throws IotDatabaseException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByConfigId'");
-    }
-
     public List<List> getLastValuesByConfigId(long sentinelConfigId) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getLastValuesByConfigId'");
@@ -163,6 +158,18 @@ public class SentinelDao implements SentinelDaoIface {
     public void removeDevice(String deviceEui) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'removeDevice'");
+    }
+
+    @Override
+    public Map<String, Map<String, String>> getDeviceChannelsByConfigId(long configId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeviceChannelsByConfigId'");
+    }
+
+    @Override
+    public List<List> getLastValuesOfDevices(Set<String> euis, long secondsBack) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLastValuesOfDevices'");
     }
 
 
