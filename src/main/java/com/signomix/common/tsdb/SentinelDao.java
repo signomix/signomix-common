@@ -35,7 +35,7 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public void backupDb() throws IotDatabaseException {
         String query = "COPY sentinels to '/var/lib/postgresql/data/export/sentinels.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY sentinel_events to '/var/lib/postgresql/data/export/sentinel_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM sentinel_events) to '/var/lib/postgresql/data/export/sentinel_events.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY sentinel_devices to '/var/lib/postgresql/data/export/sentinel_devices.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {

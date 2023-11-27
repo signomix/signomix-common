@@ -424,7 +424,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void addAlert(String type, String deviceEui, String userId, String payload, long createdAt) throws IotDatabaseException {
+    public void addAlert(String type, String deviceEui, String userId, String payload, long createdAt)
+            throws IotDatabaseException {
         String query = "insert into alerts (category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic) values (?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, "IOT");
@@ -722,22 +723,23 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;"
+        String query = "COPY account_params to '/var/lib/postgresql/data/export/account_params.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM analyticdata) to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commands to '/var/lib/postgresql/data/export/commands.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commandslog to '/var/lib/postgresql/data/export/commandslog.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboards to '/var/lib/postgresql/data/export/dashboards.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboardtemplates to '/var/lib/postgresql/data/export/dashboardtemplates.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devicechannels to '/var/lib/postgresql/data/export/devicechannels.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY devicedata to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY devicestatus to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM devicedata) to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM devicestatus) to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devices to '/var/lib/postgresql/data/export/devices.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY device_tags to '/var/lib/postgresql/data/export/device_tags.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devicetemplates to '/var/lib/postgresql/data/export/devicetemplates.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY groups to '/var/lib/postgresql/data/export/groups.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY virtualdevicedata to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY account_params to '/var/lib/postgresql/data/export/account_params.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY device_tags to '/var/lib/postgresql/data/export/device_tags.csv' DELIMITER ';' CSV HEADER;";
+                + "COPY (SELECT * FROM virtualdevicedata) to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -1975,41 +1977,40 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
         // TODO: indexes
         // create index devices_userid on devices (userid);
-        query="CREATE INDEX IF NOT EXISTS idx_devicedata_eui_tstamp ON devicedata (eui, tstamp DESC);";
+        query = "CREATE INDEX IF NOT EXISTS idx_devicedata_eui_tstamp ON devicedata (eui, tstamp DESC);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
 
-        query="CREATE INDEX IF NOT EXISTS idx_analyticdata_eui_tstamp ON analyticdata (eui, tstamp DESC);";
+        query = "CREATE INDEX IF NOT EXISTS idx_analyticdata_eui_tstamp ON analyticdata (eui, tstamp DESC);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
 
-        query="CREATE INDEX IF NOT EXISTS idx_virtualdevicedata_eui_tstamp ON virtualdevicedata (eui, tstamp DESC);";
+        query = "CREATE INDEX IF NOT EXISTS idx_virtualdevicedata_eui_tstamp ON virtualdevicedata (eui, tstamp DESC);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
 
-        query="CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts ON devicestatus (eui, tstamp DESC);";
+        query = "CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts ON devicestatus (eui, tstamp DESC);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
 
-        query="CREATE INDEX IF NOT EXISTS idx_alerts_uuid_id ON alerts (uuid, id DESC);";
+        query = "CREATE INDEX IF NOT EXISTS idx_alerts_uuid_id ON alerts (uuid, id DESC);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
-
 
     }
 
@@ -2951,7 +2952,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             query = "SELECT * FROM devices WHERE groups LIKE ? AND userid=?";
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, "%,"+groupID+",%");
+            pstmt.setString(1, "%," + groupID + ",%");
             if (organizationID != defaultOrganizationId) {
                 pstmt.setLong(2, organizationID);
             } else {
@@ -2979,8 +2980,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ArrayList<Tag> list = new ArrayList<>();
             while (rs.next()) {
                 Tag tag = new Tag();
-                tag.name=(rs.getString("tag_name"));
-                tag.value=(rs.getString("tag_value"));
+                tag.name = (rs.getString("tag_name"));
+                tag.value = (rs.getString("tag_value"));
                 list.add(tag);
             }
             return list;
@@ -3021,7 +3022,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException {
+    public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue)
+            throws IotDatabaseException {
         String query = "UPDATE device_tags SET tag_value=? WHERE eui=? AND tag_name=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagValue);
@@ -3069,7 +3071,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException {
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue)
+            throws IotDatabaseException {
         String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tag_name=? AND tag_value=?) AND organization=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
@@ -3133,7 +3136,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<Device> getDevicesByTag(String userID, long organizationID, String tagName,
             String tagValue) throws IotDatabaseException {
         String query;
-        if(organizationID == defaultOrganizationId) {
+        if (organizationID == defaultOrganizationId) {
             query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) and userid=?";
         } else {
             query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND organization=?";
@@ -3141,7 +3144,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
             pstmt.setString(2, tagValue);
-            if(organizationID == defaultOrganizationId) {
+            if (organizationID == defaultOrganizationId) {
                 pstmt.setString(3, userID);
             } else {
                 pstmt.setLong(3, organizationID);
@@ -3159,5 +3162,4 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-    
 }

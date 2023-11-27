@@ -145,7 +145,15 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        // TODO: implement
+        String query = "COPY tokens to '/var/lib/postgresql/data/export/tokens.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY ptokens to '/var/lib/postgresql/data/export/ptokens.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

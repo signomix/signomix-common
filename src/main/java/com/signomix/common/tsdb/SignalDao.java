@@ -7,9 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import org.jboss.logging.Logger;
 
 import com.signomix.common.db.IotDatabaseException;
@@ -39,8 +36,8 @@ public class SignalDao implements SignalDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY signals to '/var/lib/postgresql/data/export/signals.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY user_signals to '/var/lib/postgresql/data/export/user_signals.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY (SELECT * FROM signals) to '/var/lib/postgresql/data/export/signals.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT* FROM user_signals) to '/var/lib/postgresql/data/export/user_signals.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();

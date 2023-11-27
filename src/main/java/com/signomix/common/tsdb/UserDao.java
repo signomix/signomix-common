@@ -7,8 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement.DEFAULT;
-
 import org.jboss.logging.Logger;
 
 import com.signomix.common.HashMaker;
@@ -22,7 +20,7 @@ import io.agroal.api.AgroalDataSource;
 public class UserDao implements UserDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
-    
+
     private static final Logger LOG = Logger.getLogger(UserDao.class);
 
     private AgroalDataSource dataSource;
@@ -65,7 +63,7 @@ public class UserDao implements UserDaoIface {
                 .append("credits bigint,")
                 .append("autologin boolean,")
                 .append("language varchar,")
-                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+" references organizations(id));");
+                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + " references organizations(id));");
         query = sb.toString();
         LOG.info("Creating database structure: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -152,7 +150,8 @@ public class UserDao implements UserDaoIface {
     @Override
     public void removeNotConfirmed(long days) {
         long seconds = days * 24 * 60 * 60;
-        // SELECT uid from users as u where extract(epoch from(current_timestamp-u.created)) > days*24*60*60 and confirmed=false;
+        // SELECT uid from users as u where extract(epoch
+        // from(current_timestamp-u.created)) > days*24*60*60 and confirmed=false;
         String query = "DELETE FROM users AS u WHERE extract(epoch from(current_timestamp-u.created)) > " + seconds
                 + " AND confirmed=false";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -170,7 +169,7 @@ public class UserDao implements UserDaoIface {
 
     User buildUser(ResultSet rs) throws SQLException {
         //// uid,type,email,name,surname,role,secret,password,generalchannel,infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,number,services,phoneprefix,credits,autologin
-        //"UID","TYPE","EMAIL","ROLE","SECRET","PASSWORD","GENERALCHANNEL","INFOCHANNEL","WARNINGCHANNEL","ALERTCHANNEL","CONFIRMED","UNREGISTERREQ","AUTHSTATUS","CREATED","USER_NUMBER","NAME","SURNAME","SERVICES","PHONEPREFIX","CREDITS","AUTOLOGIN","LANGUAGE","ORGANIZATION"
+        // "UID","TYPE","EMAIL","ROLE","SECRET","PASSWORD","GENERALCHANNEL","INFOCHANNEL","WARNINGCHANNEL","ALERTCHANNEL","CONFIRMED","UNREGISTERREQ","AUTHSTATUS","CREATED","USER_NUMBER","NAME","SURNAME","SERVICES","PHONEPREFIX","CREDITS","AUTOLOGIN","LANGUAGE","ORGANIZATION"
         User user = new User();
         user.uid = rs.getString("uid");
         user.type = rs.getInt("type");
@@ -200,21 +199,15 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        // TODO: implement
-        /*
-         * String query = "CALL CSVWRITE('backup/users.csv', 'SELECT * FROM users');"
-         * +
-         * "CALL CSVWRITE('backup/organizations.csv', 'SELECT * FROM organizations');";
-         * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
-         * conn.prepareStatement(query);) {
-         * pstmt.execute();
-         * } catch (SQLException e) {
-         * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
-         * e.getMessage(), e);
-         * } catch (Exception e) {
-         * throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-         * }
-         */
+        String query = "COPY users to '/var/lib/postgresql/data/export/users.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY organizations to '/var/lib/postgresql/data/export/organizations.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
