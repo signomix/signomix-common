@@ -28,6 +28,7 @@ public interface AuthDaoIface {
     public String getIssuerId(String token, long sessionTokenLifetime, long permanentTokenLifetime);
 
     public Token getToken(String token, long sessionTokenLifetime, long permanentTokenLifetime);
+    public Token updateToken(String token, long sessionTokenLifetime, long permanentTokenLifetime);
     /**
      * Creates new session token
      * 
