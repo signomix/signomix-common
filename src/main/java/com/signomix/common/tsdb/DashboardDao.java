@@ -29,38 +29,42 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        //TODO: implement
+        // TODO: implement
     }
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        /* String query = "CREATE TABLE IF NOT EXISTS dashboards ("
-                + "id VARCHAR PRIMARY KEY,"
-                + "name VARCHAR,"
-                + "userid VARCHAR,"
-                + "title VARCHAR,"
-                + "team VARCHAR,"
-                + "widgets VARCHAR,"
-                + "token VARCHAR,"
-                + "shared BOOLEAN,"
-                + "administrators VARCHAR,"
-                + "items VARCHAR,"
-                + "organization BIGINT);"
-                + "CREATE TABLE IF NOT EXISTS dashboardtemplates ("
-                + "id VARCHAR PRIMARY KEY,"
-                + "title VARCHAR,"
-                + "widgets VARCHAR,"
-                + "items VARCHAR,"
-                + "organization BIGINT);";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.execute();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
-
-        // "favourites" table is crrated in IotDatabaseDao class */
+        /*
+         * String query = "CREATE TABLE IF NOT EXISTS dashboards ("
+         * + "id VARCHAR PRIMARY KEY,"
+         * + "name VARCHAR,"
+         * + "userid VARCHAR,"
+         * + "title VARCHAR,"
+         * + "team VARCHAR,"
+         * + "widgets VARCHAR,"
+         * + "token VARCHAR,"
+         * + "shared BOOLEAN,"
+         * + "administrators VARCHAR,"
+         * + "items VARCHAR,"
+         * + "organization BIGINT);"
+         * + "CREATE TABLE IF NOT EXISTS dashboardtemplates ("
+         * + "id VARCHAR PRIMARY KEY,"
+         * + "title VARCHAR,"
+         * + "widgets VARCHAR,"
+         * + "items VARCHAR,"
+         * + "organization BIGINT);";
+         * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+         * conn.prepareStatement(query);) {
+         * pstmt.execute();
+         * } catch (SQLException e) {
+         * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+         * e.getMessage(), e);
+         * } catch (Exception e) {
+         * throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+         * }
+         * 
+         * // "favourites" table is crrated in IotDatabaseDao class
+         */
     }
 
     @Override
@@ -132,7 +136,7 @@ public class DashboardDao implements DashboardIface {
     @Override
     public void updateDashboard(Dashboard dashboard) throws IotDatabaseException {
         String query = "UPDATE dashboards SET "
-        + "name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=?,organization=? WHERE id=?";
+                + "name=?,userid=?,title=?,team=?,widgets=?,token=?,shared=?,administrators=?,items=?,organization=? WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getName());
             pstmt.setString(2, dashboard.getUserID());
@@ -208,39 +212,68 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public List<Dashboard> getUserDashboards(String userId, boolean withShared, boolean adminRole, Integer limit,
-            Integer offset) throws IotDatabaseException {
+            Integer offset, String searchString) throws IotDatabaseException {
+
+        String searchCondition = "";
+        String[] searchParts;
+        if (null == searchString || searchString.isEmpty()) {
+            searchParts = new String[0];
+        } else {
+            searchParts = searchString.split(":");
+            if (searchParts.length == 2) {
+                if (searchParts[0].equals("id")) {
+                    searchCondition = " LOWER(d.id) LIKE LOWER(?) ";
+                } else if (searchParts[0].equals("title")) {
+                    searchCondition = " LOWER(d.title) LIKE LOWER(?) ";
+                }
+            }
+        }
         String query = "SELECT "
-        + "d.id,d.name,d.userid,d.title,d.team,d.widgets,d.token,d.shared,d.administrators,d.items,d.organization,"
-        + "(SELECT COUNT(*) FROM favourites as f where f.userid=? and f.id=d.id and f.is_device=false) AS favourite"
-        +" FROM dashboards AS d ";
+                + "d.id,d.name,d.userid,d.title,d.team,d.widgets,d.token,d.shared,d.administrators,d.items,d.organization,"
+                + "(SELECT COUNT(*) FROM favourites as f where f.userid=? and f.id=d.id and f.is_device=false) AS favourite"
+                + " FROM dashboards AS d ";
         if (adminRole) {
             // do nothing
         } else if (withShared) {
-            query = query + "WHERE userid=? OR team LIKE ? OR administrators LIKE ?";
+            query = query + "WHERE (d.userid=? OR d.team LIKE ? OR d.administrators LIKE ?) ";
         } else {
-            query = query + "WHERE userid=?";
+            query = query + "WHERE d.userid=?";
         }
-        query = query + " ORDER BY name LIMIT ? OFFSET ?";
+        if(!searchCondition.isEmpty()){
+            if(adminRole){
+                query = query + " WHERE ";
+            }else{
+                query = query + " AND ";
+            }
+            query = query + searchCondition;
+        }
+        query = query + " ORDER BY d.title LIMIT ? OFFSET ?";
+        //logger.info("getUserDashboards: " + query);
         String itemsStr;
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
+            int idxLimit = 2;
             if (adminRole) {
-                pstmt.setInt(2, limit);
-                pstmt.setInt(3, offset);
+                //pstmt.setInt(2, limit);
+                //pstmt.setInt(3, offset);
             } else {
-                if(withShared){
+                if (withShared) {
                     pstmt.setString(2, userId);
                     pstmt.setString(3, "%," + userId + ",%");
                     pstmt.setString(4, "%," + userId + ",%");
-                    pstmt.setInt(5, limit);
-                    pstmt.setInt(6, offset);
-                }else{
+                    idxLimit = 5;
+                } else {
                     pstmt.setString(2, userId);
-                    pstmt.setInt(3, limit);
-                    pstmt.setInt(4, offset);
+                    idxLimit = 3;
+                }
+                if(!searchCondition.isEmpty()){
+                    pstmt.setString(idxLimit, "%" + searchParts[1] + "%");
+                    idxLimit++;
                 }
             }
+            pstmt.setInt(idxLimit, limit);
+            pstmt.setInt(idxLimit+1, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     Dashboard dashboard = new Dashboard();
@@ -277,11 +310,11 @@ public class DashboardDao implements DashboardIface {
     @Override
     public List<Dashboard> getDashboards(Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT * FROM dashboards ORDER BY name LIMIT ? OFFSET ?";
-        //logger.info("getDashboards: " + query);
-        //logger.info("getDashboards: " + offset + " " + limit);
+        // logger.info("getDashboards: " + query);
+        // logger.info("getDashboards: " + offset + " " + limit);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            //logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
+            // logger.info("getDashboards datasource url: " + conn.getMetaData().getURL());
             pstmt.setInt(1, limit);
             pstmt.setInt(2, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -313,7 +346,8 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
-    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset) throws IotDatabaseException{
+    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset)
+            throws IotDatabaseException {
         String query = "SELECT * FROM dashboards WHERE organization= ? ORDER BY name LIMIT ? OFFSET ?";
         logger.info("getOrganizationDashboards: " + organizationId);
         List<Dashboard> dashboards = new ArrayList<>();

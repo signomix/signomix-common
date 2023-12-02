@@ -214,7 +214,8 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public List<Dashboard> getUserDashboards(String userId, boolean withShared, boolean adminRole, Integer limit,
-            Integer offset) throws IotDatabaseException {
+            Integer offset, String searchString) throws IotDatabaseException {
+                //TODO: searchString
         String query = "SELECT "
         + "d.id,d.name,d.userid,d.title,d.team,d.widgets,d.token,d.shared,d.administrators,d.items,d.organization,"
         + "(SELECT COUNT(*) FROM favourites as f where f.userid=? and f.id=d.id and f.is_device=false) AS favourite"

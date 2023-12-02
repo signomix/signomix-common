@@ -123,10 +123,10 @@ public class DeviceSelector {
                 String[] searchParts = searchString.split(":");
                 if (searchParts.length == 2) {
                     if (searchParts[0].equals("eui")) {
-                        searchCondition = " d.eui LIKE ? ";
+                        searchCondition = " LOWER(d.eui) LIKE LOWER(?) ";
                         numberOfSearchParams = 1;
                     } else if (searchParts[0].equals("name")) {
-                        searchCondition = " d.name LIKE ? ";
+                        searchCondition = " LOWER(d.name) LIKE LOWER(?) ";
                         numberOfSearchParams = 1;
                     }
                 }
