@@ -1755,7 +1755,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("framecheck boolean,")
                 .append("configuration varchar,")
                 .append("organization bigint default " + defaultOrganizationId + ",")
-                .append("organizationapp bigint references applications);");
+                .append("organizationapp bigint references applications),")
+                .append("defaultdashboard boolean default true);");
         // dashboards
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (")
                 .append("id varchar primary key,")
@@ -2190,6 +2191,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setConfiguration(rs.getString("configuration"));
         device.setOrganizationId(rs.getLong("organization"));
         device.setOrgApplicationId(rs.getLong("organizationapp"));
+        device.setDashboard(rs.getBoolean("defaultdashboard"));
         try {
             device.setWritable(rs.getBoolean("writable"));
         } catch (Exception e) {
@@ -2226,7 +2228,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder=?, devicekey=?, description=?, tinterval=?, template=?, pattern=?, "
                 + "commandscript=?, appid=?, groups=?, appeui=?, devid=?, active=?, project=?, "
                 + "latitude=?, longitude=?, altitude=?, retention=?, administrators=?, "
-                + "framecheck=?, configuration=?, organization=?, organizationapp=? "
+                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=? "
                 + "WHERE eui=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, updatedDevice.getName());
@@ -2277,7 +2279,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pst.setLong(28, defaultOrganizationId);
             }
-            pst.setString(29, updatedDevice.getEUI());
+            pst.setBoolean(29, updatedDevice.isDashboard());
+            pst.setString(30, updatedDevice.getEUI());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2293,8 +2296,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
                 + "latitude, longitude, altitude, retention, administrators, "
-                + "framecheck, configuration, organization, organizationapp) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getName());
@@ -2345,6 +2348,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pst.setLong(29, defaultApplicationId);
             }
+            pst.setBoolean(30, device.isDashboard());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2394,6 +2398,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 device.setConfiguration(rs.getString("configuration"));
                 device.setOrganizationId(rs.getLong("organization"));
                 device.setOrgApplicationId(rs.getLong("organizationapp"));
+                device.setDashboard(rs.getBoolean("defaultdashboard"));
                 devices.add(device);
             }
         } catch (SQLException e) {
@@ -2637,8 +2642,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
                 + "latitude, longitude, altitude, retention, administrators, "
-                + "framecheck, configuration, organization, organizationapp) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, device.getEUI());
             pstmt.setString(2, device.getName());
@@ -2689,6 +2694,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pstmt.setLong(29, defaultApplicationId);
             }
+            pstmt.setBoolean(30, device.isDashboard());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());

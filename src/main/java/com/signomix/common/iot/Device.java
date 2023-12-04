@@ -77,6 +77,15 @@ public class Device {
     private Long organizationId;
     private boolean writable;
     private String tags;
+    private boolean dashboard; // if true then default dashboard is created automatically for this device
+
+    public boolean isDashboard() {
+        return dashboard;
+    }
+
+    public void setDashboard(boolean withDefaultDashboard) {
+        this.dashboard = withDefaultDashboard;
+    }
 
     // TODO: change uid to uidHex and add validation (is it hex value)
     /**
@@ -112,6 +121,7 @@ public class Device {
         organizationId = 0L;
         writable=false;
         tags = "";
+        dashboard = true;
     }
 
     public void print() {
