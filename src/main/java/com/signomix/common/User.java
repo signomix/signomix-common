@@ -25,6 +25,15 @@ public class User {
     public static final int IS_LOCKED = 3;
     public static final int IS_CREATED = 10;
 
+    public static final int SERVICE_SMS = 0b00000001;
+    public static final int SERVICE_SUPPORT = 0b00000010; // not used
+    public static final int SERVICE_3 = 0b00000100; // not used
+    public static final int SERVICE_4 = 0b00001000; // not used
+    public static final int SERVICE_5 = 0b00010000; // not used
+    public static final int SERVICE_6 = 0b00100000; // not used
+    public static final int SERVICE_7 = 0b01000000; // not used
+    public static final int SERVICE_8 = 0b10000000; // not used
+
     public Integer type;
     public String uid;
     public String email;
@@ -79,6 +88,18 @@ public class User {
 
     public boolean checkPassword(String passToCheck) {
         return password != null && password.equals(HashMaker.md5Java(passToCheck));
+    }
+
+    public void addService(int newService) {
+        services = services | newService;
+    }
+
+    public void removeService(int newService) {
+        services = services ^ newService;
+    }
+
+    public boolean hasService(int newService) {
+        return (services & newService) == newService;
     }
 
 }
