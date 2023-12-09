@@ -415,4 +415,10 @@ public class UserDao implements UserDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'deleteUser'");
     }
 
+    @Override
+    public void modifyUserPassword(long id, String password) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'modifyUserPassword'");
+    }
+
 }

@@ -26,6 +26,7 @@ public class SentinelConfig {
     public String team;
     public String administrators;
     public int timeShift;
+    public double hysteresis;
 
 /*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();

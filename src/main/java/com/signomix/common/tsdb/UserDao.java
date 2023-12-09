@@ -521,4 +521,16 @@ public class UserDao implements UserDaoIface {
         }
     }
 
+    @Override
+    public void modifyUserPassword(long id, String password) throws IotDatabaseException {
+        String query = "UPDATE users SET password=? WHERE user_number=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, password);
+            pstmt.setLong(2, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
 }

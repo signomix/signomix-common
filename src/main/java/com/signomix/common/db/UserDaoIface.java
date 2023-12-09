@@ -16,6 +16,7 @@ public interface UserDaoIface {
     public User getUser(String login, String password) throws IotDatabaseException ;
     public List<User> getUsersByRole(String role) throws IotDatabaseException ;
     public void updateUser(User user) throws IotDatabaseException ;
+    public void modifyUserPassword(long id, String password) throws IotDatabaseException ;
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset) throws IotDatabaseException ;
     public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException ;
 
