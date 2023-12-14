@@ -2611,4 +2611,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'getDeviceTags'");
     }
 
+    @Override
+    public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'changeDeviceEui'");
+    }
+
 }

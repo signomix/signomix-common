@@ -2290,6 +2290,58 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException {
+        String query = "UPDATE devices SET eui=? WHERE eui=?;";
+        String query2 = "UPDATE devicechannels SET eui=? WHERE eui=?;";
+        String query3 = "UPDATE devicedata SET eui=? WHERE eui=?;";
+        String query4 = "UPDATE devicestatus SET eui=? WHERE eui=?;";
+        String query5 = "UPDATE virtualdevicedata SET eui=? WHERE eui=?;";
+        String query6 = "UPDATE device_tags SET eui=? WHERE eui=?;";
+        String query7 = "UPDATE favourites SET id=? WHERE id=? AND is_device=true;";
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pst = conn.prepareStatement(query);
+                PreparedStatement pst2 = conn.prepareStatement(query2);
+                PreparedStatement pst3 = conn.prepareStatement(query3);
+                PreparedStatement pst4 = conn.prepareStatement(query4);
+                PreparedStatement pst5 = conn.prepareStatement(query5);
+                PreparedStatement pst6 = conn.prepareStatement(query6);
+                PreparedStatement pst7 = conn.prepareStatement(query7);) {
+
+            conn.setAutoCommit(false);
+            pst.setString(1, newEui);
+            pst.setString(2, eui);
+            pst.executeUpdate();
+            pst2.setString(1, newEui);
+            pst2.setString(2, eui);
+            pst2.executeUpdate();
+            pst3.setString(1, newEui);
+            pst3.setString(2, eui);
+            pst3.executeUpdate();
+            pst4.setString(1, newEui);
+            pst4.setString(2, eui);
+            pst4.executeUpdate();
+            pst5.setString(1, newEui);
+            pst5.setString(2, eui);
+            pst5.executeUpdate();
+            pst6.setString(1, newEui);
+            pst6.setString(2, eui);
+            pst6.executeUpdate();
+            pst7.setString(1, newEui);
+            pst7.setString(2, eui);
+            pst7.executeUpdate();
+
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+
+    }
+
+    @Override
     public void createDevice(User user, Device device) throws IotDatabaseException {
         // logger.info("createDevice: " + device.getEUI() + " for user: " + user.uid);
         String query = "INSERT INTO devices (eui, name, userid, type, team, channels, code, "

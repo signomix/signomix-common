@@ -49,6 +49,7 @@ public interface IotDatabaseIface {
     //public Device getDevice(User user, boolean withStatus) throws IotDatabaseException;
     public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException;
     public void updateDevice(User user, Device device) throws IotDatabaseException;
+    public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
     public List<Device> getInactiveDevices() throws IotDatabaseException;
 

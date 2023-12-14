@@ -287,7 +287,7 @@ public class UserDao implements UserDaoIface {
     @Override
     public void updateUser(User user) throws IotDatabaseException {
         String query = "UPDATE users SET "
-                + "type=?,email=?,name=?,surname=?,role=?,secret=?,password=?,generalchannel=?,"
+                + "type=?,email=?,name=?,surname=?,role=?,secret=?,generalchannel=?,"
                 + "infochannel=?,warningchannel=?,alertchannel=?,confirmed=?,unregisterreq=?,authstatus=?,created=?,"
                 + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=? "
                 + "WHERE uid=?";
@@ -298,22 +298,21 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(4, user.surname);
             pstmt.setString(5, user.role);
             pstmt.setString(6, user.confirmString);
-            pstmt.setString(7, user.password);
-            pstmt.setString(8, user.generalNotificationChannel);
-            pstmt.setString(9, user.infoNotificationChannel);
-            pstmt.setString(10, user.warningNotificationChannel);
-            pstmt.setString(11, user.alertNotificationChannel);
-            pstmt.setBoolean(12, user.confirmed);
-            pstmt.setBoolean(13, user.unregisterRequested);
-            pstmt.setInt(14, user.authStatus);
-            pstmt.setTimestamp(15, new java.sql.Timestamp(user.createdAt));
-            pstmt.setInt(16, user.services);
-            pstmt.setString(17, user.phonePrefix);
-            pstmt.setLong(18, user.credits);
-            pstmt.setBoolean(19, user.autologin);
-            pstmt.setString(20, user.preferredLanguage);
-            pstmt.setLong(21, user.organization);
-            pstmt.setString(22, user.uid);
+            pstmt.setString(7, user.generalNotificationChannel);
+            pstmt.setString(8, user.infoNotificationChannel);
+            pstmt.setString(9, user.warningNotificationChannel);
+            pstmt.setString(10, user.alertNotificationChannel);
+            pstmt.setBoolean(11, user.confirmed);
+            pstmt.setBoolean(12, user.unregisterRequested);
+            pstmt.setInt(13, user.authStatus);
+            pstmt.setTimestamp(14, new java.sql.Timestamp(user.createdAt));
+            pstmt.setInt(15, user.services);
+            pstmt.setString(16, user.phonePrefix);
+            pstmt.setLong(17, user.credits);
+            pstmt.setBoolean(18, user.autologin);
+            pstmt.setString(19, user.preferredLanguage);
+            pstmt.setLong(20, user.organization);
+            pstmt.setString(21, user.uid);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
