@@ -2556,13 +2556,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) {
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue, Integer limit, Integer offset) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getUserDevicesByTag'");
     }
 
     @Override
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) {
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit, Integer offset) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDevicesByTag'");
     }

@@ -3109,12 +3109,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) throws IotDatabaseException {
-        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND userid=?";
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue, Integer limit, Integer offset) throws IotDatabaseException {
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND userid=? ORDER BY name LIMIT=? OFFSET=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
             pstmt.setString(2, tagValue);
             pstmt.setString(3, user.uid);
+            pstmt.setInt(4, limit);
+            pstmt.setInt(5, offset);
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {
@@ -3129,14 +3131,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue)
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit, Integer offset)
             throws IotDatabaseException {
-        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tag_name=? AND tag_value=?) AND organization=?";
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tag_name=? AND tag_value=?) AND organization=? ORDER BY name LIMIT=? OFFSET=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
             pstmt.setString(2, tagName);
             pstmt.setString(3, tagValue);
             pstmt.setLong(4, organizationId);
+            pstmt.setInt(5, limit);
+            pstmt.setInt(6, offset);
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {

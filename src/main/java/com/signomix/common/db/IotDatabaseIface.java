@@ -59,8 +59,8 @@ public interface IotDatabaseIface {
     public void removeDeviceTag(User user, String deviceEui, String tagName) throws IotDatabaseException;
     public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException;
     public void removeAllDeviceTags(User user, String deviceEui) throws IotDatabaseException;
-    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue) throws IotDatabaseException;
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException;
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue, Integer limit, Integer offset) throws IotDatabaseException;
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit, Integer offset) throws IotDatabaseException;
     public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) throws IotDatabaseException;
     public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException    ;
     public List<Device> getDevicesByTag(String userID, long organizationID, String tagName, String tagValue) throws IotDatabaseException;
