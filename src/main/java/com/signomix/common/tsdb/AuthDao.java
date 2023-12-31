@@ -82,7 +82,7 @@ public class AuthDao implements AuthDaoIface {
             LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
             if (token.startsWith(permanentTokenPrefix)) {
                 query = queryPermanent;
-                updateQuery = updatePermanent;
+                updateQuery = null;
                 lifetime = permanentTokenLifetime;
             } else {
                 query = querySession;
@@ -104,7 +104,7 @@ public class AuthDao implements AuthDaoIface {
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
             }
-            if (userUid != null) {
+            if (userUid != null && updateQuery != null) {
                 try (Connection conn = dataSource.getConnection();
                         PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
                     pstmt.setLong(1, lifetime);
