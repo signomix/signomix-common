@@ -15,6 +15,8 @@ public class Signal {
     public Long sentinelConfigId;
     public String deviceEui;
     public int level = 0;
+    public String subjectPl;
+    public String subjectEn;
     public String messageEn;
     public String messagePl;
 }
