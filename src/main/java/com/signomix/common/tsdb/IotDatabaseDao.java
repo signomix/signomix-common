@@ -2053,6 +2053,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             if (selector.numberOfSearchParams > 0) {
                 pst.setString(selector.numberOfWritableParams + 1, "%" + searchParams[1] + "%");
+                if(selector.numberOfSearchParams > 1) {
+                    pst.setString(selector.numberOfWritableParams + 2, "%" + searchParams[2] + "%");
+                }
             }
             if (selector.numberOfUserParams > 0) {
                 pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 1, user.uid);
@@ -2132,12 +2135,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO: withShared, withStatus
         DeviceSelector selector = new DeviceSelector(user, withShared, withStatus, true, null, null, null);
         String query = selector.query;
-        // logger.info(query);
         Device device = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (selector.numberOfWritableParams > 0) {
                 pst.setString(1, user.uid);
-                pst.setString(2, user.uid);
+                pst.setString(2, "%," + user.uid + ",%");
             }
             pst.setString(selector.numberOfWritableParams + 1, deviceEUI);
             if (selector.numberOfUserParams > 0) {

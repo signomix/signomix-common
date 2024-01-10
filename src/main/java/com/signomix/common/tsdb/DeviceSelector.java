@@ -129,6 +129,9 @@ public class DeviceSelector {
                         searchCondition = " LOWER(d.name) LIKE LOWER(?) ";
                         numberOfSearchParams = 1;
                     }
+                } else if (searchParts.length == 3 && searchParts[0].equals("tag")) {
+                    searchCondition = " LOWER(d.eui) IN (SELECT LOWER(eui) FROM device_tags WHERE LOWER(tag_name) LIKE LOWER(?) AND LOWER(tag_value) LIKE LOWER(?))";
+                    numberOfSearchParams = 2;
                 }
             }
 
@@ -149,10 +152,10 @@ public class DeviceSelector {
             } else if (searchString != null && !searchString.isEmpty()) {
                 sb = sb.append(searchCondition);
             }
-            if((single || searchCondition.length()>0) && this.userSql.length()>0) {
+            if ((single || searchCondition.length() > 0) && this.userSql.length() > 0) {
                 sb = sb.append(" AND ");
             }
-            if(this.userSql.length()>0) {
+            if (this.userSql.length() > 0) {
                 sb = sb.append(this.userSql);
             }
         }
