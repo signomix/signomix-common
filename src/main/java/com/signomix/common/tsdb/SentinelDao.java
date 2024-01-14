@@ -15,6 +15,7 @@ import org.jboss.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.db.SentinelDaoIface;
+import com.signomix.common.iot.LastDataPair;
 import com.signomix.common.iot.sentinel.SentinelConfig;
 
 import io.agroal.api.AgroalDataSource;
@@ -474,41 +475,73 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public List<List> getLastValuesOfDevices(Set<String> euis, long secondsBack) throws IotDatabaseException{
         String euiList = String.join(",", euis.stream().map(eui -> "'" + eui + "'").collect(Collectors.toList()));
-        String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
+        /* String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
                 + "WHERE eui IN ("+euiList+") "
-                + "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;";
+                + "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;"; */
+        String query =
+        "SELECT DISTINCT ON (eui) " + 
+        "eui, tstamp, " +
+        "d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24," +
+        "d1-LAG (d1) OVER (ORDER BY tstamp) as d1diff," +
+        "d2-LAG (d2) OVER (ORDER BY tstamp) as d2diff," +
+        "d3-LAG (d3) OVER (ORDER BY tstamp) as d3diff," +
+        "d4-LAG (d4) OVER (ORDER BY tstamp) as d4diff," +
+        "d5-LAG (d5) OVER (ORDER BY tstamp) as d5diff," +
+        "d6-LAG (d6) OVER (ORDER BY tstamp) as d6diff," +
+        "d7-LAG (d7) OVER (ORDER BY tstamp) as d7diff," +
+        "d8-LAG (d8) OVER (ORDER BY tstamp) as d8diff," +
+        "d9-LAG (d9) OVER (ORDER BY tstamp) as d9diff," +
+        "d10-LAG (d10) OVER (ORDER BY tstamp) as d10diff," +
+        "d11-LAG (d11) OVER (ORDER BY tstamp) as d11diff," +
+        "d12-LAG (d12) OVER (ORDER BY tstamp) as d12diff," +
+        "d13-LAG (d13) OVER (ORDER BY tstamp) as d13diff," +
+        "d14-LAG (d14) OVER (ORDER BY tstamp) as d14diff," +
+        "d15-LAG (d15) OVER (ORDER BY tstamp) as d15diff," +
+        "d16-LAG (d16) OVER (ORDER BY tstamp) as d16diff," +
+        "d17-LAG (d17) OVER (ORDER BY tstamp) as d17diff," +
+        "d18-LAG (d18) OVER (ORDER BY tstamp) as d18diff," +
+        "d19-LAG (d19) OVER (ORDER BY tstamp) as d19diff," +
+        "d20-LAG (d20) OVER (ORDER BY tstamp) as d20diff," +
+        "d21-LAG (d21) OVER (ORDER BY tstamp) as d21diff," +
+        "d22-LAG (d22) OVER (ORDER BY tstamp) as d22diff," +
+        "d23-LAG (d23) OVER (ORDER BY tstamp) as d23diff," +
+        "d24-LAG (d24) OVER (ORDER BY tstamp) as d24diff " +
+        "FROM analyticdata " +
+        "WHERE eui IN ("+euiList+") " + 
+        "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;";
         logger.info(query);
+        String eui;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 java.util.ArrayList<List> values = new java.util.ArrayList<>();
                 while (rs.next()) {
-                    java.util.ArrayList<Object> row = new java.util.ArrayList<>();
-                    row.add(rs.getString("eui"));
-                    row.add(rs.getTimestamp("tstamp"));
-                    row.add(rs.getDouble("d1"));
-                    row.add(rs.getDouble("d2"));
-                    row.add(rs.getDouble("d3"));
-                    row.add(rs.getDouble("d4"));
-                    row.add(rs.getDouble("d5"));
-                    row.add(rs.getDouble("d6"));
-                    row.add(rs.getDouble("d7"));
-                    row.add(rs.getDouble("d8"));
-                    row.add(rs.getDouble("d9"));
-                    row.add(rs.getDouble("d10"));
-                    row.add(rs.getDouble("d11"));
-                    row.add(rs.getDouble("d12"));
-                    row.add(rs.getDouble("d13"));
-                    row.add(rs.getDouble("d14"));
-                    row.add(rs.getDouble("d15"));
-                    row.add(rs.getDouble("d16"));
-                    row.add(rs.getDouble("d17"));
-                    row.add(rs.getDouble("d18"));
-                    row.add(rs.getDouble("d19"));
-                    row.add(rs.getDouble("d20"));
-                    row.add(rs.getDouble("d21"));
-                    row.add(rs.getDouble("d22"));
-                    row.add(rs.getDouble("d23"));
-                    row.add(rs.getDouble("d24"));
+                    java.util.ArrayList<LastDataPair> row = new java.util.ArrayList<>();
+                    eui=rs.getString("eui");
+                    //row.add(rs.getTimestamp("tstamp"));
+                    row.add(new LastDataPair(eui,rs.getDouble("d1"),rs.getDouble("d1diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d2"),rs.getDouble("d2diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d3"),rs.getDouble("d3diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d4"),rs.getDouble("d4diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d5"),rs.getDouble("d5diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d6"),rs.getDouble("d6diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d7"),rs.getDouble("d7diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d8"),rs.getDouble("d8diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d9"),rs.getDouble("d9diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d10"),rs.getDouble("d10diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d11"),rs.getDouble("d11diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d12"),rs.getDouble("d12diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d13"),rs.getDouble("d13diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d14"),rs.getDouble("d14diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d15"),rs.getDouble("d15diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d16"),rs.getDouble("d16diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d17"),rs.getDouble("d17diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d18"),rs.getDouble("d18diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d19"),rs.getDouble("d19diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d20"),rs.getDouble("d20diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d21"),rs.getDouble("d21diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d22"),rs.getDouble("d22diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d23"),rs.getDouble("d23diff")));
+                    row.add(new LastDataPair(eui,rs.getDouble("d24"),rs.getDouble("d24diff")));
                     values.add(row);
                 }
                 return values;
