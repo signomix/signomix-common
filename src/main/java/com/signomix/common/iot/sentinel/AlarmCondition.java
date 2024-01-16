@@ -12,7 +12,8 @@ public class AlarmCondition {
     public String measurement;
     public Integer condition1;
     public Double value1;
-    public boolean orOperator = false;
+    public boolean orOperator = false; //deprecated
+    public Integer logic; // 0 - none, 1- OR, 2 - AND
     public Integer condition2;
     public Double value2;
 }
