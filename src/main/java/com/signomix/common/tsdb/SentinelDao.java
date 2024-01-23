@@ -109,8 +109,8 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public long addConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators, time_shift) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?,?)";
+        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators, time_shift, hysteresis) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
             pstmt.setString(1, config.name);
@@ -131,6 +131,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setString(16, config.team);
             pstmt.setString(17, config.administrators);
             pstmt.setInt(18, config.timeShift);
+            pstmt.setDouble(19, config.hysteresis);
             pstmt.execute();
             ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
@@ -147,7 +148,7 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public void updateConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, every_time=?, time_shift=? WHERE id=?";
+        String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, every_time=?, time_shift=?, hysteresis=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, config.name);
@@ -168,7 +169,8 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setString(16, config.administrators);
             pstmt.setBoolean(17, config.everyTime);
             pstmt.setInt(18, config.timeShift);
-            pstmt.setLong(19, config.id);
+            pstmt.setDouble(19, config.hysteresis);
+            pstmt.setLong(20, config.id);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -219,6 +221,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
+                    config.hysteresis = rs.getDouble("hysteresis");
                     return config;
                 }
             } catch (Exception e) {
@@ -263,6 +266,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
+                    config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
                 return configs;
@@ -308,6 +312,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
+                    config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
                 return configs;
@@ -351,6 +356,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
+                    config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
                 return configs;
@@ -755,6 +761,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
+                    config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
                 return configs;
@@ -797,6 +804,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.team = rs.getString("team");
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
+                    config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
                 return configs;
