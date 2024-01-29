@@ -164,7 +164,8 @@ public class DeviceSelector {
                 .append(this.limitSql)
                 .append(this.offsetSql);
         query = sb.toString();
-        logger.info("query:" + query);
+        logger.info("query(1):" + query);
+        logger.info("searchString:" + searchString);
     }
 
     public DeviceSelector(String deviceEui, boolean withStatus) {

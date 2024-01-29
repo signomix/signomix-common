@@ -2046,6 +2046,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         String query = selector.query;
         Device device;
+        String parametrizedParam="";
+        boolean isParametrized = false;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (selector.numberOfWritableParams > 0) {
                 pst.setString(1, user.uid);
@@ -2053,9 +2055,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             if (selector.numberOfSearchParams > 0) {
                 pst.setString(selector.numberOfWritableParams + 1, "%" + searchParams[1] + "%");
-                if(selector.numberOfSearchParams > 1) {
-                    pst.setString(selector.numberOfWritableParams + 2, "%" + searchParams[2] + "%");
+                if (selector.numberOfSearchParams > 1) {
+                    parametrizedParam = searchParams[2];
+                    if (parametrizedParam.contains("*")) {
+                        isParametrized = true;
+                        parametrizedParam = parametrizedParam.replace("*", "%");
+                    }
+                    if (isParametrized) {
+                        pst.setString(selector.numberOfWritableParams + 2, parametrizedParam);
+                    } else {
+                        pst.setString(selector.numberOfWritableParams + 2, "%" + parametrizedParam + "%");
+                    }
                 }
+                logger.info("parametrizedParam = " + parametrizedParam +" at " + selector.numberOfWritableParams + 2);
+
             }
             if (selector.numberOfUserParams > 0) {
                 pst.setString(selector.numberOfWritableParams + selector.numberOfSearchParams + 1, user.uid);
@@ -3111,11 +3124,21 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue, Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND userid=? ORDER BY name LIMIT=? OFFSET=?";
+    public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue, Integer limit, Integer offset)
+            throws IotDatabaseException {
+        String searchValue=tagValue;
+        boolean isLikeQuery = false;
+        if (tagValue.contains("*")) {
+            searchValue = tagValue.replace("*", "%");
+            isLikeQuery = true;
+        }
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE LOWER(tag_name)=LOWER(?) AND LOWER(tag_value)=LOWER(?)) AND userid=? ORDER BY name LIMIT=? OFFSET=?";
+        if(isLikeQuery){
+            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE LOWER(tag_name)=LOWER(?) AND LOWER(tag_value) LIKE LOWER(?)) AND userid=? ORDER BY name LIMIT=? OFFSET=?";
+        }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
-            pstmt.setString(2, tagValue);
+            pstmt.setString(2, searchValue);
             pstmt.setString(3, user.uid);
             pstmt.setInt(4, limit);
             pstmt.setInt(5, offset);
@@ -3133,7 +3156,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit, Integer offset)
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit,
+            Integer offset)
             throws IotDatabaseException {
         String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tag_name=? AND tag_value=?) AND organization=? ORDER BY name LIMIT=? OFFSET=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -3199,11 +3223,24 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public List<Device> getDevicesByTag(String userID, long organizationID, String tagName,
             String tagValue) throws IotDatabaseException {
+        boolean isLikeQuery = false;
+        if (tagValue.contains("*")) {
+            tagValue = tagValue.replace("*", "%");
+            isLikeQuery = true;
+        }
         String query;
         if (organizationID == defaultOrganizationId) {
-            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) and userid=?";
+            if (isLikeQuery) {
+                query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value LIKE ?) and userid=?";
+            } else {
+                query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) and userid=?";
+            }
         } else {
-            query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND organization=?";
+            if (isLikeQuery) {
+                query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value LIKE ?) and organization=?";
+            } else {
+                query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) and organization=?";
+            }
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
