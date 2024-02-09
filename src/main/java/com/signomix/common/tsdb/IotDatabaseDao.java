@@ -112,7 +112,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setString(1, groupEUI);
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
-                String[] s = rs.getString(1).toLowerCase().split(",");
+                String tmps = rs.getString(1).toLowerCase();
+                String[] s = tmps.split(",");
                 channels = Arrays.asList(s);
             }
             return channels;
@@ -125,7 +126,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<List<List>> getGroupLastValues(String userID, long organizationID, String groupEUI,
             String[] channelNames, long secondsBack)
             throws IotDatabaseException {
-        // logger.info("getGroupLastValues");
+        logger.info("getGroupLastValues");
         List<String> requestChannels = Arrays.asList(channelNames);
         try {
             String group = "%," + groupEUI + ",%";
@@ -142,7 +143,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     + "ORDER BY eui,tstamp DESC;";
             List<String> groupChannels = getGroupChannels(groupEUI);
             if (requestChannels.size() == 0) {
-                // logger.error("empty channelNames");
+                logger.info("empty channelNames");
                 requestChannels = groupChannels;
             }
             List<List<List>> result = new ArrayList<>();
@@ -169,15 +170,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 String channelName;
                 String devEui;
                 double d;
-                // logger.info("query: "+ query);
                 while (rs.next()) {
-                    // logger.info(rs.getString("eui"));
                     for (int i = 0; i < groupChannels.size(); i++) {
                         devEui = rs.getString(1);
                         channelName = groupChannels.get(i);
                         channelIndex = devices.get(devEui).indexOf(channelName);
                         d = rs.getDouble(4 + channelIndex);
-                        // logger.info("channel: "+ channelName + " " + d);
                         if (!rs.wasNull()) {
                             tmpResult.add(new ChannelData(devEui, channelName, d,
                                     rs.getTimestamp(3).getTime()));
@@ -194,14 +192,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (tmpResult.isEmpty()) {
                 return result;
             }
-            long processedTimestamp = 0;
             String prevEUI = "";
             long prevTimestamp = 0;
             int idx;
             for (int i = 0; i < tmpResult.size(); i++) {
                 cd = tmpResult.get(i);
-                // logger.info("ChannelData: {} {} {}", cd.getDeviceEUI(), cd.getName(),
-                // cd.getTimestamp());
+
                 if (!cd.getDeviceEUI().equalsIgnoreCase(prevEUI)) {
                     if (!measuresForEuiTimestamp.isEmpty()) {
                         measuresForEui.add(measuresForEuiTimestamp);
@@ -238,6 +234,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (!measuresForEui.isEmpty()) {
                 result.add(measuresForEui);
             }
+            logger.info("result: " + result.size());
             return result;
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -257,7 +254,136 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public List<List<List>> getGroupValues(String userID, long organizationId, String groupEUI, String[] channelNames,
             String dataQuery) throws IotDatabaseException {
-        return getGroupLastValues(userID, organizationId, groupEUI, channelNames, 0);
+        DataQuery dq = null;
+        try {
+            dq = DataQuery.parse(dataQuery);
+        } catch (DataQueryException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "Invalid data query", null);
+        }
+        Timestamp fromTs = dq.getFromTs();
+        Timestamp toTs = dq.getToTs();
+        if (fromTs == null || toTs == null || fromTs.after(toTs)) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "Invalid dates in data query", null);
+        }
+        List<String> requestChannels = Arrays.asList(channelNames);
+        try {
+            String group = "%," + groupEUI + ",%";
+            String deviceQuery = "SELECT eui,channels FROM devices WHERE groups like ?;";
+            HashMap<String, List> devices = new HashMap<>();
+            String query;
+            query = "SELECT "
+                    + "eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 "
+                    + "FROM devicedata "
+                    + "WHERE eui IN "
+                    + "(SELECT eui FROM devices WHERE groups like ?) "
+                    + "AND tstamp >= ? AND tstamp <= ? "
+                    + "ORDER BY eui,tstamp;";
+            List<String> groupChannels = getGroupChannels(groupEUI);
+            if (requestChannels.size() == 0 || requestChannels.indexOf("*") > -1) {
+                logger.info("empty channelNames");
+                requestChannels = groupChannels;
+            }
+            List<List<List>> result = new ArrayList<>();
+            List<List> measuresForEui = new ArrayList<>();
+            List<ChannelData> measuresForEuiTimestamp = new ArrayList<>();
+            List<ChannelData> tmpResult = new ArrayList<>();
+            ChannelData cd;
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstd = conn.prepareStatement(deviceQuery);
+                    PreparedStatement pst = conn.prepareStatement(query);) {
+                pstd.setString(1, group);
+                ResultSet rs = pstd.executeQuery();
+                while (rs.next()) {
+                    devices.put(rs.getString(1), Arrays.asList(rs.getString(2).split(",")));
+                }
+                pst.setString(1, group);
+                pst.setTimestamp(2, fromTs);
+                pst.setTimestamp(3, toTs);
+                rs = pst.executeQuery();
+                int channelIndex;
+                String channelName;
+                String devEui;
+                Double d;
+                Timestamp ts;
+                logger.info("query: " + query);
+                String gChnames = "";
+                for (int i = 0; i < groupChannels.size(); i++) {
+                    gChnames += groupChannels.get(i) + ",";
+                }
+                logger.info("groupChannels: " + gChnames);
+                while (rs.next()) {
+                    devEui = rs.getString(1);
+                    ts = rs.getTimestamp(3);
+                    for (int i = 0; i < groupChannels.size(); i++) {
+                        channelName = groupChannels.get(i);
+                        logger.info("channel: " + channelName);
+                        channelIndex = devices.get(devEui).indexOf(channelName);
+                        if (channelIndex > -1) {
+                            d = rs.getDouble(4 + channelIndex);
+                            if (rs.wasNull()) {
+                                d = null;
+                            }
+                        } else {
+                            // if device does not have this channel name
+                            d = null;
+                        }
+                        tmpResult.add(new ChannelData(devEui, channelName, d, ts.getTime()));
+                    }
+                }
+            } catch (SQLException e) {
+                logger.error(e.getMessage());
+                throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            } catch (Exception ex) {
+                logger.error(ex.getMessage());
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, ex.getMessage());
+            }
+            if (tmpResult.isEmpty()) {
+                return result;
+            }
+            String prevEUI = "";
+            long prevTimestamp = 0;
+            for (int i = 0; i < tmpResult.size(); i++) {
+                cd = tmpResult.get(i);
+                if (!cd.getDeviceEUI().equalsIgnoreCase(prevEUI)) {
+                    if (measuresForEuiTimestamp.size() > 0) {
+                        measuresForEui.add(measuresForEuiTimestamp);
+                    }
+                    if (measuresForEui.size() > 0) {
+                        result.add(measuresForEui);
+                    }
+                    measuresForEui = new ArrayList<>();
+                    measuresForEuiTimestamp = new ArrayList<>();
+                    prevEUI = cd.getDeviceEUI();
+                    prevTimestamp = cd.getTimestamp();
+                } else if (prevTimestamp != cd.getTimestamp()) {
+                    if (measuresForEuiTimestamp.size() > 0) {
+                        measuresForEui.add(measuresForEuiTimestamp);
+                    }
+                    measuresForEuiTimestamp = new ArrayList<>();
+                    prevTimestamp = cd.getTimestamp();
+                }
+                measuresForEuiTimestamp.add(cd);
+            }
+            if (measuresForEuiTimestamp.size() > 0) {
+                measuresForEui.add(measuresForEuiTimestamp);
+            }
+            if (measuresForEui.size() > 0) {
+                result.add(measuresForEui);
+            }
+            return result;
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            StackTraceElement[] ste = e.getStackTrace();
+            // logger.error("requestChannels[{}]", requestChannels.size());
+            // logger.error("channelNames[{}]", channelNames.length);
+            // logger.error(e.getMessage());
+            for (int i = 0; i < ste.length; i++) {
+                // logger.error("{}.{}:{}", e.getStackTrace()[i].getClassName(),
+                // e.getStackTrace()[i].getMethodName(),
+                // e.getStackTrace()[i].getLineNumber());
+            }
+            return null;
+        }
     }
 
     @Override
@@ -2046,7 +2172,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         String query = selector.query;
         Device device;
-        String parametrizedParam="";
+        String parametrizedParam = "";
         boolean isParametrized = false;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (selector.numberOfWritableParams > 0) {
@@ -2067,7 +2193,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                         pst.setString(selector.numberOfWritableParams + 2, "%" + parametrizedParam + "%");
                     }
                 }
-                logger.info("parametrizedParam = " + parametrizedParam +" at " + selector.numberOfWritableParams + 2);
+                logger.info("parametrizedParam = " + parametrizedParam + " at " + selector.numberOfWritableParams + 2);
 
             }
             if (selector.numberOfUserParams > 0) {
@@ -3126,14 +3252,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public List<Device> getUserDevicesByTag(User user, String tagName, String tagValue, Integer limit, Integer offset)
             throws IotDatabaseException {
-        String searchValue=tagValue;
+        String searchValue = tagValue;
         boolean isLikeQuery = false;
         if (tagValue.contains("*")) {
             searchValue = tagValue.replace("*", "%");
             isLikeQuery = true;
         }
         String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE LOWER(tag_name)=LOWER(?) AND LOWER(tag_value)=LOWER(?)) AND userid=? ORDER BY name LIMIT=? OFFSET=?";
-        if(isLikeQuery){
+        if (isLikeQuery) {
             query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE LOWER(tag_name)=LOWER(?) AND LOWER(tag_value) LIKE LOWER(?)) AND userid=? ORDER BY name LIMIT=? OFFSET=?";
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {

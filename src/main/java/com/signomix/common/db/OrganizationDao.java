@@ -3,8 +3,11 @@ package com.signomix.common.db;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.jboss.logging.Logger;
+
+import com.signomix.common.Tenant;
 
 import io.agroal.api.AgroalDataSource;
 
@@ -52,16 +55,52 @@ public class OrganizationDao implements OrganizationDaoIface {
     }
 
     @Override
-    public void addOrganizationStructureElement(Long organizationId, String path, String name)
-            throws IotDatabaseException {
+    public void addTenant(Integer organizationId, String name, String root) throws IotDatabaseException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addOrganizationStructureElement'");
+        throw new UnsupportedOperationException("Unimplemented method 'addTenant'");
     }
 
     @Override
-    public Integer getStructureId(long organizationId, String path) throws IotDatabaseException {
+    public void updateTenant(Integer id, Integer organizationId, String name, String root) throws IotDatabaseException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getStructureId'");
+        throw new UnsupportedOperationException("Unimplemented method 'updateTenant'");
+    }
+
+    @Override
+    public void deleteTenant(Integer id) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteTenant'");
+    }
+
+    @Override
+    public Tenant getTenant(Integer id) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTenant'");
+    }
+
+    @Override
+    public Tenant getTenantByRoot(String root) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTenantByRoot'");
+    }
+
+    @Override
+    public List<Tenant> getTenants(Integer organizationId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTenants'");
+    }
+
+    @Override
+    public List<String> getTenantPaths(Integer tenantId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTenantPaths'");
+    }
+
+    @Override
+    public void addTenantUser(Integer organizationId, Integer tenantId, Long userNumber, String path)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addTenantUser'");
     }
 
 }
