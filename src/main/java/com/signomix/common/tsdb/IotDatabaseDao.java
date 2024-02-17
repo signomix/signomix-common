@@ -1881,7 +1881,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("framecheck boolean,")
                 .append("configuration varchar,")
                 .append("organization bigint default " + defaultOrganizationId + ",")
-                .append("organizationapp bigint references applications),")
+                .append("organizationapp bigint references applications,")
                 .append("defaultdashboard boolean default true);");
         // dashboards
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (")

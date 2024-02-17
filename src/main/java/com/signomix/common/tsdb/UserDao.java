@@ -10,7 +10,6 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import com.signomix.common.HashMaker;
-import com.signomix.common.Organization;
 import com.signomix.common.User;
 import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.db.UserDaoIface;
@@ -35,11 +34,6 @@ public class UserDao implements UserDaoIface {
         StringBuilder sb = new StringBuilder();
         // sb.append("create sequence if not exists user_number_seq;");
         // sb.append("create sequence if not exists org_number_seq;");
-        sb.append("create table if not exists organizations (")
-                .append("id SERIAL PRIMARY KEY,")
-                .append("code varchar unique,")
-                .append("name varchar,")
-                .append("description varchar);");
         sb.append("create table if not exists users (")
                 .append("uid varchar primary key,")
                 .append("type int,")
@@ -77,14 +71,7 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-        query = "insert into organizations (id,code,name,description) values (1,'','default','default organization - for accounts without organization feature');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
-        } catch (SQLException e2) {
-            LOG.warn("Error inserting default organization", e2);
-            // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
-            // e2.getMessage(), e2);
-        }
+
 
         User user = new User();
         user.uid = "admin";
@@ -103,10 +90,10 @@ public class UserDao implements UserDaoIface {
         user.unregisterRequested = false;
         user.authStatus = 1;
         user.createdAt = System.currentTimeMillis();
-        user.number = 0;
+        user.number = 0L;
         user.services = 0;
         user.phonePrefix = "";
-        user.credits = 0;
+        user.credits = 0L;
         user.autologin = false;
         user.preferredLanguage = "en";
         user.organization = DEFAULT_ORGANIZATION_ID;
@@ -132,10 +119,10 @@ public class UserDao implements UserDaoIface {
         user.unregisterRequested = false;
         user.authStatus = 1;
         user.createdAt = System.currentTimeMillis();
-        user.number = 0;
+        user.number = 0L;
         user.services = 0;
         user.phonePrefix = "";
-        user.credits = 0;
+        user.credits = 0L;
         user.autologin = false;
         user.preferredLanguage = "en";
         user.organization = DEFAULT_ORGANIZATION_ID;
@@ -199,8 +186,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY users to '/var/lib/postgresql/data/export/users.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY organizations to '/var/lib/postgresql/data/export/organizations.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY users to '/var/lib/postgresql/data/export/users.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -319,124 +305,21 @@ public class UserDao implements UserDaoIface {
         }
     }
 
-    @Override
-    public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description from organizations";
-        if (limit != null) {
-            query += " LIMIT " + limit;
-        }
-        if (offset != null) {
-            query += " OFFSET " + offset;
-        }
-        List<Organization> orgs = new ArrayList<>();
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Organization org = new Organization(
-                        rs.getLong("id"),
-                        rs.getString("code"),
-                        rs.getString("name"),
-                        rs.getString("description"));
-                orgs.add(org);
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-        return orgs;
-    }
-
-    @Override
-    public Organization getOrganization(long id) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description from organizations where id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                Organization org = new Organization(
-                        rs.getLong("id"),
-                        rs.getString("code"),
-                        rs.getString("name"),
-                        rs.getString("description"));
-                return org;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-        return null;
-    }
-
-    @Override
-    public Organization getOrganization(String code) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description from organizations where code=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, code);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                Organization org = new Organization(
-                        rs.getLong("id"),
-                        rs.getString("code"),
-                        rs.getString("name"),
-                        rs.getString("description"));
-                return org;
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-        return null;
-    }
-
-    @Override
-    public void addOrganization(Organization org) throws IotDatabaseException {
-        String query = "INSERT INTO organizations (code,name,description) VALUES (?,?,?)";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, org.code);
-            pstmt.setString(2, org.name);
-            pstmt.setString(3, org.description);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    }
-
-    @Override
-    public void updateOrganization(Organization org) throws IotDatabaseException {
-        String query = "UPDATE organizations SET code=?,name=?,description=? WHERE id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, org.code);
-            pstmt.setString(2, org.name);
-            pstmt.setString(3, org.description);
-            pstmt.setLong(4, org.id);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    }
-
-    @Override
-    public void deleteOrganization(long id) throws IotDatabaseException {
-        String query = "DELETE FROM organizations WHERE id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, id);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    }
-
+/*    
+*/
     @Override
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
             throws IotDatabaseException {
-        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
-                + "WHERE organization=?";
+        String query = "SELECT * FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
+                + "WHERE organization=? AND tenant_users.user_id IS NULL ";
         if (limit != null) {
             query += " LIMIT " + limit;
         }
         if (offset != null) {
             query += " OFFSET " + offset;
         }
+        LOG.info("getOrganizationUsers: " + query);
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
@@ -445,16 +328,15 @@ public class UserDao implements UserDaoIface {
                 users.add(buildUser(rs));
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return users;
-    }
+    } 
 
     @Override
     public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "user_number,services,phoneprefix,credits,autologin,language,organization from users";
+        String query = "SELECT * from users";
         if (limit != null) {
             query += " LIMIT " + limit;
         }
@@ -468,6 +350,7 @@ public class UserDao implements UserDaoIface {
                 users.add(buildUser(rs));
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return users;
@@ -530,6 +413,30 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+    }
+
+    @Override
+    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset) throws IotDatabaseException {
+        String query = "SELECT * FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id"
+                + "WHERE tenant_users.tenant_id=?";
+        if (limit != null) {
+            query += " LIMIT " + limit;
+        }
+        if (offset != null) {
+            query += " OFFSET " + offset;
+        }
+        ArrayList<User> users = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, tenantId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                users.add(buildUser(rs));
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return users;
     }
 
 }

@@ -19,15 +19,16 @@ public interface UserDaoIface {
     public void modifyUserPassword(long id, String password) throws IotDatabaseException ;
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset) throws IotDatabaseException ;
     public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException ;
+    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset) throws IotDatabaseException ;
 
     public void removeNotConfirmed(long since);
     public List<User> getAll();
     public void backupDb() throws IotDatabaseException;
 
-    public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException;
-    public Organization getOrganization(long id) throws IotDatabaseException;
-    public Organization getOrganization(String code) throws IotDatabaseException;
-    public void deleteOrganization(long id) throws IotDatabaseException;
-    public void addOrganization(Organization organization) throws IotDatabaseException;
-    public void updateOrganization(Organization organization) throws IotDatabaseException;
+    //public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException;
+    //public Organization getOrganization(long id) throws IotDatabaseException;
+    //public Organization getOrganization(String code) throws IotDatabaseException;
+    //public void deleteOrganization(long id) throws IotDatabaseException;
+    //public void addOrganization(Organization organization) throws IotDatabaseException;
+    //public void updateOrganization(Organization organization) throws IotDatabaseException;
 }

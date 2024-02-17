@@ -128,8 +128,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/users.csv', 'SELECT * FROM users');"
-                + "CALL CSVWRITE('backup/organizations.csv', 'SELECT * FROM organizations');";
+        String query = "CALL CSVWRITE('backup/users.csv', 'SELECT * FROM users');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -249,7 +248,7 @@ public class UserDao implements UserDaoIface {
         }
     }
 
-    @Override
+/*     @Override
     public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException {
         String query = "SELECT id,code,name,description from organizations";
         if (limit != null) {
@@ -353,7 +352,7 @@ public class UserDao implements UserDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }
-
+*/
     @Override
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
             throws IotDatabaseException {
@@ -419,6 +418,12 @@ public class UserDao implements UserDaoIface {
     public void modifyUserPassword(long id, String password) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'modifyUserPassword'");
+    }
+
+    @Override
+    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTenantUsers'");
     }
 
 }
