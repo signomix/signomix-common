@@ -64,6 +64,7 @@ public interface IotDatabaseIface {
     public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) throws IotDatabaseException;
     public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException    ;
     public List<Device> getDevicesByTag(String userID, long organizationID, String tagName, String tagValue) throws IotDatabaseException;
+    public List<Device> getDevicesByPath(String userID, long organizationID, String path) throws IotDatabaseException;
     
     //data migration
     public List<Device> getAllDevices() throws IotDatabaseException;

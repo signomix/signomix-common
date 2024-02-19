@@ -2617,4 +2617,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'changeDeviceEui'");
     }
 
+    @Override
+    public List<Device> getDevicesByPath(String userID, long organizationID, String path) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevicesByPath'");
+    }
+
 }

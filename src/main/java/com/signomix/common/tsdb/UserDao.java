@@ -31,6 +31,19 @@ public class UserDao implements UserDaoIface {
 
     public void createStructure() throws IotDatabaseException {
         String query;
+        query="create extension if not exists ltree;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            boolean updated = pst.executeUpdate() > 0;
+            /*
+             * if (!updated) {
+             * throw new IotDatabaseException(IotDatabaseException.CONFLICT,
+             * "Database structure not updated");
+             * }
+             */
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+        
         StringBuilder sb = new StringBuilder();
         // sb.append("create sequence if not exists user_number_seq;");
         // sb.append("create sequence if not exists org_number_seq;");
@@ -57,7 +70,8 @@ public class UserDao implements UserDaoIface {
                 .append("credits bigint,")
                 .append("autologin boolean,")
                 .append("language varchar,")
-                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + " references organizations(id));");
+                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + " references organizations(id),")
+                .append("path ltree DEFAULT ''::ltree);");
         query = sb.toString();
         LOG.info("Creating database structure: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -97,6 +111,7 @@ public class UserDao implements UserDaoIface {
         user.autologin = false;
         user.preferredLanguage = "en";
         user.organization = DEFAULT_ORGANIZATION_ID;
+        user.path = "";
         try {
             addUser(user);
         } catch (IotDatabaseException e) {
@@ -126,6 +141,7 @@ public class UserDao implements UserDaoIface {
         user.autologin = false;
         user.preferredLanguage = "en";
         user.organization = DEFAULT_ORGANIZATION_ID;
+        user.path = "";
         try {
             addUser(user);
         } catch (IotDatabaseException e) {
@@ -181,6 +197,7 @@ public class UserDao implements UserDaoIface {
         user.autologin = rs.getBoolean("autologin");
         user.preferredLanguage = rs.getString("language");
         user.organization = rs.getLong("organization");
+        user.path = rs.getObject("path").toString();
         return user;
     }
 
@@ -198,9 +215,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String uid) throws IotDatabaseException {
-        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+        String query = "SELECT * FROM users "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, uid);
@@ -216,9 +231,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(long id) throws IotDatabaseException {
-        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+        String query = "SELECT * FROM users "
                 + "WHERE user_number=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
@@ -234,9 +247,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String login, String password) throws IotDatabaseException {
-        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+        String query = "SELECT * FROM users "
                 + "WHERE uid=? AND password=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, login);
@@ -253,9 +264,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public List<User> getUsersByRole(String role) throws IotDatabaseException {
-        String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
-                + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "user_number,services,phoneprefix,credits,autologin,language,organization from users "
+        String query = "SELECT * FROM users "
                 + "WHERE role LIKE ?";
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -275,7 +284,7 @@ public class UserDao implements UserDaoIface {
         String query = "UPDATE users SET "
                 + "type=?,email=?,name=?,surname=?,role=?,secret=?,generalchannel=?,"
                 + "infochannel=?,warningchannel=?,alertchannel=?,confirmed=?,unregisterreq=?,authstatus=?,created=?,"
-                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=? "
+                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, path=? "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setInt(1, user.type);
@@ -298,7 +307,8 @@ public class UserDao implements UserDaoIface {
             pstmt.setBoolean(18, user.autologin);
             pstmt.setString(19, user.preferredLanguage);
             pstmt.setLong(20, user.organization);
-            pstmt.setString(21, user.uid);
+            pstmt.setObject(21, user.path, java.sql.Types.OTHER);
+            pstmt.setString(22, user.uid);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -361,8 +371,8 @@ public class UserDao implements UserDaoIface {
         String query = "INSERT INTO users "
                 + "(uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "services,phoneprefix,credits,autologin,language,organization) "
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "services,phoneprefix,credits,autologin,language,organization, path) "
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, user.uid);
             pstmt.setInt(2, user.type);
@@ -385,7 +395,8 @@ public class UserDao implements UserDaoIface {
             pstmt.setLong(19, user.credits);
             pstmt.setBoolean(20, user.autologin);
             pstmt.setString(21, user.preferredLanguage);
-            pstmt.setLong(22, user.organization);
+            pstmt.setObject(22, user.path, java.sql.Types.OTHER);
+            pstmt.setLong(23, user.organization);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());

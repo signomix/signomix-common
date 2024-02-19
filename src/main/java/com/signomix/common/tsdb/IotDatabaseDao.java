@@ -1882,7 +1882,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("configuration varchar,")
                 .append("organization bigint default " + defaultOrganizationId + ",")
                 .append("organizationapp bigint references applications,")
-                .append("defaultdashboard boolean default true);");
+                .append("defaultdashboard boolean default true,")
+                .append("path ltree default ''::ltree);");
+
         // dashboards
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (")
                 .append("id varchar primary key,")
@@ -2369,7 +2371,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder=?, devicekey=?, description=?, tinterval=?, template=?, pattern=?, "
                 + "commandscript=?, appid=?, groups=?, appeui=?, devid=?, active=?, project=?, "
                 + "latitude=?, longitude=?, altitude=?, retention=?, administrators=?, "
-                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=? "
+                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=?, path=? "
                 + "WHERE eui=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, updatedDevice.getName());
@@ -2421,7 +2423,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setLong(28, defaultOrganizationId);
             }
             pst.setBoolean(29, updatedDevice.isDashboard());
-            pst.setString(30, updatedDevice.getEUI());
+            pst.setObject(30, device.getOrganizationPath(), java.sql.Types.OTHER);
+            pst.setString(31, updatedDevice.getEUI());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2489,8 +2492,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
                 + "latitude, longitude, altitude, retention, administrators, "
-                + "framecheck, configuration, organization, organizationapp, defaultdashboard) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getName());
@@ -2542,6 +2545,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setLong(29, defaultApplicationId);
             }
             pst.setBoolean(30, device.isDashboard());
+            pst.setObject(31, device.getOrganizationPath(), java.sql.Types.OTHER);
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2835,8 +2839,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
                 + "latitude, longitude, altitude, retention, administrators, "
-                + "framecheck, configuration, organization, organizationapp, defaultdashboard) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, device.getEUI());
             pstmt.setString(2, device.getName());
@@ -2888,6 +2892,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pstmt.setLong(29, defaultApplicationId);
             }
             pstmt.setBoolean(30, device.isDashboard());
+            pstmt.setObject(31, device.getOrganizationPath(), java.sql.Types.OTHER);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -3375,6 +3380,35 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pstmt.setString(3, userID);
             } else {
                 pstmt.setLong(3, organizationID);
+            }
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(buildDevice(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Device> getDevicesByPath(String userID, long organizationID, String path) throws IotDatabaseException {
+        //TODO
+        String query;
+        if (organizationID == defaultOrganizationId) {
+            query = "SELECT * FROM devices WHERE path @> ?::ltree and userid=?";
+        } else {
+            query = "SELECT * FROM devices WHERE path @> ?::ltree and organization=?";
+        }
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, path);
+            if (organizationID == defaultOrganizationId) {
+                pstmt.setString(2, userID);
+            } else {
+                pstmt.setLong(2, organizationID);
             }
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Device> list = new ArrayList<>();

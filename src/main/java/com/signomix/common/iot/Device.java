@@ -78,6 +78,7 @@ public class Device {
     private boolean writable;
     private String tags;
     private boolean dashboard; // if true then default dashboard is created automatically for this device
+    private String organizationPath; // device location in organization tree
 
     public boolean isDashboard() {
         return dashboard;
@@ -762,5 +763,13 @@ public class Device {
         this.alertStatus = statusData.alert;
         this.transmissionInterval = statusData.transmissionInterval;
     } */
+
+    public void setOrganzationPath(String path) {
+        this.organizationPath = path;
+    }
+
+    public String getOrganizationPath() {
+        return organizationPath;
+    }
     
 }
