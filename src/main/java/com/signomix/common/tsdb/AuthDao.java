@@ -10,6 +10,7 @@ import javax.inject.Singleton;
 import org.jboss.logging.Logger;
 
 import com.signomix.common.Token;
+import com.signomix.common.TokenType;
 import com.signomix.common.User;
 import com.signomix.common.db.AuthDaoIface;
 import com.signomix.common.db.IotDatabaseException;
@@ -21,7 +22,7 @@ import io.quarkus.cache.CacheResult;
 public class AuthDao implements AuthDaoIface {
     private static final Logger LOG = Logger.getLogger(AuthDao.class);
 
-    String permanentTokenPrefix = "~~";
+    String permanentTokenPrefix = Token.PERMANENT_TOKEN_PREFIX;
 
     private AgroalDataSource dataSource;
 
@@ -37,18 +38,33 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        String query = "CREATE TABLE IF NOT EXISTS tokens (token varchar primary key, uid varchar, issuer varchar, payload varchar, tstamp timestamp default CURRENT_TIMESTAMP, eoflife timestamp);"
-                + "CREATE TABLE IF NOT EXISTS ptokens (token varchar primary key, uid varchar, issuer varchar, payload varchar, tstamp timestamp default CURRENT_TIMESTAMP, eoflife timestamp);";
+        String query = "CREATE TYPE token_type AS ENUM ('SESSION', 'API', 'PERMANENT', 'RESET_PASSWORD', 'EMAIL_VERIFICATION', 'DASHBOARD');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            LOG.warn(e.getMessage());
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+
+        query = "CREATE TABLE IF NOT EXISTS tokens ("
+                + "token varchar primary key,"
+                + "uid varchar,"
+                + "issuer varchar,"
+                + "payload varchar,"
+                + "tstamp timestamp default CURRENT_TIMESTAMP,"
+                + "eoflife timestamp,"
+                + "type token_type NOT NULL DEFAULT 'SESSION'::token_type);"
+                + "CREATE TABLE IF NOT EXISTS ptokens ("
+                + "token varchar primary key,"
+                + "uid varchar,"
+                + "issuer varchar,"
+                + "payload varchar,"
+                + "tstamp timestamp default CURRENT_TIMESTAMP,"
+                + "eoflife timestamp,"
+                + "type token_type NOT NULL DEFAULT 'PERMANENT'::token_type);";
         query = "CREATE INDEX IF NOT EXISTS tokens_token_eoflife_index ON tokens (token, eoflife);"
                 + "CREATE INDEX IF NOT EXISTS ptokens_token_eoflife_index ON ptokens (token, eoflife);";
-
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -140,6 +156,26 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
+    public void removeToken(String token) {
+        String query;
+        if (token.startsWith(permanentTokenPrefix)) {
+            query = "DELETE FROM ptokens WHERE token=?";
+        } else {
+            query = "DELETE FROM tokens WHERE token=?";
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, token);
+            pstmt.setString(2, token);
+            boolean ok = pstmt.execute();
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+        }
+    }
+
+    @Override
     public void clearExpiredTokens() {
         String query = "DELETE FROM tokens WHERE eoflife<CURRENT_TIMESTAMP; "
                 + "DELETE FROM ptokens WHERE eoflife<CURRENT_TIMESTAMP";
@@ -167,7 +203,8 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
-    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent) {
+    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType tokenType,
+            String payload) {
         try {
             LOG.info("createTokenForUser: " + userId + " " + lifetime + " " + permanent);
             // String token = java.util.UUID.randomUUID().toString();
@@ -175,9 +212,9 @@ public class AuthDao implements AuthDaoIface {
             t.setIssuer(issuer.uid);
             String query;
             if (permanent) {
-                query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?)";
+                query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
             } else {
-                query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?)";
+                query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -185,6 +222,8 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setString(2, t.getUid());
                 pstmt.setLong(3, t.getLifetime());
                 pstmt.setString(4, t.getIssuer());
+                pstmt.setString(5, tokenType.name());
+                pstmt.setString(6, payload);
                 int count = pstmt.executeUpdate();
                 LOG.info("createTokenForUser: inserted " + count + " rows");
             } catch (SQLException ex) {
@@ -198,6 +237,34 @@ public class AuthDao implements AuthDaoIface {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    @Override
+    public void modifyToken(Token token) {
+        LOG.info("modifyToken: " + token.getToken());
+        String query;
+        if (token.isPermanent()) {
+            query = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),"
+                    + " payload=?, issuer=?, type=?, uid=?, tstamp=CURRENT_TIMESTAMP WHERE token=?";
+        } else {
+            query = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),"
+                    + " payload=?, issuer=?, type=?, uid=?, tstamp=CURRENT_TIMESTAMP WHERE token=?";
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, token.getLifetime());
+            pstmt.setString(2, token.getPayload());
+            pstmt.setString(3, token.getIssuer());
+            pstmt.setString(4, token.getType().name());
+            pstmt.setString(5, token.getUid());
+            pstmt.setString(6, token.getToken());
+            int count = pstmt.executeUpdate();
+            LOG.info("modifyToken: updated " + count + " rows");
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
         }
     }
 
@@ -216,19 +283,24 @@ public class AuthDao implements AuthDaoIface {
             String queryPermanent = "SELECT uid FROM ptokens WHERE token=? AND"
                     + " eoflife>=CURRENT_TIMESTAMP";
 
-/*             String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
-            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
- */            String query, updateQuery;
+            /*
+             * String updateSession =
+             * "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?"
+             * ;
+             * String updatePermanent =
+             * "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?"
+             * ;
+             */ String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + token);
             LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
             if (token.startsWith(permanentTokenPrefix)) {
                 query = queryPermanent;
-                //updateQuery = updatePermanent;
+                // updateQuery = updatePermanent;
                 lifetime = permanentTokenLifetime;
             } else {
                 query = querySession;
-                //updateQuery = updateSession;
+                // updateQuery = updateSession;
                 lifetime = sessionTokenLifetime;
             }
             try (Connection conn = dataSource.getConnection();
@@ -246,19 +318,21 @@ public class AuthDao implements AuthDaoIface {
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
             }
-/*             if (userUid != null) {
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
-                    pstmt.setLong(1, lifetime);
-                    pstmt.setString(2, token);
-                    int count = pstmt.executeUpdate();
-                    LOG.info("getUserId: updated " + count + " rows");
-                } catch (SQLException ex) {
-                    LOG.warn(ex.getMessage());
-                } catch (Exception ex) {
-                    LOG.error(ex.getMessage());
-                }
-            } */
+            /*
+             * if (userUid != null) {
+             * try (Connection conn = dataSource.getConnection();
+             * PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+             * pstmt.setLong(1, lifetime);
+             * pstmt.setString(2, token);
+             * int count = pstmt.executeUpdate();
+             * LOG.info("getUserId: updated " + count + " rows");
+             * } catch (SQLException ex) {
+             * LOG.warn(ex.getMessage());
+             * } catch (Exception ex) {
+             * LOG.error(ex.getMessage());
+             * }
+             * }
+             */
             return userUid;
         } catch (Exception e) {
             e.printStackTrace();
@@ -302,6 +376,8 @@ public class AuthDao implements AuthDaoIface {
                     token.setPayload(rs.getString("payload"));
                     token.setTimestamp(rs.getTimestamp("tstamp").getTime());
                     token.setToken(rs.getString("token"));
+                    token.setType(TokenType.valueOf(rs.getString("type")));
+                    token.setPayload(rs.getString("payload"));
                 } else {
                     LOG.warn("getUserId: token not found: " + tokenID);
                 }

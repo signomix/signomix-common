@@ -1,9 +1,13 @@
 package com.signomix.common;
 
+import org.jboss.logging.Logger;
+
 //import javax.enterprise.context.Dependent;
 
 //@Dependent
 public class User {
+
+    public static Logger logger=Logger.getLogger(User.class);
 
     public static final int USER = 0; // default type, standard user
     public static final int OWNER = 1; // owner, service admin
@@ -61,6 +65,8 @@ public class User {
     public String sessionToken;
     public String organizationCode;
     public String path="";
+    public Integer phone;
+    public Integer tenant;
 
     /**
      * Clones given user
@@ -86,7 +92,9 @@ public class User {
         if(cloned.organizationCode!=null) result.organizationCode=cloned.organizationCode;
         if(cloned.password!=null) result.password=cloned.password;
         if(cloned.path!=null) result.path=cloned.path;
+        if(cloned.tenant!=null) result.tenant=cloned.tenant;
         if(cloned.phonePrefix!=null) result.phonePrefix=cloned.phonePrefix;
+        if(cloned.phone!=null) result.phone=cloned.phone;
         if(cloned.preferredLanguage!=null) result.preferredLanguage=cloned.preferredLanguage;
         if(cloned.role!=null) result.role=cloned.role;
         if(cloned.services!=null) result.services=cloned.services;
@@ -96,7 +104,6 @@ public class User {
         if(cloned.uid!=null) result.uid=cloned.uid;
         if(cloned.unregisterRequested!=null) result.unregisterRequested=cloned.unregisterRequested;
         if(cloned.warningNotificationChannel!=null) result.warningNotificationChannel=cloned.warningNotificationChannel;
-
         return result;
     }
     public User() {
@@ -139,6 +146,17 @@ public class User {
 
     public boolean hasService(int newService) {
         return (services & newService) == newService;
+    }
+
+    public String getPathRoot() {
+        if (path == null) {
+            return "";
+        }
+        String[] parts = path.split("\\.");
+        if (parts.length > 0) {
+            return parts[0];
+        }
+        return "";
     }
 
 }

@@ -75,7 +75,7 @@ public class SentinelDao implements SentinelDaoIface {
                 + "hysteresis REAL NOT NULL DEFAULT 0.0"
                 + ");"
                 + "CREATE TABLE IF NOT EXISTS sentinel_events ("
-                + "id BIGSERIAL PRIMARY KEY,"
+                + "id BIGSERIAL,"
                 + "device_eui VARCHAR(255) NOT NULL,"
                 + "sentinel_id BIGINT NOT NULL,"
                 + "tstamp TIMESTAMPTZ NOT NULL DEFAULT now(),"
@@ -99,9 +99,9 @@ public class SentinelDao implements SentinelDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
-        query = "SELECT create_hypertable('sentinel_events', 'tstamp');";
+        query = "SELECT create_hypertable('sentinel_events', 'tstamp',migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }

@@ -5,9 +5,9 @@
 package com.signomix.common.gui;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.cedarsoftware.util.io.JsonReader;
-import com.cedarsoftware.util.io.JsonWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -287,7 +287,7 @@ public class Dashboard {
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -312,11 +312,11 @@ public class Dashboard {
                 try {
                     items = objectMapper.readValue(jsonString, ArrayList.class);
                 } catch (JsonProcessingException ex) {
-                    //ex.printStackTrace();
+                    // ex.printStackTrace();
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -336,6 +336,28 @@ public class Dashboard {
          * }
          */
         return this;
+    }
+
+    public HashSet<String> getDeviceEuis() {
+        HashSet<String> euis = new HashSet<>();
+        for (int i = 0; i < widgets.size(); i++) {
+            Widget w = (Widget) widgets.get(i);
+            if (w.getDev_id() != null && !w.getDev_id().isEmpty()) {
+                euis.add(w.getDev_id());
+            }
+        }
+        return euis;
+    }
+
+    public HashSet<String> getGroupEuis() {
+        HashSet<String> euis = new HashSet<>();
+        for (int i = 0; i < widgets.size(); i++) {
+            Widget w = (Widget) widgets.get(i);
+            if (w.getGroup() != null && !w.getGroup().isEmpty()) {
+                euis.add(w.getGroup());
+            }
+        }
+        return euis;
     }
 
 }

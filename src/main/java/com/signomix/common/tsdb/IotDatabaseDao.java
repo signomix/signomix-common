@@ -1975,8 +1975,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("state double precision);");
         // .append("PRIMARY KEY (eui,tstamp) );");
         // virtualdevicedata
-        sb.append(
-                "CREATE TABLE IF NOT EXISTS virtualdevicedata (eui TEXT,tstamp TIMESTAMP NOT NULL default current_timestamp, data TEXT);");
+        sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
+                .append("eui TEXT,tstamp TIMESTAMPTZ default current_timestamp, data TEXT);");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,")
@@ -2080,26 +2080,26 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // hypertables
         query = "SELECT create_hypertable('devicedata', 'tstamp');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
         query = "SELECT create_hypertable('analyticdata', 'tstamp');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
 
         query = "SELECT create_hypertable('virtualdevicedata', 'tstamp');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
-        query = "SELECT create_hypertable('devicestatus', 'ts');";
+        query = "SELECT create_hypertable('devicestatus', 'ts', migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
@@ -2110,6 +2110,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
             logger.warn(e.getMessage());
         }
 
@@ -2117,6 +2118,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
             logger.warn(e.getMessage());
         }
 
@@ -2124,13 +2126,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
             logger.warn(e.getMessage());
         }
 
-        query = "CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts ON devicestatus (eui, tstamp DESC);";
+        query = "CREATE INDEX IF NOT EXISTS idx_devicestatus_eui_ts ON devicestatus (eui, ts DESC);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
             logger.warn(e.getMessage());
         }
 
@@ -2138,6 +2142,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
             logger.warn(e.getMessage());
         }
 

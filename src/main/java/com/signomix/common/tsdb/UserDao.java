@@ -31,7 +31,7 @@ public class UserDao implements UserDaoIface {
 
     public void createStructure() throws IotDatabaseException {
         String query;
-        query="create extension if not exists ltree;";
+        query = "create extension if not exists ltree;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
             /*
@@ -43,7 +43,7 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-        
+
         StringBuilder sb = new StringBuilder();
         // sb.append("create sequence if not exists user_number_seq;");
         // sb.append("create sequence if not exists org_number_seq;");
@@ -71,9 +71,9 @@ public class UserDao implements UserDaoIface {
                 .append("autologin boolean,")
                 .append("language varchar,")
                 .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + " references organizations(id),")
-                .append("path ltree DEFAULT ''::ltree);");
+                .append("path ltree DEFAULT ''::ltree,")
+                .append("phone integer);");
         query = sb.toString();
-        LOG.info("Creating database structure: " + query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
             /*
@@ -85,7 +85,6 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-
 
         User user = new User();
         user.uid = "admin";
@@ -134,7 +133,37 @@ public class UserDao implements UserDaoIface {
         user.unregisterRequested = false;
         user.authStatus = 1;
         user.createdAt = System.currentTimeMillis();
-        user.number = 0L;
+        user.number = null;
+        user.services = 0;
+        user.phonePrefix = "";
+        user.credits = 0L;
+        user.autologin = false;
+        user.preferredLanguage = "en";
+        user.organization = DEFAULT_ORGANIZATION_ID;
+        user.path = "";
+        try {
+            addUser(user);
+        } catch (IotDatabaseException e) {
+            LOG.warn("Error inserting default admin user", e);
+        }
+        user = new User();
+        user.uid = "public";
+        user.type = User.READONLY;
+        user.email = "";
+        user.name = "Public";
+        user.surname = "User";
+        user.role = "";
+        user.confirmString = "";
+        user.password = HashMaker.md5Java("public");
+        user.generalNotificationChannel = "";
+        user.infoNotificationChannel = "";
+        user.warningNotificationChannel = "";
+        user.alertNotificationChannel = "";
+        user.confirmed = true;
+        user.unregisterRequested = false;
+        user.authStatus = 1;
+        user.createdAt = System.currentTimeMillis();
+        user.number = null;
         user.services = 0;
         user.phonePrefix = "";
         user.credits = 0L;
@@ -197,7 +226,17 @@ public class UserDao implements UserDaoIface {
         user.autologin = rs.getBoolean("autologin");
         user.preferredLanguage = rs.getString("language");
         user.organization = rs.getLong("organization");
-        user.path = rs.getObject("path").toString();
+        try{
+            user.path = rs.getObject("path").toString();
+        }catch(NullPointerException e){
+            user.path="";
+        }
+        try{
+            user.tenant=rs.getInt("tenant_id");
+        }catch(NullPointerException e){
+            user.tenant=null;
+        }
+        user.phone = rs.getInt("phone");
         return user;
     }
 
@@ -215,7 +254,8 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String uid) throws IotDatabaseException {
-        String query = "SELECT * FROM users "
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, uid);
@@ -231,7 +271,8 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(long id) throws IotDatabaseException {
-        String query = "SELECT * FROM users "
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE user_number=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
@@ -247,7 +288,8 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String login, String password) throws IotDatabaseException {
-        String query = "SELECT * FROM users "
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE uid=? AND password=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, login);
@@ -264,7 +306,8 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public List<User> getUsersByRole(String role) throws IotDatabaseException {
-        String query = "SELECT * FROM users "
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id"
                 + "WHERE role LIKE ?";
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -284,7 +327,7 @@ public class UserDao implements UserDaoIface {
         String query = "UPDATE users SET "
                 + "type=?,email=?,name=?,surname=?,role=?,secret=?,generalchannel=?,"
                 + "infochannel=?,warningchannel=?,alertchannel=?,confirmed=?,unregisterreq=?,authstatus=?,created=?,"
-                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, path=? "
+                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, path=?, phone=? "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setInt(1, user.type);
@@ -308,19 +351,24 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(19, user.preferredLanguage);
             pstmt.setLong(20, user.organization);
             pstmt.setObject(21, user.path, java.sql.Types.OTHER);
-            pstmt.setString(22, user.uid);
+            if (user.phone == null) {
+                pstmt.setNull(22, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(22, user.phone);
+            }
+            pstmt.setString(23, user.uid);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }
 
-/*    
-*/
+    /*    
+    */
     @Override
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
             throws IotDatabaseException {
-        String query = "SELECT * FROM users "
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE organization=? AND tenant_users.user_id IS NULL ";
         if (limit != null) {
@@ -342,11 +390,13 @@ public class UserDao implements UserDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return users;
-    } 
+    }
 
     @Override
     public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT * from users";
+        // String query = "SELECT * from users";
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id ";
         if (limit != null) {
             query += " LIMIT " + limit;
         }
@@ -371,8 +421,8 @@ public class UserDao implements UserDaoIface {
         String query = "INSERT INTO users "
                 + "(uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "services,phoneprefix,credits,autologin,language,organization, path) "
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "services,phoneprefix,credits,autologin,language,organization, path, phone) "
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, user.uid);
             pstmt.setInt(2, user.type);
@@ -395,8 +445,13 @@ public class UserDao implements UserDaoIface {
             pstmt.setLong(19, user.credits);
             pstmt.setBoolean(20, user.autologin);
             pstmt.setString(21, user.preferredLanguage);
-            pstmt.setObject(22, user.path, java.sql.Types.OTHER);
-            pstmt.setLong(23, user.organization);
+            pstmt.setLong(22, user.organization);
+            pstmt.setObject(23, user.path, java.sql.Types.OTHER);
+            if (user.phone == null) {
+                pstmt.setNull(24, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(24, user.phone);
+            }
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -428,8 +483,8 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT * FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id"
+        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE tenant_users.tenant_id=?";
         if (limit != null) {
             query += " LIMIT " + limit;

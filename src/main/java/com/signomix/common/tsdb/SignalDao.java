@@ -54,8 +54,8 @@ public class SignalDao implements SignalDaoIface {
     @Override
     public void createStructure() throws IotDatabaseException {
         String query = "CREATE TABLE IF NOT EXISTS signals ("
-                + "id BIGSERIAL PRIMARY KEY, "
-                + "created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "id BIGSERIAL, "
+                + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
                 + "read_at TIMESTAMPTZ,"
                 + "sent_at TIMESTAMPTZ,"
                 + "delivered_at TIMESTAMPTZ,"
@@ -77,8 +77,8 @@ public class SignalDao implements SignalDaoIface {
         }
 
          query = "CREATE TABLE IF NOT EXISTS user_signals ("
-                + "id BIGSERIAL PRIMARY KEY, "
-                + "created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "id BIGSERIAL, "
+                + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
                 + "read_at TIMESTAMPTZ,"
                 + "sent_at TIMESTAMPTZ,"
                 + "delivered_at TIMESTAMPTZ,"
@@ -100,15 +100,15 @@ public class SignalDao implements SignalDaoIface {
         }
 
         // hypertables
-        query = "SELECT create_hypertable('signals', 'created_at');";
+        query = "SELECT create_hypertable('signals', 'created_at',migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
-        query = "SELECT create_hypertable('user_signals', 'created_at');";
+        query = "SELECT create_hypertable('user_signals', 'created_at',migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.executeUpdate();
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         } 

@@ -1,6 +1,7 @@
 package com.signomix.common.db;
 
 import com.signomix.common.Token;
+import com.signomix.common.TokenType;
 import com.signomix.common.User;
 
 import io.agroal.api.AgroalDataSource;
@@ -38,14 +39,18 @@ public interface AuthDaoIface {
      */
     //public Token createSession(User user, long lifetime);
 
-    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent);
+    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType tokenType, String payload);
 
+    public void modifyToken(Token token);
+    
     /**
      * Removes session token
      * 
      * @param token
      */
     public void removeSession(String token);
+
+    public void removeToken(String token);
 
     public void clearExpiredTokens();
 

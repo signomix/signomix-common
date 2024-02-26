@@ -10,6 +10,7 @@ import javax.inject.Singleton;
 import org.jboss.logging.Logger;
 
 import com.signomix.common.Token;
+import com.signomix.common.TokenType;
 import com.signomix.common.User;
 
 import io.agroal.api.AgroalDataSource;
@@ -35,8 +36,31 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        String query = "CREATE TABLE IF NOT EXISTS tokens (token varchar primary key, uid varchar, issuer varchar, payload varchar, tstamp timestamp default CURRENT_TIMESTAMP, eoflife timestamp);"
-                + "CREATE TABLE IF NOT EXISTS ptokens (token varchar primary key, uid varchar, issuer varchar, payload varchar, tstamp timestamp default CURRENT_TIMESTAMP, eoflife timestamp);";
+        String query = "CREATE TYPE token_type AS ENUM ('SESSION', 'API', 'PERMANENT', 'RESET_PASSWORD', 'EMAIL_VERIFICATION', 'DASHBOARD');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            LOG.warn(e.getMessage());
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+
+        query = "CREATE TABLE IF NOT EXISTS tokens ("
+                + "token varchar primary key,"
+                + "uid varchar,"
+                + "issuer varchar,"
+                + "payload varchar,"
+                + "tstamp timestamp default CURRENT_TIMESTAMP,"
+                + "eoflife timestamp,"
+                + "type token_type);"
+                + "CREATE TABLE IF NOT EXISTS ptokens ("
+                + "token varchar primary key,"
+                + "uid varchar,"
+                + "issuer varchar,"
+                + "payload varchar,"
+                + "tstamp timestamp default CURRENT_TIMESTAMP,"
+                + "eoflife timestamp,"
+                + "type token_type);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -155,10 +179,10 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
-    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent) {
+    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType type, String payload) {
         try {
             LOG.info("createTokenForUser: " + userId + " " + lifetime + " " + permanent);
-            //String token = java.util.UUID.randomUUID().toString();
+            // String token = java.util.UUID.randomUUID().toString();
             Token t = new Token(userId, lifetime, permanent);
             t.setIssuer(issuer.uid);
             String query;
@@ -381,6 +405,18 @@ public class AuthDao implements AuthDaoIface {
             LOG.error(e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public void removeToken(String token) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeToken'");
+    }
+
+    @Override
+    public void modifyToken(Token token) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'modifyToken'");
     }
 
 }

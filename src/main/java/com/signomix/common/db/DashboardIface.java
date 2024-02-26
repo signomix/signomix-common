@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.signomix.common.gui.Dashboard;
 import com.signomix.common.gui.DashboardTemplate;
-import com.signomix.common.iot.Device;
 
 import io.agroal.api.AgroalDataSource;
 

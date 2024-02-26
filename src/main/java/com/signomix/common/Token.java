@@ -23,7 +23,7 @@ import java.util.Base64;
  */
 public class Token {
 
-    private static final String PERMANENT_TOKEN_PREFIX = "~~";
+    public static final String PERMANENT_TOKEN_PREFIX = "~~";
 
     private String uid;
     private long timestamp;
@@ -31,6 +31,8 @@ public class Token {
     private String token;
     private String issuer;
     private String payload;
+    private TokenType type;
+    private boolean permanent;
 
     /**
      * Creates new session token
@@ -125,6 +127,22 @@ public class Token {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public TokenType getType() {
+        return type;
+    }
+
+    public void setType(TokenType type) {
+        this.type = type;
+    }
+
+    public boolean isPermanent() {
+        return permanent;
+    }
+
+    public void setPermanent(boolean permanent) {
+        this.permanent = permanent;
     }
     
     public String toString(){
