@@ -45,6 +45,7 @@ public class Token {
         timestamp = System.currentTimeMillis();
         setLifetime(lifetime);
         uid = userID;
+        setPermanent(permanent);
         token = Base64.getUrlEncoder().encodeToString((uid + ":" + timestamp).getBytes());
         while(token.endsWith("=")){
             token=token.substring(0, token.length()-1);

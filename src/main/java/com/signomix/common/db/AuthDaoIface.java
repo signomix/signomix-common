@@ -55,4 +55,6 @@ public interface AuthDaoIface {
     public void clearExpiredTokens();
 
     public void backupDb() throws IotDatabaseException;
+
+    public Token findTokenById(String tokenId);
 }

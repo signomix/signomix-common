@@ -419,4 +419,10 @@ public class AuthDao implements AuthDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'modifyToken'");
     }
 
+    @Override
+    public Token findTokenById(String tokenId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findTokenById'");
+    }
+
 }

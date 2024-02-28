@@ -222,7 +222,7 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setString(2, t.getUid());
                 pstmt.setLong(3, t.getLifetime());
                 pstmt.setString(4, t.getIssuer());
-                pstmt.setString(5, tokenType.name());
+                pstmt.setObject(5, tokenType.name(), java.sql.Types.OTHER);
                 pstmt.setString(6, payload);
                 int count = pstmt.executeUpdate();
                 LOG.info("createTokenForUser: inserted " + count + " rows");
@@ -242,7 +242,8 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void modifyToken(Token token) {
-        LOG.info("modifyToken: " + token.getToken());
+        LOG.info("modifyToken: " + token.getToken() + " " + token.getLifetime() + " " + token.getPayload() + " "
+                + token.getIssuer() + " " + token.getType() + " " + token.getUid() + " " + token.isPermanent());
         String query;
         if (token.isPermanent()) {
             query = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),"
@@ -256,7 +257,7 @@ public class AuthDao implements AuthDaoIface {
             pstmt.setLong(1, token.getLifetime());
             pstmt.setString(2, token.getPayload());
             pstmt.setString(3, token.getIssuer());
-            pstmt.setString(4, token.getType().name());
+            pstmt.setObject(4, token.getType().name(), java.sql.Types.OTHER);
             pstmt.setString(5, token.getUid());
             pstmt.setString(6, token.getToken());
             int count = pstmt.executeUpdate();
@@ -468,6 +469,41 @@ public class AuthDao implements AuthDaoIface {
             LOG.error(e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public Token findTokenById(String tokenId) {
+        String query;
+        Token token = null;
+        // TODO: check eolife
+        if (tokenId.startsWith(Token.PERMANENT_TOKEN_PREFIX)) {
+            query = "SELECT * FROM ptokens WHERE token=? AND eoflife>=CURRENT_TIMESTAMP";
+        } else {
+            query = "SELECT * FROM tokens WHERE token=? AND eoflife>=CURRENT_TIMESTAMP";
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, tokenId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                token = new Token(rs.getString("uid"), 0, tokenId.startsWith(Token.PERMANENT_TOKEN_PREFIX));
+                token.setIssuer(rs.getString("issuer"));
+                token.setPayload(rs.getString("payload"));
+                token.setTimestamp(rs.getTimestamp("tstamp").getTime());
+                token.setToken(rs.getString("token"));
+                token.setType(TokenType.valueOf(rs.getString("type")));
+                token.setPayload(rs.getString("payload"));
+            } else {
+                LOG.warn("findTokenById: token not found: " + tokenId);
+            }
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+            ex.printStackTrace();
+        }
+        return token;
     }
 
 }

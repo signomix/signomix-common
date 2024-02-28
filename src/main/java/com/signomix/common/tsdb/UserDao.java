@@ -327,7 +327,7 @@ public class UserDao implements UserDaoIface {
         String query = "UPDATE users SET "
                 + "type=?,email=?,name=?,surname=?,role=?,secret=?,generalchannel=?,"
                 + "infochannel=?,warningchannel=?,alertchannel=?,confirmed=?,unregisterreq=?,authstatus=?,created=?,"
-                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, path=?, phone=? "
+                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, phone=? "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setInt(1, user.type);
@@ -350,13 +350,12 @@ public class UserDao implements UserDaoIface {
             pstmt.setBoolean(18, user.autologin);
             pstmt.setString(19, user.preferredLanguage);
             pstmt.setLong(20, user.organization);
-            pstmt.setObject(21, user.path, java.sql.Types.OTHER);
             if (user.phone == null) {
-                pstmt.setNull(22, java.sql.Types.INTEGER);
+                pstmt.setNull(21, java.sql.Types.INTEGER);
             } else {
-                pstmt.setInt(22, user.phone);
+                pstmt.setInt(21, user.phone);
             }
-            pstmt.setString(23, user.uid);
+            pstmt.setString(22, user.uid);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -421,8 +420,8 @@ public class UserDao implements UserDaoIface {
         String query = "INSERT INTO users "
                 + "(uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
-                + "services,phoneprefix,credits,autologin,language,organization, path, phone) "
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "services,phoneprefix,credits,autologin,language,organization, phone) "
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, user.uid);
             pstmt.setInt(2, user.type);
@@ -446,11 +445,10 @@ public class UserDao implements UserDaoIface {
             pstmt.setBoolean(20, user.autologin);
             pstmt.setString(21, user.preferredLanguage);
             pstmt.setLong(22, user.organization);
-            pstmt.setObject(23, user.path, java.sql.Types.OTHER);
             if (user.phone == null) {
-                pstmt.setNull(24, java.sql.Types.INTEGER);
+                pstmt.setNull(23, java.sql.Types.INTEGER);
             } else {
-                pstmt.setInt(24, user.phone);
+                pstmt.setInt(23, user.phone);
             }
             pstmt.executeUpdate();
         } catch (SQLException e) {

@@ -6,6 +6,7 @@ package com.signomix.common.gui;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 import com.cedarsoftware.util.io.JsonReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,7 +24,7 @@ public class Dashboard {
     private String title;
     private boolean shared;
     private String team;
-    private ArrayList<Widget> widgets;
+    private ArrayList<Object> widgets;
     private ArrayList<DashboardItem> items;
     private String sharedToken;
     private String administrators;
@@ -340,22 +341,37 @@ public class Dashboard {
 
     public HashSet<String> getDeviceEuis() {
         HashSet<String> euis = new HashSet<>();
-        for (int i = 0; i < widgets.size(); i++) {
-            Widget w = (Widget) widgets.get(i);
-            if (w.getDev_id() != null && !w.getDev_id().isEmpty()) {
-                euis.add(w.getDev_id());
+        try {
+            LinkedHashMap map = new LinkedHashMap();
+            String devId;
+            for (int i = 0; i < widgets.size(); i++) {
+                map = (LinkedHashMap) widgets.get(i);
+                // Widget w = (Widget) widgets.get(i);
+                devId = (String) map.get("dev_id");
+                if (devId != null && !devId.isEmpty()) {
+                    euis.add(devId);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return euis;
     }
 
     public HashSet<String> getGroupEuis() {
         HashSet<String> euis = new HashSet<>();
-        for (int i = 0; i < widgets.size(); i++) {
-            Widget w = (Widget) widgets.get(i);
-            if (w.getGroup() != null && !w.getGroup().isEmpty()) {
-                euis.add(w.getGroup());
+        try {
+            LinkedHashMap map = new LinkedHashMap();
+            String groupId;
+            for (int i = 0; i < widgets.size(); i++) {
+                map = (LinkedHashMap) widgets.get(i);
+                groupId = (String) map.get("group");
+                if (groupId != null && !groupId.isEmpty()) {
+                    euis.add(groupId);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return euis;
     }
