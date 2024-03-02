@@ -425,4 +425,16 @@ public class AuthDao implements AuthDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'findTokenById'");
     }
 
+    @Override
+    public void removeDashboardToken(String dashboardId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDashboardToken'");
+    }
+
+    @Override
+    public void saveToken(Token token) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'saveToken'");
+    }
+
 }

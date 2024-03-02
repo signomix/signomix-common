@@ -176,6 +176,21 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
+    public void removeDashboardToken(String dashboardId) {
+        String query = "DELETE FROM ptokens WHERE payload=? AND type='DASHBOARD'";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, dashboardId);
+            boolean ok = pstmt.execute();
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+        }
+    }
+
+
+    @Override
     public void clearExpiredTokens() {
         String query = "DELETE FROM tokens WHERE eoflife<CURRENT_TIMESTAMP; "
                 + "DELETE FROM ptokens WHERE eoflife<CURRENT_TIMESTAMP";
@@ -241,6 +256,31 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
+    public void saveToken(Token token){
+        String query;
+        if(token.isPermanent()){
+            query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
+        } else {
+            query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, token.getToken());
+            pstmt.setString(2, token.getUid());
+            pstmt.setLong(3, token.getLifetime());
+            pstmt.setString(4, token.getIssuer());
+            pstmt.setObject(5, token.getType().name(), java.sql.Types.OTHER);
+            pstmt.setString(6, token.getPayload());
+            int count = pstmt.executeUpdate();
+            LOG.info("saveToken: inserted " + count + " rows");
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+        }
+    }
+
+    @Override
     public void modifyToken(Token token) {
         LOG.info("modifyToken: " + token.getToken() + " " + token.getLifetime() + " " + token.getPayload() + " "
                 + token.getIssuer() + " " + token.getType() + " " + token.getUid() + " " + token.isPermanent());
@@ -261,7 +301,7 @@ public class AuthDao implements AuthDaoIface {
             pstmt.setString(5, token.getUid());
             pstmt.setString(6, token.getToken());
             int count = pstmt.executeUpdate();
-            LOG.info("modifyToken: updated " + count + " rows");
+            LOG.info("modifyToken "+token.getToken()+" "+(token.isPermanent()?"permanent":"session")+": updated " + count + " rows");
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
         } catch (Exception ex) {

@@ -5,11 +5,13 @@ public class Organization {
     public String code;
     public String name;
     public String description;
+    public Integer numberOfTenants;
 
-    public Organization(Long id, String code, String name, String description) {
+    public Organization(Long id, String code, String name, String description, Integer numberOfTenants) {
         this.id = id;
         this.name = name;
         this.code = code;
         this.description = description;
+        this.numberOfTenants = numberOfTenants;
     }
 }

@@ -42,6 +42,8 @@ public interface AuthDaoIface {
     public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType tokenType, String payload);
 
     public void modifyToken(Token token);
+
+    public void saveToken(Token token);
     
     /**
      * Removes session token
@@ -51,6 +53,8 @@ public interface AuthDaoIface {
     public void removeSession(String token);
 
     public void removeToken(String token);
+
+    public void removeDashboardToken(String dashboardId);
 
     public void clearExpiredTokens();
 
