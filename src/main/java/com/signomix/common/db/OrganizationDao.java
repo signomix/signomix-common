@@ -87,7 +87,7 @@ public class OrganizationDao implements OrganizationDaoIface {
     }
 
     @Override
-    public List<Tenant> getTenants(Long organizationId) throws IotDatabaseException {
+    public List<Tenant> getTenants(Long organizationId, Integer limit, Integer offset) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getTenants'");
     }

@@ -204,11 +204,13 @@ public class OrganizationDao implements OrganizationDaoIface {
     }
 
     @Override
-    public List<Tenant> getTenants(Long organizationId) throws IotDatabaseException {
+    public List<Tenant> getTenants(Long organizationId, Integer limit, Integer offset) throws IotDatabaseException {
         ArrayList<Tenant> tenants = new ArrayList<Tenant>();
-        String query = "SELECT * FROM tenants WHERE organization_id = ?";
+        String query = "SELECT * FROM tenants WHERE organization_id=? LIMIT ? OFFSET ? ";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, organizationId);
+            pst.setInt(2, limit);
+            pst.setInt(3, offset);
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 Tenant tenant = new Tenant();
