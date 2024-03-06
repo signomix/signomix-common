@@ -1883,7 +1883,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("organization bigint default " + defaultOrganizationId + ",")
                 .append("organizationapp bigint references applications,")
                 .append("defaultdashboard boolean default true,")
-                .append("path ltree default ''::ltree);");
+                .append("path ltree);");
 
         // dashboards
         sb.append("CREATE TABLE IF NOT EXISTS dashboards (")
@@ -2233,7 +2233,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throws IotDatabaseException {
         ArrayList<Device> devices = new ArrayList<>();
 
-        String searchCondition = "";
+        boolean pathSearch = false;
+        boolean additionalSearch = false;
+        // actual implementation doesn't support path 
+        // only organization tenants can have devices with path
+        String searchCondition = "AND path IS NULL ";
         String[] searchParts;
         if (null == searchString || searchString.isEmpty()) {
             searchParts = new String[0];
@@ -2241,24 +2245,39 @@ public class IotDatabaseDao implements IotDatabaseIface {
             searchParts = searchString.split(":");
             if (searchParts.length == 2) {
                 if (searchParts[0].equals("eui")) {
-                    searchCondition = "AND eui LIKE ? ";
+                    searchCondition += "AND eui LIKE ? ";
                 } else if (searchParts[0].equals("name")) {
-                    searchCondition = "AND name LIKE ? ";
-                }
+                    searchCondition += "AND name LIKE ? ";
+                }/*  else if (searchParts[0].equals("path")) {
+                    pathSearch = true;
+                    if (searchParts[1].equals("-")) {
+                        searchCondition = "AND path is NULL";
+                    } else {
+                        searchCondition = "AND path ~ ? ";
+                    }
+                } */
             }
         }
         String query = "SELECT * FROM devices WHERE organization=? " + searchCondition + " LIMIT ? OFFSET ?";
         Device device;
+        int idx = 0;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, organizationId);
-            if (!searchCondition.isEmpty()) {
-                pst.setString(2, "%" + searchString + "%");
-                pst.setInt(3, limit);
-                pst.setInt(4, offset);
-            } else {
-                pst.setInt(2, limit);
-                pst.setInt(3, offset);
+            idx = 2;
+            if (searchParts.length >1) {
+                if (pathSearch) {
+                    if (searchParts[1].equals("-")) {
+                    } else {
+                        pst.setObject(2, searchParts[1], Types.OTHER);
+                        idx = 3;
+                    }
+                } else {
+                    pst.setString(2, "%" + searchString + "%");
+                    idx = 3;
+                }
             }
+            pst.setInt(idx, limit);
+            pst.setInt(idx + 1, offset);
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 device = buildDevice(rs);
@@ -2345,6 +2364,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (Exception e) {
             device.setWritable(true); // writable won't be used in new access logic
         }
+        try {
+            device.setPath(rs.getString("path"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            device.setPath("");
+        }
         return device;
     }
 
@@ -2368,6 +2393,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void updateDevice(User user, Device updatedDevice) throws IotDatabaseException {
+        logger.info("updatedDevice: " + updatedDevice.getEUI() + " with path: " + updatedDevice.getPath());
         Device device = getDevice(user, updatedDevice.getEUI(), true, false);
         if (!device.isWritable()) {
             throw new IotDatabaseException(IotDatabaseException.CONFLICT, "User is not allowed to update device");
@@ -2428,7 +2454,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setLong(28, defaultOrganizationId);
             }
             pst.setBoolean(29, updatedDevice.isDashboard());
-            pst.setObject(30, device.getOrganizationPath(), java.sql.Types.OTHER);
+            if (null == updatedDevice.getPath() || updatedDevice.getPath().isEmpty()) {
+                pst.setNull(30, java.sql.Types.OTHER);
+            } else {
+                pst.setObject(30, updatedDevice.getPath(), java.sql.Types.OTHER);
+            }
             pst.setString(31, updatedDevice.getEUI());
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -2550,7 +2580,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setLong(29, defaultApplicationId);
             }
             pst.setBoolean(30, device.isDashboard());
-            pst.setObject(31, device.getOrganizationPath(), java.sql.Types.OTHER);
+            if (null == device.getPath() || device.getPath().isEmpty()) {
+                pst.setNull(31, java.sql.Types.OTHER);
+            } else {
+                pst.setObject(31, device.getPath(), java.sql.Types.OTHER);
+            }
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2897,7 +2931,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pstmt.setLong(29, defaultApplicationId);
             }
             pstmt.setBoolean(30, device.isDashboard());
-            pstmt.setObject(31, device.getOrganizationPath(), java.sql.Types.OTHER);
+            if (null == device.getPath() || device.getPath().isEmpty()) {
+                pstmt.setNull(31, java.sql.Types.OTHER);
+            } else {
+                pstmt.setObject(31, device.getPath(), java.sql.Types.OTHER);
+            }
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -3400,21 +3438,46 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesByPath(String userID, long organizationID, String path) throws IotDatabaseException {
-        //TODO
+    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, Integer limit, Integer offset)
+            throws IotDatabaseException {
+        // TODO
         String query;
-        if (organizationID == defaultOrganizationId) {
-            query = "SELECT * FROM devices WHERE path @> ?::ltree and userid=?";
-        } else {
-            query = "SELECT * FROM devices WHERE path @> ?::ltree and organization=?";
+        String searchPath=null;
+        if(path!=null){
+            searchPath=path.replace(".ALL", ".*");
         }
+        if (organizationID == defaultOrganizationId) {
+            query = "SELECT * FROM devices WHERE userid=?";
+        } else {
+            query = "SELECT * FROM devices WHERE organization=?";
+        }
+        if (searchPath != null && !searchPath.isEmpty()) {
+            query += " AND path ~ ?";
+        } else {
+            query += " AND path IS NULL";
+        }
+        if (limit != null && offset != null) {
+            query += " LIMIT ? OFFSET ?";
+        }
+        logger.info(query);
+        logger.info(userID + " " + organizationID + " " + searchPath + " " + limit + " " + offset);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, path);
+            int idx=2;
             if (organizationID == defaultOrganizationId) {
-                pstmt.setString(2, userID);
+                pstmt.setString(1, userID);
             } else {
-                pstmt.setLong(2, organizationID);
+                pstmt.setLong(1, organizationID);
             }
+            if (searchPath != null && !searchPath.isEmpty()) {
+                pstmt.setObject(2, searchPath, java.sql.Types.OTHER);
+                idx=3;
+            }
+
+            if (limit != null && offset != null) {
+                pstmt.setInt(idx, limit);
+                pstmt.setInt(idx+1, offset);
+            }
+
             ResultSet rs = pstmt.executeQuery();
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {

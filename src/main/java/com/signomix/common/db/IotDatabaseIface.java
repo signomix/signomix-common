@@ -43,6 +43,7 @@ public interface IotDatabaseIface {
     //DEVICES
     public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset, String searcString) throws IotDatabaseException;
     public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset, String searchString) throws IotDatabaseException;
+    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, Integer limit, Integer offset) throws IotDatabaseException;
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
     public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
     //public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
@@ -64,7 +65,7 @@ public interface IotDatabaseIface {
     public List<String> getUserDeviceEuisByTag(User user, String tagName, String tagValue) throws IotDatabaseException;
     public List<String> getOrganizationDeviceEuisByTag(long organizationId, String tagName, String tagValue) throws IotDatabaseException    ;
     public List<Device> getDevicesByTag(String userID, long organizationID, String tagName, String tagValue) throws IotDatabaseException;
-    public List<Device> getDevicesByPath(String userID, long organizationID, String path) throws IotDatabaseException;
+    //public List<Device> getDevicesByPath(String userID, long organizationID, String path) throws IotDatabaseException;
     
     //data migration
     public List<Device> getAllDevices() throws IotDatabaseException;
