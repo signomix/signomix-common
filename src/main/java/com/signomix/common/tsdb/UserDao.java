@@ -327,7 +327,7 @@ public class UserDao implements UserDaoIface {
         String query = "UPDATE users SET "
                 + "type=?,email=?,name=?,surname=?,role=?,secret=?,generalchannel=?,"
                 + "infochannel=?,warningchannel=?,alertchannel=?,confirmed=?,unregisterreq=?,authstatus=?,created=?,"
-                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, phone=? "
+                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, phone=?, password=? "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setInt(1, user.type);
@@ -355,7 +355,12 @@ public class UserDao implements UserDaoIface {
             } else {
                 pstmt.setInt(21, user.phone);
             }
-            pstmt.setString(22, user.uid);
+            if(user.password==null || user.password.isEmpty()){
+                pstmt.setNull(22, java.sql.Types.VARCHAR);
+            }else{
+                pstmt.setString(22, user.password);
+            }
+            pstmt.setString(23, user.uid);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
