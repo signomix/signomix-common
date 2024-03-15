@@ -421,13 +421,14 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public void addUser(User user) throws IotDatabaseException {
+    public Integer addUser(User user) throws IotDatabaseException {
         String query = "INSERT INTO users "
                 + "(uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
                 + "services,phoneprefix,credits,autologin,language,organization, phone) "
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        try (Connection conn = dataSource.getConnection(); 
+        PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
             pstmt.setString(1, user.uid);
             pstmt.setInt(2, user.type);
             pstmt.setString(3, user.email);
@@ -455,10 +456,26 @@ public class UserDao implements UserDaoIface {
             } else {
                 pstmt.setInt(23, user.phone);
             }
-            pstmt.executeUpdate();
+            pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+        // get user number
+        int userNumber = -1;
+        query = "SELECT user_number FROM users WHERE uid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, user.uid);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                userNumber = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        if(userNumber<0){
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "User number not found");
+        }
+        return userNumber;
     }
 
     @Override

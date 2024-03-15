@@ -403,7 +403,7 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public void addUser(User user) throws IotDatabaseException {
+    public Integer addUser(User user) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addUser'");
     }

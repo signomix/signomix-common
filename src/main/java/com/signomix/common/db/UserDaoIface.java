@@ -9,7 +9,7 @@ import io.agroal.api.AgroalDataSource;
 public interface UserDaoIface {
     public void setDatasource(AgroalDataSource ds);
     public void createStructure() throws IotDatabaseException;
-    public void addUser(User user) throws IotDatabaseException ;
+    public Integer addUser(User user) throws IotDatabaseException ;
     public void deleteUser(long id) throws IotDatabaseException ;
     public User getUser(String uid) throws IotDatabaseException ;
     public User getUser(long id) throws IotDatabaseException ;

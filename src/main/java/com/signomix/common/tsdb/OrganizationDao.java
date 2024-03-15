@@ -253,7 +253,7 @@ public class OrganizationDao implements OrganizationDaoIface {
             pst.setLong(1, organizationId);
             pst.setInt(2, tenantId);
             pst.setLong(3, userNumber);
-            pst.setString(4, path);
+            pst.setObject(4, path, java.sql.Types.OTHER);
             boolean updated = pst.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
