@@ -35,6 +35,7 @@ public class DataQuery {
     private boolean virtual;
     private boolean dateParamPresent;
     private long offset;
+    private String className;
 
     public Timestamp getFromTs() {
         return fromTs;
@@ -74,6 +75,7 @@ public class DataQuery {
         virtual = false;
         dateParamPresent = false;
         offset = 0;
+        className = null;
     }
 
     public static DataQuery parse(String query) throws DataQueryException {
@@ -203,6 +205,10 @@ public class DataQuery {
                     dq.setToTs(params[i + 1]);
                     i = i + 2;
                     dq.setLimit(0);
+                    break;
+                case "report":
+                    dq.setClassName(params[i + 1]);
+                    i = i + 2;
                     break;
                 default:
                     throw new DataQueryException(DataQueryException.PARSING_EXCEPTION,
@@ -408,10 +414,19 @@ public class DataQuery {
 
     /**
      * Get offset in milliseconds as calculated from fromTs parameter.
+     * 
      * @return the offset - milliseconds from fromTs to current time
      */
     public long getOffset() {
         return offset;
+    }
+
+    public String getClassName(){
+        return className;
+    }
+
+    public void setClassName(String className){
+        this.className=className;
     }
 
 }
