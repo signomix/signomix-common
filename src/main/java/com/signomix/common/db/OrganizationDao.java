@@ -97,13 +97,13 @@ public class OrganizationDao implements OrganizationDaoIface {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getTenantPaths'");
     }
-
+/* 
     @Override
     public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addTenantUser'");
-    }
+    } */
 
     @Override
     public boolean canViewTenant(User user, Tenant tenant) throws IotDatabaseException {

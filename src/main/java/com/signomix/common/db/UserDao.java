@@ -426,4 +426,17 @@ public class UserDao implements UserDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'getTenantUsers'");
     }
 
+    @Override
+    public void updateTenantUser(User user) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateTenantUser'");
+    }
+
+    @Override
+    public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addTenantUser'");
+    }
+
 }

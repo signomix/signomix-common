@@ -48,7 +48,7 @@ public class UserDao implements UserDaoIface {
         // sb.append("create sequence if not exists user_number_seq;");
         // sb.append("create sequence if not exists org_number_seq;");
         sb.append("create table if not exists users (")
-                .append("uid varchar primary key,")
+                .append("uid varchar PRIMARY KEY,")
                 .append("type int,")
                 .append("email varchar,")
                 .append("role varchar not null default '',")
@@ -70,9 +70,10 @@ public class UserDao implements UserDaoIface {
                 .append("credits bigint,")
                 .append("autologin boolean,")
                 .append("language varchar,")
-                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + " references organizations(id),")
+                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + ",") // REMOVED: " references organizations(id),"
                 .append("path ltree DEFAULT ''::ltree,")
-                .append("phone integer);");
+                .append("phone integer);")
+                .append("create index if not exists users_user_number_idx on users(user_number);");
         query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
@@ -227,7 +228,7 @@ public class UserDao implements UserDaoIface {
         user.preferredLanguage = rs.getString("language");
         user.organization = rs.getLong("organization");
         try{
-            user.path = rs.getObject("path").toString();
+            user.path = rs.getObject("tpath").toString();
         }catch(NullPointerException e){
             user.path="";
         }
@@ -254,7 +255,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String uid) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -271,7 +272,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(long id) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE user_number=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -288,7 +289,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String login, String password) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE uid=? AND password=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -306,7 +307,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public List<User> getUsersByRole(String role) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id"
                 + "WHERE role LIKE ?";
         ArrayList<User> users = new ArrayList<>();
@@ -372,7 +373,7 @@ public class UserDao implements UserDaoIface {
     @Override
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
             throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE organization=? AND tenant_users.user_id IS NULL ";
         if (limit != null) {
@@ -399,7 +400,7 @@ public class UserDao implements UserDaoIface {
     @Override
     public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException {
         // String query = "SELECT * from users";
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id ";
         if (limit != null) {
             query += " LIMIT " + limit;
@@ -444,6 +445,9 @@ public class UserDao implements UserDaoIface {
             pstmt.setBoolean(13, user.confirmed);
             pstmt.setBoolean(14, user.unregisterRequested);
             pstmt.setInt(15, user.authStatus);
+            if(user.createdAt==null || user.createdAt==0){
+                user.createdAt=System.currentTimeMillis();
+            }
             pstmt.setTimestamp(16, new java.sql.Timestamp(user.createdAt));
             pstmt.setInt(17, user.services);
             pstmt.setString(18, user.phonePrefix);
@@ -503,7 +507,7 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path, tenant_users.tenant_id FROM users "
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE tenant_users.tenant_id=?";
         if (limit != null) {
@@ -523,6 +527,34 @@ public class UserDao implements UserDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return users;
+    }
+
+    @Override
+    public void updateTenantUser(User user) throws IotDatabaseException {
+        String query = "UPDATE tenant_users SET path=?, updated_at=? WHERE user_id=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setObject(1, user.path, java.sql.Types.OTHER);
+            pstmt.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+            pstmt.setLong(3, user.number);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path)
+            throws IotDatabaseException {
+                String query = "INSERT INTO tenant_users(organization_id, tenant_id, user_id, path) VALUES(?, ?, ?, ?)";
+                try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+                    pst.setLong(1, organizationId);
+                    pst.setInt(2, tenantId);
+                    pst.setLong(3, userNumber);
+                    pst.setObject(4, path, java.sql.Types.OTHER);
+                    boolean updated = pst.executeUpdate() > 0;
+                } catch (SQLException e) {
+                    throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+                }
     }
 
 }

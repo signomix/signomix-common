@@ -19,7 +19,7 @@ public interface OrganizationDaoIface {
     public Tenant getTenantByRoot(Long organizationId, String root) throws IotDatabaseException;
     public List<Tenant> getTenants(Long organizationId, Integer limit, Integer offset) throws IotDatabaseException;
     public List<String> getTenantPaths(Integer tenantId) throws IotDatabaseException;
-    public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path) throws IotDatabaseException;
+    //public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path) throws IotDatabaseException;
     public boolean canViewTenant(User user, Tenant tenant) throws IotDatabaseException;
     public boolean canEditTenant(User user, Tenant tenant) throws IotDatabaseException;
 

@@ -38,7 +38,7 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        String query = "CREATE TYPE token_type AS ENUM ('SESSION', 'API', 'PERMANENT', 'RESET_PASSWORD', 'EMAIL_VERIFICATION', 'DASHBOARD');";
+        String query = "CREATE TYPE token_type AS ENUM ('SESSION', 'API', 'PERMANENT', 'RESET_PASSWORD', 'EMAIL_VERIFICATION', 'DASHBOARD', 'CONFIRM');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -62,8 +62,8 @@ public class AuthDao implements AuthDaoIface {
                 + "payload varchar,"
                 + "tstamp timestamp default CURRENT_TIMESTAMP,"
                 + "eoflife timestamp,"
-                + "type token_type NOT NULL DEFAULT 'PERMANENT'::token_type);";
-        query = "CREATE INDEX IF NOT EXISTS tokens_token_eoflife_index ON tokens (token, eoflife);"
+                + "type token_type NOT NULL DEFAULT 'PERMANENT'::token_type);"
+                + "CREATE INDEX IF NOT EXISTS tokens_token_eoflife_index ON tokens (token, eoflife);"
                 + "CREATE INDEX IF NOT EXISTS ptokens_token_eoflife_index ON ptokens (token, eoflife);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
@@ -189,7 +189,6 @@ public class AuthDao implements AuthDaoIface {
         }
     }
 
-
     @Override
     public void clearExpiredTokens() {
         String query = "DELETE FROM tokens WHERE eoflife<CURRENT_TIMESTAMP; "
@@ -256,9 +255,9 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
-    public void saveToken(Token token){
+    public void saveToken(Token token) {
         String query;
-        if(token.isPermanent()){
+        if (token.isPermanent()) {
             query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
         } else {
             query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
@@ -301,7 +300,8 @@ public class AuthDao implements AuthDaoIface {
             pstmt.setString(5, token.getUid());
             pstmt.setString(6, token.getToken());
             int count = pstmt.executeUpdate();
-            LOG.info("modifyToken "+token.getToken()+" "+(token.isPermanent()?"permanent":"session")+": updated " + count + " rows");
+            LOG.info("modifyToken " + token.getToken() + " " + (token.isPermanent() ? "permanent" : "session")
+                    + ": updated " + count + " rows");
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
         } catch (Exception ex) {

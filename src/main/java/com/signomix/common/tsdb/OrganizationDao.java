@@ -45,7 +45,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         // create table tenants with root column allowing only A-Z, a-z, 0-9, - and _
         query = "CREATE TABLE IF NOT EXISTS tenants ("
                 + "id SERIAL PRIMARY KEY,"
-                + "organization_id BIGINT NOT NULL REFERENCES organizations(id),"
+                + "organization_id INTEGER NOT NULL REFERENCES organizations(id),"
                 + "name VARCHAR(255),"
                 + "root VARCHAR(255) NOT NULL CHECK(root ~ '^[A-Za-z0-9_-]+$'),"
                 + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
@@ -83,7 +83,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         query = "CREATE TABLE IF NOT EXISTS tenant_users("
                 + "organization_id INTEGER REFERENCES organizations(id),"
                 + "tenant_id INTEGER REFERENCES tenants(id),"
-                + "user_id INTEGER REFERENCES users(user_number),"
+                + "user_id INTEGER NOT NULL," // REMOVED: REFERENCES users(user_number)
                 + "path LTREE NOT NULL,"
                 + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
                 + "updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
@@ -245,7 +245,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         return paths;
     }
 
-    @Override
+/*     @Override
     public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path)
             throws IotDatabaseException {
         String query = "INSERT INTO tenant_users(organization_id, tenant_id, user_id, path) VALUES(?, ?, ?, ?)";
@@ -258,7 +258,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-    }
+    } */
 
     @Override
     public boolean canViewTenant(User user, Tenant tenant) throws IotDatabaseException {
