@@ -144,14 +144,14 @@ public class Widget {
      * @return the dev_id
      */
     public String getDev_id() {
-        return dev_id.toUpperCase();
+        return dev_id!=null?dev_id.toUpperCase():"";
     }
 
     /**
      * @param dev_id the dev_id to set
      */
     public void setDev_id(String dev_id) {
-        this.dev_id = dev_id.toUpperCase();
+        this.dev_id = dev_id!=null?dev_id.toUpperCase():"";
     }
 
     /**
@@ -187,7 +187,7 @@ public class Widget {
      */
     public String getQuery() {
         if(query==null || query.isEmpty()){
-            setQuery("last");
+            setQuery("last 1");
         }
         return query;
     }
@@ -284,14 +284,14 @@ public class Widget {
      * @return the group
      */
     public String getGroup() {
-        return group.toUpperCase();
+        return group!=null?group.toUpperCase():"";
     }
 
     /**
      * @param group the group to set
      */
     public void setGroup(String group) {
-        this.group = group.toUpperCase();
+        this.group = group!=null?group.toUpperCase():"";
     }
     
     public void normalize(){

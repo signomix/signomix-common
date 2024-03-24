@@ -87,7 +87,7 @@ public class UserDao implements UserDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
 
-        User user = new User();
+ /*        User user = new User();
         user.uid = "admin";
         user.type = User.OWNER;
         user.email = "";
@@ -176,7 +176,7 @@ public class UserDao implements UserDaoIface {
             addUser(user);
         } catch (IotDatabaseException e) {
             LOG.warn("Error inserting default admin user", e);
-        }
+        } */
 
     }
 

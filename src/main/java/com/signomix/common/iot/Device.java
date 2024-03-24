@@ -117,9 +117,9 @@ public class Device {
         state = 0d;
         administrators = "";
         configuration = null;
-        orgApplicationId = 0L;
+        orgApplicationId = 1L;
         applicationConfig = null;
-        organizationId = 0L;
+        organizationId = 1L;
         writable=false;
         tags = "";
         dashboard = true;
