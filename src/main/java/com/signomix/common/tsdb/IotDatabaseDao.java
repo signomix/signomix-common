@@ -2237,7 +2237,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         boolean additionalSearch = false;
         // actual implementation doesn't support path 
         // only organization tenants can have devices with path
-        String searchCondition = "AND path IS NULL ";
+        String searchCondition = "AND path IS NULL OR path = ''";
         String[] searchParts;
         if (null == searchString || searchString.isEmpty()) {
             searchParts = new String[0];
@@ -3443,6 +3443,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO
         String query;
         String searchPath=null;
+        logger.info("getDevicesByPath: "+userID+" "+organizationID+" "+path+" "+limit+" "+offset);
         if(path!=null){
             searchPath=path.replace(".ALL", ".*");
         }

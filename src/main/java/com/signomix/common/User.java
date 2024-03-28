@@ -19,7 +19,9 @@ public class User {
     public static final int EXTENDED = 7; // students, scientists, nonprofits
     public static final int SUPERUSER = 8; // organization admin
     public static final int MANAGING_ADMIN = 8; // organization admin
+    public static final int ORGANIZATION_ADMIN = 8; // organization admin
     public static final int ADMIN = 9; // tenant admin
+    public static final int TENANT_ADMIN = 9; // tenant admin
     public static final int ANONYMOUS = 10;
     public static final int SUBSCRIBER = 100;
     public static final int ANY = 1000;
