@@ -3438,15 +3438,21 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, Integer limit, Integer offset)
+    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search, Integer limit, Integer offset)
             throws IotDatabaseException {
-        // TODO
+        // TODO: search param:
+        // 1. search by path
+        // 2. search by name
+        // 3. search by eui
+        // 4. search by tag
         String query;
-        String searchPath=null;
+        String searchPath=mergePaths(path, search);
         logger.info("getDevicesByPath: "+userID+" "+organizationID+" "+path+" "+limit+" "+offset);
+
         if(path!=null){
             searchPath=path.replace(".ALL", ".*");
         }
+
         if (organizationID == defaultOrganizationId) {
             query = "SELECT * FROM devices WHERE userid=?";
         } else {
@@ -3461,7 +3467,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             query += " LIMIT ? OFFSET ?";
         }
         logger.info(query);
-        logger.info(userID + " " + organizationID + " " + searchPath + " " + limit + " " + offset);
+        logger.info(userID + " " + organizationID + " " + searchPath + " " + search + " " + limit + " " + offset);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             int idx=2;
             if (organizationID == defaultOrganizationId) {
@@ -3490,6 +3496,27 @@ public class IotDatabaseDao implements IotDatabaseIface {
             logger.error(e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+    }
+
+    private String mergePaths(String path, String search) {
+        if (search == null || search.isEmpty()) {
+            return path;
+        }
+        String[] parts = search.split(":");
+        if(parts.length<2){
+            return path;
+        }
+        String searchPath=null;
+        if(parts[0].equals("path")){
+            searchPath=parts[1];
+        }
+        if (path == null || path.isEmpty()) {
+            return searchPath;
+        }
+        // merge paths
+        String result=null;
+        
+        return result;
     }
 
 }

@@ -2618,7 +2618,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, Integer limit, Integer offset)
+    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search,Integer limit, Integer offset)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesByPath'");
