@@ -3449,10 +3449,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String searchPath=mergePaths(path, search);
         logger.info("getDevicesByPath: "+userID+" "+organizationID+" "+path+" "+limit+" "+offset);
 
-        if(path!=null){
-            searchPath=path.replace(".ALL", ".*");
-        }
-
         if (organizationID == defaultOrganizationId) {
             query = "SELECT * FROM devices WHERE userid=?";
         } else {
@@ -3498,24 +3494,70 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    /**
+     * Merges two paths and returns the result.
+     *
+     * @param pathOfAccessRights the user has access to.
+     * @param searchPath The path to search for.
+     * @return The merged path.
+     */
     private String mergePaths(String path, String search) {
-        if (search == null || search.isEmpty()) {
-            return path;
+        String pathOfAccessRights=path;
+        String searchPath=search;
+        /* if(pathOfAccessRights!=null && pathOfAccessRights.endsWith(".ALL")){
+            pathOfAccessRights=pathOfAccessRights.substring(0, pathOfAccessRights.length()-4)+".*";
         }
-        String[] parts = search.split(":");
+        if(searchPath!=null && searchPath.endsWith(".ALL")){
+            searchPath=searchPath.substring(0, searchPath.length()-4)+".*";
+        } */
+        // name path means pathOfAccessRights
+        if (searchPath == null || searchPath.isEmpty()) {
+            return pathOfAccessRights;
+        }
+        String[] parts = searchPath.split(":");
         if(parts.length<2){
-            return path;
+            return pathOfAccessRights;
         }
-        String searchPath=null;
+        String pathToSearch=null;
         if(parts[0].equals("path")){
-            searchPath=parts[1];
+            pathToSearch=parts[1];
         }
-        if (path == null || path.isEmpty()) {
-            return searchPath;
+        if (pathOfAccessRights == null || pathOfAccessRights.isEmpty()) {
+            return pathToSearch;
         }
-        // merge paths
+
         String result=null;
-        
+        // adding "technical" dot at the end of path, to make it easier to compare paths
+        if(!(pathOfAccessRights.endsWith(".*")||pathOfAccessRights.endsWith("."))){
+            pathOfAccessRights+=".";
+        }
+        if(!(pathToSearch.endsWith(".*")||pathToSearch.endsWith("."))){
+            pathToSearch+=".";
+        }
+        //if path the user has access to is higher (in organization structure tree) or the same as the path to search and ends with *, return the path to search
+        //if path the user has access to is higher or the same as the path to search and does not end with *, return the path only if it is exactly the same as the path to search
+        if(pathToSearch.startsWith(pathOfAccessRights)){
+            if(pathOfAccessRights.endsWith(".*")){
+                result=pathToSearch;
+            }else if(pathOfAccessRights.equals(pathToSearch)){
+                result=pathOfAccessRights;
+            }else{
+                result="";
+            }
+        }
+        //if path the user has access to is lower than the path to search and ends with *, return the path
+        //if path the user has access to is lower than the path to search and does not end with *, return nothing
+        if(pathOfAccessRights.startsWith(pathToSearch)){
+            if(pathToSearch.endsWith(".*")){
+                result=pathOfAccessRights;
+            }else{
+                result="";
+            }
+        }
+        // remove last "technical" dot
+        if(result.endsWith(".")){
+            result=result.substring(0, result.length()-1);
+        }
         return result;
     }
 
