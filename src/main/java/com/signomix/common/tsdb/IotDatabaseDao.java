@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -251,6 +252,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    /**
+     * Get values of a group of devices
+     * The resulting dataset can contain maximum 31 days of data 
+     */
     @Override
     public List<List<List>> getGroupValues(String userID, long organizationId, String groupEUI, String[] channelNames,
             String dataQuery) throws IotDatabaseException {
@@ -265,6 +270,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
         if (fromTs == null || toTs == null || fromTs.after(toTs)) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "Invalid dates in data query", null);
         }
+        logger.info("fromTs: " + fromTs + " toTs: " + toTs);
+        Instant i1 = fromTs.toInstant();
+        Instant i2 = toTs.toInstant();
+        Instant i3 = i2.minusSeconds(31 * 24 * 60 * 60);
+        if(i1.isBefore(i3)){
+            fromTs = Timestamp.from(i3);
+        }
+        
+        // if toTs is more than 1 month from fromTs, set fromTs to 1 month before toTs
+        /* long diff = toTs.getTime() - fromTs.getTime();
+        if (diff > 31 * 24 * 60 * 60 * 1000) {
+            fromTs = new Timestamp(toTs.getTime() - 31 * 24 * 60 * 60 * 1000);
+        } */
+        logger.info("fromTs_2: " + fromTs + " toTs: " + toTs);
         List<String> requestChannels = Arrays.asList(channelNames);
         try {
             String group = "%," + groupEUI + ",%";
@@ -316,7 +335,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     ts = rs.getTimestamp(3);
                     for (int i = 0; i < groupChannels.size(); i++) {
                         channelName = groupChannels.get(i);
-                        logger.info("channel: " + channelName);
+                        //logger.info("channel: " + channelName);
                         channelIndex = devices.get(devEui).indexOf(channelName);
                         if (channelIndex > -1) {
                             d = rs.getDouble(4 + channelIndex);
@@ -3217,6 +3236,27 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }
+
+    @Override
+    public List<Device> getGroupDevices(String groupID)
+            throws IotDatabaseException {
+        ;
+        String query = "SELECT * FROM devices WHERE groups LIKE ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, "%," + groupID + ",%");
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Device> list = new ArrayList<>();
+            while (rs.next()) {
+                Device device = buildDevice(rs);
+                list.add(device);
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
 
     @Override
     public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException {

@@ -53,6 +53,7 @@ public interface IotDatabaseIface {
     public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
     public List<Device> getInactiveDevices() throws IotDatabaseException;
+    public List<Device> getGroupDevices(String groupID) throws IotDatabaseException;
 
     //tags
     public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException;

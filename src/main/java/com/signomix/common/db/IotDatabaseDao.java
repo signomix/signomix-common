@@ -2624,4 +2624,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesByPath'");
     }
 
+    @Override
+    public List<Device> getGroupDevices(String groupID) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getGroupDevices'");
+    }
+
 }
