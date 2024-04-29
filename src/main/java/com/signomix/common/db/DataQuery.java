@@ -210,6 +210,11 @@ public class DataQuery {
                     dq.setClassName(params[i + 1]);
                     i = i + 2;
                     break;
+                case "sback":
+                    try {
+                        dq.offset = Long.parseLong(params[i + 1]);
+                        i = i + 2;
+                    } catch (NumberFormatException e) {}
                 default:
                     throw new DataQueryException(DataQueryException.PARSING_EXCEPTION,
                             "unrecognized word " + params[i]);
@@ -389,7 +394,7 @@ public class DataQuery {
             fromTs = DateTool.parseTimestamp(fromStr, null, false);
             if (null != fromTs) {
                 dateParamPresent = true;
-                offset = System.currentTimeMillis() - fromTs.getTime();
+                offset = (System.currentTimeMillis() - fromTs.getTime())/1000;
             }
         } catch (Exception ex) {
 
@@ -413,9 +418,9 @@ public class DataQuery {
     }
 
     /**
-     * Get offset in milliseconds as calculated from fromTs parameter.
+     * Get offset in seconds as calculated from fromTs parameter or provided explicitly by 'sback' parameter
      * 
-     * @return the offset - milliseconds from fromTs to current time
+     * @return the offset - maximum time back from now in seconds to get data
      */
     public long getOffset() {
         return offset;

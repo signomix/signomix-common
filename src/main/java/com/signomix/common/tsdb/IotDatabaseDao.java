@@ -113,7 +113,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setString(1, groupEUI);
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
-                String tmps = rs.getString(1).toLowerCase();
+                String tmps = rs.getString(1).toLowerCase().trim();
+                logger.info("channels: " + tmps);
                 String[] s = tmps.split(",");
                 channels = Arrays.asList(s);
             }
@@ -176,6 +177,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
                         devEui = rs.getString(1);
                         channelName = groupChannels.get(i);
                         channelIndex = devices.get(devEui).indexOf(channelName);
+                        if(channelIndex < 0){
+                            logger.info("Channel not found: " + channelName + " for device: " + devEui);
+                            continue;
+                        }
                         d = rs.getDouble(4 + channelIndex);
                         if (!rs.wasNull()) {
                             tmpResult.add(new ChannelData(devEui, channelName, d,
@@ -185,9 +190,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 }
             } catch (SQLException e) {
                 logger.error(e.getMessage());
+                e.printStackTrace();
                 throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());
+                ex.printStackTrace();
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, ex.getMessage());
             }
             if (tmpResult.isEmpty()) {
@@ -239,6 +246,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return result;
         } catch (Exception e) {
             logger.error(e.getMessage());
+            e.printStackTrace();
             StackTraceElement[] ste = e.getStackTrace();
             // logger.error("requestChannels[{}]", requestChannels.size());
             // logger.error("channelNames[{}]", channelNames.length);
@@ -2541,7 +2549,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void createDevice(User user, Device device) throws IotDatabaseException {
-        // logger.info("createDevice: " + device.getEUI() + " for user: " + user.uid);
+        logger.info("createDevice: " + device.getEUI() + " for user: " + user.uid);
         String query = "INSERT INTO devices (eui, name, userid, type, team, channels, code, "
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
@@ -3045,7 +3053,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 group.setName(rs.getString("name"));
                 group.setUserID(rs.getString("userid"));
                 group.setAdministrators(rs.getString("administrators"));
-                group.setChannels(rs.getString("channels"));
+                group.setChannelsAsString(rs.getString("channels"));
                 group.setDescription(rs.getString("description"));
                 group.setOrganization(rs.getLong("organization"));
                 group.setTeam(rs.getString("team"));
@@ -3096,7 +3104,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 group.setName(rs.getString("name"));
                 group.setUserID(rs.getString("userid"));
                 group.setAdministrators(rs.getString("administrators"));
-                group.setChannels(rs.getString("channels"));
+                group.setChannelsAsString(rs.getString("channels"));
                 group.setDescription(rs.getString("description"));
                 group.setOrganization(rs.getLong("organization"));
                 group.setTeam(rs.getString("team"));
@@ -3144,7 +3152,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 group.setName(rs.getString("name"));
                 group.setUserID(rs.getString("userid"));
                 group.setAdministrators(rs.getString("administrators"));
-                group.setChannels(rs.getString("channels"));
+                group.setChannelsAsString(rs.getString("channels"));
                 group.setDescription(rs.getString("description"));
                 group.setOrganization(rs.getLong("organization"));
                 group.setTeam(rs.getString("team"));
