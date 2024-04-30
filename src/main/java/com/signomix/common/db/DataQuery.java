@@ -82,12 +82,12 @@ public class DataQuery {
         // TODO: in case of number format exception - log SEVERE event
         // TODO: parsing exception
         // TODO: 'to' or 'from' parameter removes 'last' (setLimit(0))
-        LOG.debug(query);
         DataQuery dq = new DataQuery();
         String q = query.trim();
         if (q.equalsIgnoreCase("last")) {
             q = "last 1";
         }
+        LOG.debug("data query: "+query);
         String[] params = q.split(" ");
         for (int i = 0; i < params.length;) {
             switch (params[i].toLowerCase()) {
@@ -213,8 +213,11 @@ public class DataQuery {
                 case "sback":
                     try {
                         dq.offset = Long.parseLong(params[i + 1]);
-                        i = i + 2;
-                    } catch (NumberFormatException e) {}
+                    } catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                    i = i + 2;
+                    break;
                 default:
                     throw new DataQueryException(DataQueryException.PARSING_EXCEPTION,
                             "unrecognized word " + params[i]);
