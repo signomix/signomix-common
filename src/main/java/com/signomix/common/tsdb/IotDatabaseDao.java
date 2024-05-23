@@ -1179,6 +1179,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 dq.setChannels(getDeviceChannels(deviceEUI));
             }
         } catch (DataQueryException ex) {
+            ex.printStackTrace();
             throw new IotDatabaseException(ex.getCode(), "DataQuery " + ex.getMessage());
         }
         if (dq.isVirtual()) {
