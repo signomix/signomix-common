@@ -335,7 +335,7 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(2, user.email);
             pstmt.setString(3, user.name);
             pstmt.setString(4, user.surname);
-            pstmt.setString(5, user.role);
+            pstmt.setString(5, user.role!=null?user.role:"");
             pstmt.setString(6, user.confirmString);
             pstmt.setString(7, user.generalNotificationChannel);
             pstmt.setString(8, user.infoNotificationChannel);
@@ -435,7 +435,7 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(3, user.email);
             pstmt.setString(4, user.name);
             pstmt.setString(5, user.surname);
-            pstmt.setString(6, user.role);
+            pstmt.setString(6, user.role!=null?user.role:"");
             pstmt.setString(7, user.confirmString);
             pstmt.setString(8, user.password);
             pstmt.setString(9, user.generalNotificationChannel);
