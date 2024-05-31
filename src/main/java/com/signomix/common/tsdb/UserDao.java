@@ -368,6 +368,93 @@ public class UserDao implements UserDaoIface {
         }
     }
 
+    /**
+     * Check if user object has all parameters set or basic parameters or notification parameters
+     * only then uses the correct update method
+     * @param user
+     * @throws IotDatabaseException
+     */
+/*     @Override
+    public void updateUser(User user) throws IotDatabaseException {
+        LOG.info("updateUser (new): " + user.uid);
+        if(user.generalNotificationChannel!=null || user.infoNotificationChannel!=null || user.warningNotificationChannel!=null || user.alertNotificationChannel!=null){
+            updateUserNotifications(user);
+            LOG.info("updateUserNotifications: " + user.uid);
+        }else if(user.email!=null && user.name!=null){
+            updateUserBasicParams(user);
+            LOG.info("updateUserBasicParams: " + user.uid);
+        }
+    }
+
+    private void updateUserNotifications(User user) throws IotDatabaseException {
+        LOG.info("generalNotificationChannel: " + user.generalNotificationChannel);
+        String query = "UPDATE users SET "
+                + "generalchannel=?,infochannel=?,warningchannel=?,alertchannel=? "
+                + "WHERE uid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, user.generalNotificationChannel==null?"":user.generalNotificationChannel);
+            pstmt.setString(2, user.infoNotificationChannel==null?"":user.infoNotificationChannel);
+            pstmt.setString(3, user.warningNotificationChannel==null?"":user.warningNotificationChannel);
+            pstmt.setString(4, user.alertNotificationChannel==null?"":user.alertNotificationChannel);
+            pstmt.setString(5, user.uid);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    } */
+
+    /**
+     * Update all user parameters except notifications
+     * @param user
+     */
+/*     private void updateUserBasicParams(User user) throws IotDatabaseException{
+        String query = "UPDATE users SET "
+                + "type=?,email=?,name=?,surname=?,role=?,secret=?,"
+                + "confirmed=?,unregisterreq=?,authstatus=?,created=?,"
+                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, phone=? "
+                + "WHERE uid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setInt(1, user.type);
+            pstmt.setString(2, user.email);
+            pstmt.setString(3, user.name);
+            pstmt.setString(4, user.surname);
+            pstmt.setString(5, user.role!=null?user.role:"");
+            pstmt.setString(6, user.confirmString);
+            pstmt.setBoolean(7, user.confirmed);
+            pstmt.setBoolean(8, user.unregisterRequested);
+            pstmt.setInt(9, user.authStatus);
+            pstmt.setTimestamp(10, new java.sql.Timestamp(user.createdAt));
+            pstmt.setInt(11, user.services);
+            if(user.phonePrefix==null){
+                user.phonePrefix="";
+            }else{
+                pstmt.setString(12, user.phonePrefix);
+            }
+            if(user.credits==null){
+                user.credits=0L;
+            }else{
+                pstmt.setLong(13, user.credits);
+            }
+            pstmt.setBoolean(14, user.autologin);
+            pstmt.setString(15, user.preferredLanguage);
+            pstmt.setLong(16, user.organization);
+            if (user.phone == null) {
+                pstmt.setNull(17, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(17, user.phone);
+            }
+            pstmt.setString(18, user.uid);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    } */
+
     /*    
     */
     @Override
