@@ -106,6 +106,17 @@ public class User {
         if(cloned.uid!=null) result.uid=cloned.uid;
         if(cloned.unregisterRequested!=null) result.unregisterRequested=cloned.unregisterRequested;
         if(cloned.warningNotificationChannel!=null) result.warningNotificationChannel=cloned.warningNotificationChannel;
+        
+        // fix nulls
+        if (cloned.services == null) {
+            cloned.services = 0;
+        }
+        if (cloned.credits == null) {
+            cloned.credits = 0L;
+        }
+        if (cloned.autologin == null) {
+            cloned.autologin = false;
+        }
         return result;
     }
     public User() {
