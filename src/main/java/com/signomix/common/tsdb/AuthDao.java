@@ -22,8 +22,6 @@ import io.quarkus.cache.CacheResult;
 public class AuthDao implements AuthDaoIface {
     private static final Logger LOG = Logger.getLogger(AuthDao.class);
 
-    String permanentTokenPrefix = Token.PERMANENT_TOKEN_PREFIX;
-
     private AgroalDataSource dataSource;
 
     @Override
@@ -95,8 +93,7 @@ public class AuthDao implements AuthDaoIface {
             String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + token);
-            LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
-            if (token.startsWith(permanentTokenPrefix)) {
+            if (token.startsWith(Token.PERMANENT_TOKEN_PREFIX) || token.startsWith(Token.API_TOKEN_PREFIX)) {
                 query = queryPermanent;
                 updateQuery = null;
                 lifetime = permanentTokenLifetime;
@@ -158,7 +155,7 @@ public class AuthDao implements AuthDaoIface {
     @Override
     public void removeToken(String token) {
         String query;
-        if (token.startsWith(permanentTokenPrefix)) {
+        if (token.startsWith(Token.PERMANENT_TOKEN_PREFIX) || token.startsWith(Token.API_TOKEN_PREFIX)) {
             query = "DELETE FROM ptokens WHERE token=?";
         } else {
             query = "DELETE FROM tokens WHERE token=?";
@@ -334,8 +331,7 @@ public class AuthDao implements AuthDaoIface {
              */ String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + token);
-            LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
-            if (token.startsWith(permanentTokenPrefix)) {
+            if (token.startsWith(Token.PERMANENT_TOKEN_PREFIX) || token.startsWith(Token.API_TOKEN_PREFIX)) {
                 query = queryPermanent;
                 // updateQuery = updatePermanent;
                 lifetime = permanentTokenLifetime;
@@ -397,8 +393,7 @@ public class AuthDao implements AuthDaoIface {
             String query;
             long lifetime = 0;
             LOG.debug("token:" + tokenID);
-            LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
-            if (tokenID.startsWith(permanentTokenPrefix)) {
+            if (tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX) || tokenID.startsWith(Token.API_TOKEN_PREFIX)) {
                 query = queryPermanent;
                 lifetime = permanentTokenLifetime;
             } else {
@@ -412,7 +407,7 @@ public class AuthDao implements AuthDaoIface {
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
                     token = new Token(rs.getString("uid"), lifetime,
-                            tokenID.startsWith(permanentTokenPrefix));
+                            tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
                     token.setIssuer(rs.getString("issuer"));
                     token.setPayload(rs.getString("payload"));
                     token.setTimestamp(rs.getTimestamp("tstamp").getTime());
@@ -440,6 +435,11 @@ public class AuthDao implements AuthDaoIface {
     public Token updateToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
+
+        if(tokenID==null || tokenID.startsWith(Token.API_TOKEN_PREFIX)){
+            return null;
+        }
+
         Token token = null;
         try {
             LOG.info("getIssuer: " + tokenID);
@@ -456,8 +456,7 @@ public class AuthDao implements AuthDaoIface {
             String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + tokenID);
-            LOG.debug("permanentTokenPrefix:" + permanentTokenPrefix);
-            if (tokenID.startsWith(permanentTokenPrefix)) {
+            if (tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX)) {
                 query = queryPermanent;
                 updateQuery = updatePermanent;
                 lifetime = permanentTokenLifetime;
@@ -473,7 +472,7 @@ public class AuthDao implements AuthDaoIface {
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
                     token = new Token(rs.getString("uid"), lifetime,
-                            tokenID.startsWith(permanentTokenPrefix));
+                            tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
                     token.setIssuer(rs.getString("issuer"));
                     token.setPayload(rs.getString("payload"));
                     token.setTimestamp(rs.getTimestamp("tstamp").getTime());
@@ -516,7 +515,7 @@ public class AuthDao implements AuthDaoIface {
         String query;
         Token token = null;
         // TODO: check eolife
-        if (tokenId.startsWith(Token.PERMANENT_TOKEN_PREFIX)) {
+        if (tokenId.startsWith(Token.PERMANENT_TOKEN_PREFIX) || tokenId.startsWith(Token.API_TOKEN_PREFIX)) {
             query = "SELECT * FROM ptokens WHERE token=? AND eoflife>=CURRENT_TIMESTAMP";
         } else {
             query = "SELECT * FROM tokens WHERE token=? AND eoflife>=CURRENT_TIMESTAMP";
@@ -544,6 +543,67 @@ public class AuthDao implements AuthDaoIface {
             ex.printStackTrace();
         }
         return token;
+    }
+
+
+    @Override
+    public Token createApiToken(User issuer, long lifetimeMinutes){
+        try {
+            LOG.info("createApiToken: " + issuer.uid + " " + lifetimeMinutes);
+            Token t = new Token(issuer.uid, lifetimeMinutes, TokenType.API);
+            t.setIssuer(issuer.uid);
+            String query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, t.getToken());
+                pstmt.setString(2, t.getUid());
+                pstmt.setLong(3, t.getLifetime());
+                pstmt.setString(4, t.getIssuer());
+                pstmt.setObject(5, t.getType().name(), java.sql.Types.OTHER);
+                pstmt.setString(6, "");
+                int count = pstmt.executeUpdate();
+                return t;
+            } catch (SQLException ex) {
+                LOG.warn(ex.getMessage());
+                return null;
+            } catch (Exception ex) {
+                LOG.error(ex.getMessage());
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public Token getApiToken(User user) {
+        String query = "SELECT * FROM ptokens WHERE uid=? AND type='API' AND eoflife>=CURRENT_TIMESTAMP";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, user.uid);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Token token = new Token(rs.getString("uid"), 0, true);
+                token.setIssuer(rs.getString("issuer"));
+                token.setPayload(rs.getString("payload"));
+                token.setTimestamp(rs.getTimestamp("tstamp").getTime());
+                token.setToken(rs.getString("token"));
+                token.setType(TokenType.valueOf(rs.getString("type")));
+                token.setPayload(rs.getString("payload"));
+                token.setLifetime(rs.getTimestamp("eoflife").getTime() - rs.getTimestamp("tstamp").getTime());
+                return token;
+            } else {
+                LOG.warn("getApiToken: token not found: " + user.uid);
+            }
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+            ex.printStackTrace();
+        }
+        return null;
     }
 
 }

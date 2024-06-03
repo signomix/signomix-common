@@ -14,7 +14,8 @@ public interface BillingDaoIface {
      * @param year
      * @return
      */
-    public int getOrderCount(int month, int year);
-    public Order createOrder(Order order);
-    
+    public int getOrderCount(int month, int year) throws IotDatabaseException;
+    public Order createOrder(Order order) throws IotDatabaseException;
+    public void updateOrder(Order order) throws IotDatabaseException;
+    public Order getOrder(String id) throws IotDatabaseException;    
 }

@@ -214,6 +214,35 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
+    public Token createApiToken(User issuer, long lifetimeMinutes){
+        try {
+            LOG.info("createApiToken: " + issuer.uid + " " + lifetimeMinutes);
+            Token t = new Token(issuer.uid, lifetimeMinutes, TokenType.API);
+            t.setIssuer(issuer.uid);
+            String query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, t.getToken());
+                pstmt.setString(2, t.getUid());
+                pstmt.setLong(3, t.getLifetime());
+                pstmt.setString(4, t.getIssuer());
+                int count = pstmt.executeUpdate();
+                LOG.info("createApiToken: inserted " + count + " rows");
+            } catch (SQLException ex) {
+                LOG.warn(ex.getMessage());
+                return null;
+            } catch (Exception ex) {
+                LOG.error(ex.getMessage());
+                return null;
+            }
+            return t;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
     public String getIssuerId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
@@ -435,6 +464,12 @@ public class AuthDao implements AuthDaoIface {
     public void saveToken(Token token) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveToken'");
+    }
+
+    @Override
+    public Token getApiToken(User user) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getApiToken'");
     }
 
 }
