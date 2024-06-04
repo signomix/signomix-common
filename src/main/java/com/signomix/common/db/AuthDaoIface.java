@@ -41,9 +41,11 @@ public interface AuthDaoIface {
 
     public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType tokenType, String payload);
 
-    public Token createApiToken(User issuer, long lifetime);
+    public Token createApiToken(User issuer, long lifetime, String key);
 
     public Token getApiToken(User user);
+
+    public void removeApiToken(User user);
     
     public void modifyToken(Token token);
 

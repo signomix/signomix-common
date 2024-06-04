@@ -59,37 +59,26 @@ public class Token {
         }
     }
 
-    public Token(String issuerId, long lifetime, TokenType type)     {
+    public Token(String issuerId, long lifetime, TokenType type, String key)     {
         uid=issuerId;
         issuer=issuerId;
         timestamp = System.currentTimeMillis();
         setLifetime(lifetime);
         setPermanent(true);
         this.type=type;
-        try {
+        /* try {
             String originalString = uid + ":" + timestamp;
             MessageDigest digest = MessageDigest.getInstance("MD5");
             byte[] encodedhash = digest.digest(originalString.getBytes(StandardCharsets.UTF_8));
             token = API_TOKEN_PREFIX+bytesToHex(encodedhash);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-        }
+        } */
+        token = HashMaker.md5Java(key);
     }
 
     public void setLifetime(long lifetime) {
         this.lifetime = lifetime;
-    }
-
-    private static String bytesToHex(byte[] hash) {
-        StringBuilder hexString = new StringBuilder(2 * hash.length);
-        for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
     }
 
     public long getLifetime() {

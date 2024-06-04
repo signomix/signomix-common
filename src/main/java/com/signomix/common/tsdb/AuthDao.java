@@ -9,6 +9,7 @@ import javax.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
+import com.signomix.common.HashMaker;
 import com.signomix.common.Token;
 import com.signomix.common.TokenType;
 import com.signomix.common.User;
@@ -104,7 +105,13 @@ public class AuthDao implements AuthDaoIface {
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, token);
+                String tokenValue;
+                if (token.startsWith(Token.API_TOKEN_PREFIX)) {
+                    tokenValue = HashMaker.md5Java(token);
+                } else {
+                    tokenValue = token;
+                }
+                pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + token);
@@ -163,7 +170,6 @@ public class AuthDao implements AuthDaoIface {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, token);
-            pstmt.setString(2, token);
             boolean ok = pstmt.execute();
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
@@ -342,7 +348,13 @@ public class AuthDao implements AuthDaoIface {
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, token);
+                String tokenValue;
+                if (token.startsWith(Token.API_TOKEN_PREFIX)) {
+                    tokenValue = HashMaker.md5Java(token);
+                } else {
+                    tokenValue = token;
+                }
+                pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + token);
@@ -402,7 +414,13 @@ public class AuthDao implements AuthDaoIface {
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, tokenID);
+                String tokenValue;
+                if (tokenID.startsWith(Token.API_TOKEN_PREFIX)) {
+                    tokenValue = HashMaker.md5Java(tokenID);
+                } else {
+                    tokenValue = tokenID;
+                }
+                pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
@@ -436,7 +454,7 @@ public class AuthDao implements AuthDaoIface {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
 
-        if(tokenID==null || tokenID.startsWith(Token.API_TOKEN_PREFIX)){
+        if (tokenID == null || tokenID.startsWith(Token.API_TOKEN_PREFIX)) {
             return null;
         }
 
@@ -467,7 +485,13 @@ public class AuthDao implements AuthDaoIface {
             }
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, tokenID);
+                String tokenValue;
+                if (tokenID.startsWith(Token.API_TOKEN_PREFIX)) {
+                    tokenValue = HashMaker.md5Java(tokenID);
+                } else {
+                    tokenValue = tokenID;
+                }
+                pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
@@ -522,7 +546,13 @@ public class AuthDao implements AuthDaoIface {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, tokenId);
+            String tokenValue;
+            if (tokenId.startsWith(Token.API_TOKEN_PREFIX)) {
+                tokenValue = HashMaker.md5Java(tokenId);
+            } else {
+                tokenValue = tokenId;
+            }
+            pstmt.setString(1, tokenValue);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 token = new Token(rs.getString("uid"), 0, tokenId.startsWith(Token.PERMANENT_TOKEN_PREFIX));
@@ -545,22 +575,23 @@ public class AuthDao implements AuthDaoIface {
         return token;
     }
 
-
     @Override
-    public Token createApiToken(User issuer, long lifetimeMinutes){
+    public Token createApiToken(User issuer, long lifetimeMinutes, String key) {
         try {
             LOG.info("createApiToken: " + issuer.uid + " " + lifetimeMinutes);
-            Token t = new Token(issuer.uid, lifetimeMinutes, TokenType.API);
+            Token t = new Token(issuer.uid, lifetimeMinutes, TokenType.API, key);
             t.setIssuer(issuer.uid);
-            String query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
+            String query = "DELETE FROM ptokens WHERE uid=? AND type='API';"
+                    + "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer,type,payload) VALUES (?,?,CURRENT_TIMESTAMP,(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute'),?,?,?)";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
-                pstmt.setString(1, t.getToken());
-                pstmt.setString(2, t.getUid());
-                pstmt.setLong(3, t.getLifetime());
-                pstmt.setString(4, t.getIssuer());
-                pstmt.setObject(5, t.getType().name(), java.sql.Types.OTHER);
-                pstmt.setString(6, "");
+                pstmt.setString(1, t.getUid());
+                pstmt.setString(2, t.getToken());
+                pstmt.setString(3, t.getUid());
+                pstmt.setLong(4, t.getLifetime());
+                pstmt.setString(5, t.getIssuer());
+                pstmt.setObject(6, t.getType().name(), java.sql.Types.OTHER);
+                pstmt.setString(7, "");
                 int count = pstmt.executeUpdate();
                 return t;
             } catch (SQLException ex) {
@@ -604,6 +635,20 @@ public class AuthDao implements AuthDaoIface {
             ex.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public void removeApiToken(User user) {
+        String query = "DELETE FROM ptokens WHERE uid=? AND type='API'";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, user.uid);
+            boolean ok = pstmt.execute();
+        } catch (SQLException ex) {
+            LOG.warn(ex.getMessage());
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+        }
     }
 
 }
