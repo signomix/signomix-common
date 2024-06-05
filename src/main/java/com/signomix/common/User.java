@@ -69,6 +69,7 @@ public class User {
     public String path="";
     public Integer phone;
     public Integer tenant;
+    public String pathRoot="";
 
     /**
      * Clones given user
