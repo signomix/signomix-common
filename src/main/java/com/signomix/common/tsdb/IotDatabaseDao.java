@@ -177,7 +177,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                         devEui = rs.getString(1);
                         channelName = groupChannels.get(i);
                         channelIndex = devices.get(devEui).indexOf(channelName);
-                        if(channelIndex < 0){
+                        if (channelIndex < 0) {
                             logger.info("Channel not found: " + channelName + " for device: " + devEui);
                             continue;
                         }
@@ -262,7 +262,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     /**
      * Get values of a group of devices
-     * The resulting dataset can contain maximum 31 days of data 
+     * The resulting dataset can contain maximum 31 days of data
      */
     @Override
     public List<List<List>> getGroupValues(String userID, long organizationId, String groupEUI, String[] channelNames,
@@ -282,15 +282,17 @@ public class IotDatabaseDao implements IotDatabaseIface {
         Instant i1 = fromTs.toInstant();
         Instant i2 = toTs.toInstant();
         Instant i3 = i2.minusSeconds(31 * 24 * 60 * 60);
-        if(i1.isBefore(i3)){
+        if (i1.isBefore(i3)) {
             fromTs = Timestamp.from(i3);
         }
-        
+
         // if toTs is more than 1 month from fromTs, set fromTs to 1 month before toTs
-        /* long diff = toTs.getTime() - fromTs.getTime();
-        if (diff > 31 * 24 * 60 * 60 * 1000) {
-            fromTs = new Timestamp(toTs.getTime() - 31 * 24 * 60 * 60 * 1000);
-        } */
+        /*
+         * long diff = toTs.getTime() - fromTs.getTime();
+         * if (diff > 31 * 24 * 60 * 60 * 1000) {
+         * fromTs = new Timestamp(toTs.getTime() - 31 * 24 * 60 * 60 * 1000);
+         * }
+         */
         logger.info("fromTs_2: " + fromTs + " toTs: " + toTs);
         List<String> requestChannels = Arrays.asList(channelNames);
         try {
@@ -343,7 +345,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     ts = rs.getTimestamp(3);
                     for (int i = 0; i < groupChannels.size(); i++) {
                         channelName = groupChannels.get(i);
-                        //logger.info("channel: " + channelName);
+                        // logger.info("channel: " + channelName);
                         channelIndex = devices.get(devEui).indexOf(channelName);
                         if (channelIndex > -1) {
                             d = rs.getDouble(4 + channelIndex);
@@ -507,8 +509,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "", null);
         }
         String query = "INSERT INTO virtualdevicedata (eui, tstamp, data) VALUES (?,?,?); ";
-        //+ " ON CONFLICT (eui) DO UPDATE SET tstamp = EXCLUDED.tstamp, data = EXCLUDED.data;";
-        //String query = "MERGE INTO virtualdevicedata (eui, tstamp, data) KEY (eui) values (?,?,?)";
+        // + " ON CONFLICT (eui) DO UPDATE SET tstamp = EXCLUDED.tstamp, data =
+        // EXCLUDED.data;";
+        // String query = "MERGE INTO virtualdevicedata (eui, tstamp, data) KEY (eui)
+        // values (?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setTimestamp(2, new Timestamp(data.timestamp));
@@ -907,11 +911,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
         String query = "insert into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
-        String query2 = "INSERT into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?) "
-                + "ON CONFLICT (id) DO UPDATE SET category=?,type=?,origin=?,payload=?,createdat=?;";
+        String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
         String command = (String) commandEvent.getPayload();
+        boolean overwrite = false;
         if (command.startsWith("&")) {
         } else if (command.startsWith("#")) {
+            overwrite = true;
             query = query2;
         }
         command = command.substring(1);
@@ -920,18 +925,21 @@ public class IotDatabaseDao implements IotDatabaseIface {
             origin = deviceEUI;
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setLong(1, commandEvent.getId());
-            pst.setString(2, commandEvent.getCategory());
-            pst.setString(3, commandEvent.getType());
-            pst.setString(4, origin);
-            pst.setString(5, command);
-            pst.setLong(6, commandEvent.getCreatedAt());
-            if (command.startsWith("#")) {
-                pst.setString(7, commandEvent.getCategory());
-                pst.setString(8, commandEvent.getType());
-                pst.setString(9, origin);
-                pst.setString(10, command);
-                pst.setLong(11, commandEvent.getCreatedAt());
+            if (overwrite) {
+                pst.setString(1, origin);
+                pst.setLong(2, commandEvent.getId());
+                pst.setString(3, commandEvent.getCategory());
+                pst.setString(4, commandEvent.getType());
+                pst.setString(5, origin);
+                pst.setString(6, command);
+                pst.setLong(7, commandEvent.getCreatedAt());
+            } else {
+                pst.setLong(1, commandEvent.getId());
+                pst.setString(2, commandEvent.getCategory());
+                pst.setString(3, commandEvent.getType());
+                pst.setString(4, origin);
+                pst.setString(5, command);
+                pst.setLong(6, commandEvent.getCreatedAt());
             }
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -2265,7 +2273,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
         boolean pathSearch = false;
         boolean additionalSearch = false;
-        // actual implementation doesn't support path 
+        // actual implementation doesn't support path
         // only organization tenants can have devices with path
         String searchCondition = "AND path IS NULL OR path = ''";
         String[] searchParts;
@@ -2278,14 +2286,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     searchCondition += "AND eui LIKE ? ";
                 } else if (searchParts[0].equals("name")) {
                     searchCondition += "AND name LIKE ? ";
-                }/*  else if (searchParts[0].equals("path")) {
-                    pathSearch = true;
-                    if (searchParts[1].equals("-")) {
-                        searchCondition = "AND path is NULL";
-                    } else {
-                        searchCondition = "AND path ~ ? ";
-                    }
-                } */
+                } /*
+                   * else if (searchParts[0].equals("path")) {
+                   * pathSearch = true;
+                   * if (searchParts[1].equals("-")) {
+                   * searchCondition = "AND path is NULL";
+                   * } else {
+                   * searchCondition = "AND path ~ ? ";
+                   * }
+                   * }
+                   */
             }
         }
         String query = "SELECT * FROM devices WHERE organization=? " + searchCondition + " LIMIT ? OFFSET ?";
@@ -2294,7 +2304,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, organizationId);
             idx = 2;
-            if (searchParts.length >1) {
+            if (searchParts.length > 1) {
                 if (pathSearch) {
                     if (searchParts[1].equals("-")) {
                     } else {
@@ -3268,7 +3278,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-
     @Override
     public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException {
         String query = "SELECT * FROM device_tags WHERE eui=?";
@@ -3489,7 +3498,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search, Integer limit, Integer offset)
+    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search,
+            Integer limit, Integer offset)
             throws IotDatabaseException {
         // TODO: search param:
         // 1. search by path
@@ -3497,8 +3507,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // 3. search by eui
         // 4. search by tag
         String query;
-        String searchPath=mergePaths(path, search);
-        logger.info("getDevicesByPath: "+userID+" "+organizationID+" "+path+" "+limit+" "+offset);
+        String searchPath = mergePaths(path, search);
+        logger.info("getDevicesByPath: " + userID + " " + organizationID + " " + path + " " + limit + " " + offset);
 
         if (organizationID == defaultOrganizationId) {
             query = "SELECT * FROM devices WHERE userid=?";
@@ -3516,7 +3526,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         logger.info(query);
         logger.info(userID + " " + organizationID + " " + searchPath + " " + search + " " + limit + " " + offset);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            int idx=2;
+            int idx = 2;
             if (organizationID == defaultOrganizationId) {
                 pstmt.setString(1, userID);
             } else {
@@ -3524,12 +3534,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             if (searchPath != null && !searchPath.isEmpty()) {
                 pstmt.setObject(2, searchPath, java.sql.Types.OTHER);
-                idx=3;
+                idx = 3;
             }
 
             if (limit != null && offset != null) {
                 pstmt.setInt(idx, limit);
-                pstmt.setInt(idx+1, offset);
+                pstmt.setInt(idx + 1, offset);
             }
 
             ResultSet rs = pstmt.executeQuery();
@@ -3549,65 +3559,73 @@ public class IotDatabaseDao implements IotDatabaseIface {
      * Merges two paths and returns the result.
      *
      * @param pathOfAccessRights the user has access to.
-     * @param searchPath The path to search for.
+     * @param searchPath         The path to search for.
      * @return The merged path.
      */
     private String mergePaths(String path, String search) {
-        String pathOfAccessRights=path;
-        String searchPath=search;
-        /* if(pathOfAccessRights!=null && pathOfAccessRights.endsWith(".ALL")){
-            pathOfAccessRights=pathOfAccessRights.substring(0, pathOfAccessRights.length()-4)+".*";
-        }
-        if(searchPath!=null && searchPath.endsWith(".ALL")){
-            searchPath=searchPath.substring(0, searchPath.length()-4)+".*";
-        } */
+        String pathOfAccessRights = path;
+        String searchPath = search;
+        /*
+         * if(pathOfAccessRights!=null && pathOfAccessRights.endsWith(".ALL")){
+         * pathOfAccessRights=pathOfAccessRights.substring(0,
+         * pathOfAccessRights.length()-4)+".*";
+         * }
+         * if(searchPath!=null && searchPath.endsWith(".ALL")){
+         * searchPath=searchPath.substring(0, searchPath.length()-4)+".*";
+         * }
+         */
         // name path means pathOfAccessRights
         if (searchPath == null || searchPath.isEmpty()) {
             return pathOfAccessRights;
         }
         String[] parts = searchPath.split(":");
-        if(parts.length<2){
+        if (parts.length < 2) {
             return pathOfAccessRights;
         }
-        String pathToSearch=null;
-        if(parts[0].equals("path")){
-            pathToSearch=parts[1];
+        String pathToSearch = null;
+        if (parts[0].equals("path")) {
+            pathToSearch = parts[1];
         }
         if (pathOfAccessRights == null || pathOfAccessRights.isEmpty()) {
             return pathToSearch;
         }
 
-        String result=null;
+        String result = null;
         // adding "technical" dot at the end of path, to make it easier to compare paths
-        if(!(pathOfAccessRights.endsWith(".*")||pathOfAccessRights.endsWith("."))){
-            pathOfAccessRights+=".";
+        if (!(pathOfAccessRights.endsWith(".*") || pathOfAccessRights.endsWith("."))) {
+            pathOfAccessRights += ".";
         }
-        if(!(pathToSearch.endsWith(".*")||pathToSearch.endsWith("."))){
-            pathToSearch+=".";
+        if (!(pathToSearch.endsWith(".*") || pathToSearch.endsWith("."))) {
+            pathToSearch += ".";
         }
-        //if path the user has access to is higher (in organization structure tree) or the same as the path to search and ends with *, return the path to search
-        //if path the user has access to is higher or the same as the path to search and does not end with *, return the path only if it is exactly the same as the path to search
-        if(pathToSearch.startsWith(pathOfAccessRights)){
-            if(pathOfAccessRights.endsWith(".*")){
-                result=pathToSearch;
-            }else if(pathOfAccessRights.equals(pathToSearch)){
-                result=pathOfAccessRights;
-            }else{
-                result="";
+        // if path the user has access to is higher (in organization structure tree) or
+        // the same as the path to search and ends with *, return the path to search
+        // if path the user has access to is higher or the same as the path to search
+        // and does not end with *, return the path only if it is exactly the same as
+        // the path to search
+        if (pathToSearch.startsWith(pathOfAccessRights)) {
+            if (pathOfAccessRights.endsWith(".*")) {
+                result = pathToSearch;
+            } else if (pathOfAccessRights.equals(pathToSearch)) {
+                result = pathOfAccessRights;
+            } else {
+                result = "";
             }
         }
-        //if path the user has access to is lower than the path to search and ends with *, return the path
-        //if path the user has access to is lower than the path to search and does not end with *, return nothing
-        if(pathOfAccessRights.startsWith(pathToSearch)){
-            if(pathToSearch.endsWith(".*")){
-                result=pathOfAccessRights;
-            }else{
-                result="";
+        // if path the user has access to is lower than the path to search and ends with
+        // *, return the path
+        // if path the user has access to is lower than the path to search and does not
+        // end with *, return nothing
+        if (pathOfAccessRights.startsWith(pathToSearch)) {
+            if (pathToSearch.endsWith(".*")) {
+                result = pathOfAccessRights;
+            } else {
+                result = "";
             }
         }
         // remove last "technical" dot
-        if(result.endsWith(".")){
-            result=result.substring(0, result.length()-1);
+        if (result.endsWith(".")) {
+            result = result.substring(0, result.length() - 1);
         }
         return result;
     }
