@@ -11,6 +11,16 @@ public class Order {
     public Long userNumber;
     public Timestamp firstPaidAt;
     public Timestamp nextPaymentAt;
+    public String paymentMethod;
+    public String name;
+    public String email;
+    public String address;
+    public String city;
+    public String zip;
+    public String country;
+    public String vat;
+    public String currency;
+    public String companyName;
 
     public Order() {
         createdAt = new Timestamp(System.currentTimeMillis());
