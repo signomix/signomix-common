@@ -552,34 +552,42 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void addAlert(IotEvent event) throws IotDatabaseException {
-        Alert alert = new Alert(event);
+        String userStr = event.getOrigin().substring(0, event.getOrigin().indexOf("\t"));
+        String[] users = userStr.split(";");
+        String deviceEui = event.getOrigin().substring(event.getOrigin().indexOf("\t") + 2);
         String query = "insert into alerts (name,category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, alert.getName());
-            pstmt.setString(2, alert.getCategory());
-            pstmt.setString(3, alert.getType());
-            pstmt.setString(4, alert.getDeviceEUI());
-            pstmt.setString(5, alert.getUserID());
-            pstmt.setString(6, (null != alert.getPayload()) ? alert.getPayload().toString() : "");
-            pstmt.setString(7, "");
-            pstmt.setString(8, "");
-            pstmt.setString(9, "");
-            pstmt.setLong(10, 0);
-            pstmt.setLong(11, alert.getCreatedAt());
-            pstmt.setLong(12, -1);
-            pstmt.setBoolean(13, false);
-            int updated = pstmt.executeUpdate();
-            if (updated < 1) {
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
-                        "Unable to create notification " + alert.getId(), null);
+        for (String user : users) {
+            if(user.isEmpty()){
+                continue;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage(), null);
+            try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, "");
+                pstmt.setString(2, event.getCategory());
+                pstmt.setString(3, event.getType());
+                pstmt.setString(4, deviceEui);
+                pstmt.setString(5, user);
+                pstmt.setString(6, (null != event.getPayload()) ? event.getPayload().toString() : "");
+                pstmt.setString(7, "");
+                pstmt.setString(8, "");
+                pstmt.setString(9, "");
+                pstmt.setLong(10, 0);
+                pstmt.setLong(11, event.getCreatedAt());
+                pstmt.setLong(12, -1);
+                pstmt.setBoolean(13, false);
+                int updated = pstmt.executeUpdate();
+                if (updated < 1) {
+                    throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
+                            "Unable to create notification " + event.getId(), null);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage(), null);
+            }
         }
+        //Alert alert = new Alert(event);
     }
 
     @Override

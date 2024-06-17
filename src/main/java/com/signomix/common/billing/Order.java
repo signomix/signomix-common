@@ -5,22 +5,26 @@ import java.sql.Timestamp;
 public class Order {
 
     public String id;
-    public Timestamp createdAt;
-    public Boolean yearly;
-    public Integer accountType;
+    public String uid;
     public Long userNumber;
-    public Timestamp firstPaidAt;
-    public Timestamp nextPaymentAt;
-    public String paymentMethod;
+    public Integer accountType;
+    public Integer targetType;
     public String name;
+    public String surname;
     public String email;
     public String address;
     public String city;
     public String zip;
     public String country;
     public String vat;
-    public String currency;
     public String companyName;
+    public Boolean yearly;
+    public String currency;
+    public Timestamp firstPaidAt;
+    public Timestamp nextPaymentAt;
+    public String paymentMethod;
+    public Timestamp createdAt;
+
 
     public Order() {
         createdAt = new Timestamp(System.currentTimeMillis());

@@ -20,8 +20,7 @@ import io.agroal.api.AgroalDataSource;
 
 public class BillingDao implements BillingDaoIface {
 
-    @Inject
-    Logger logger;
+    private static final Logger logger = Logger.getLogger(BillingDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -45,7 +44,7 @@ public class BillingDao implements BillingDaoIface {
             pstmt.setInt(2, year);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    count = rs.getInt(1);
+                    count = rs.getInt(1)+1;
                 }
             }
         } catch (Exception e) {
@@ -57,47 +56,38 @@ public class BillingDao implements BillingDaoIface {
     @Override
     public Order createOrder(Order order) throws IotDatabaseException{
         int actualCount = getOrderCount(getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
-        String query = "INSERT INTO orders (id, month, year, created_at, yearly, account_type, user_number, first_paid_at, next_payment_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         boolean saved = false;
-
         while (!saved) {
+            order.id = buildId(actualCount, getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
+            String query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, name, surname, email, address, city, zip, country, vat, company_name, currency) "
+                    + "VALUES (?,? ,?,? ,?,? ,?,? ,?,? ,?,? ,?,? ,?,? ,?,?)";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
-                int month = getMonthNumber(order.createdAt);
-                int year = getYearNumber(order.createdAt);
-                order.id = buildId(actualCount, month, year);
                 pstmt.setString(1, order.id);
                 pstmt.setInt(2, getMonthNumber(order.createdAt));
                 pstmt.setInt(3, getYearNumber(order.createdAt));
-                pstmt.setTimestamp(4, order.createdAt);
-                pstmt.setBoolean(5, order.yearly);
-                pstmt.setInt(6, order.accountType);
+                pstmt.setBoolean(4, order.yearly);
+                pstmt.setInt(5, order.accountType);
+                pstmt.setInt(6, order.targetType);
                 pstmt.setLong(7, order.userNumber);
-                if(order.firstPaidAt != null){
-                    pstmt.setTimestamp(8, order.firstPaidAt);
-                } else {
-                    pstmt.setNull(8, java.sql.Types.TIMESTAMP);
-                }
-                if(order.nextPaymentAt != null){
-                    pstmt.setTimestamp(9, order.nextPaymentAt);
-                } else {
-                    pstmt.setNull(9, java.sql.Types.TIMESTAMP);
-                }
+                pstmt.setString(8, order.uid);
+                pstmt.setString(9, order.name);
+                pstmt.setString(10, order.surname);
+                pstmt.setString(11, order.email);
+                pstmt.setString(12, order.address);
+                pstmt.setString(13, order.city);
+                pstmt.setString(14, order.zip);
+                pstmt.setString(15, order.country);
+                pstmt.setString(16, order.vat);
+                pstmt.setString(17, order.companyName);
+                pstmt.setString(18, order.currency);
                 pstmt.execute();
+                saved = true;
             } catch (SQLException e) {
-                logger.error("Error saving order: " + e.getMessage());
-                // in case of duplicate key, try again
-                if (e.getSQLState().equals("23505")) {
-                    actualCount = getOrderCount(getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
-                } else {
-                    order.id = null;
-                    break;
-                }
+                logger.error("Error creating order: " + e.getMessage());
             } catch (Exception e) {
-                logger.error("Error saving order: " + e.getMessage());
-                return order;
+                logger.error("Error creating order: " + e.getMessage());
             }
-            saved = true;
         }
         return order;
     }
@@ -130,11 +120,23 @@ public class BillingDao implements BillingDaoIface {
         String query = "CREATE TABLE IF NOT EXISTS orders ("
                 + "id VARCHAR(255) PRIMARY KEY,"
                 + "month INT NOT NULL,"
-                + "year INT NOT NULL"
-                + "created_at TIMESTAMP NOT NULL,"
+                + "year INT NOT NULL,"
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                 + "yearly BOOLEAN NOT NULL,"
                 + "account_type INT NOT NULL,"
+                + "target_type INT,"
                 + "user_number BIGINT NOT NULL,"
+                + "user_id VARCHAR(255),"
+                + "name VARCHAR(255),"
+                + "surname VARCHAR(255),"
+                + "email VARCHAR(255),"
+                + "address VARCHAR(255),"
+                + "city VARCHAR(255),"
+                + "zip VARCHAR(255),"
+                + "country VARCHAR(255),"
+                + "vat VARCHAR(255),"
+                + "company_name VARCHAR(255),"
+                + "currency VARCHAR(255),"
                 + "first_paid_at TIMESTAMP,"
                 + "next_payment_at TIMESTAMP"
                 + ")";
@@ -147,6 +149,37 @@ public class BillingDao implements BillingDaoIface {
         } catch (Exception e) {
             logger.error("Error creating order table: " + e.getMessage());
         }
+
+        //create index for month and year
+        query = "CREATE INDEX IF NOT EXISTS idx_month_year ON orders (month, year)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.warn("Error creating index for month and year: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error creating index for month and year: " + e.getMessage());
+        }
+        //create index for vat
+        query = "CREATE INDEX IF NOT EXISTS idx_vat ON orders (vat)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.warn("Error creating index for vat: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error creating index for vat: " + e.getMessage());
+        }
+        //create index for user_id
+        query = "CREATE INDEX IF NOT EXISTS idx_user_id ON orders (user_id)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.warn("Error creating index for user_id: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error creating index for user_id: " + e.getMessage());
+        }   
     }
 
     private String buildId(int lastOrder, int month, int year) {
@@ -177,9 +210,21 @@ public class BillingDao implements BillingDaoIface {
                     order.createdAt = rs.getTimestamp("created_at");
                     order.yearly = rs.getBoolean("yearly");
                     order.accountType = rs.getInt("account_type");
+                    order.targetType = rs.getInt("target_type");
                     order.userNumber = rs.getLong("user_number");
+                    order.uid = rs.getString("user_id");
                     order.firstPaidAt = rs.getTimestamp("first_paid_at");
                     order.nextPaymentAt = rs.getTimestamp("next_payment_at");
+                    order.name = rs.getString("name");
+                    order.surname = rs.getString("surname");
+                    order.email = rs.getString("email");
+                    order.address = rs.getString("address");
+                    order.city = rs.getString("city");
+                    order.zip = rs.getString("zip");
+                    order.country = rs.getString("country");
+                    order.vat = rs.getString("vat");
+                    order.companyName = rs.getString("company_name");
+                    order.currency = rs.getString("currency");
                 }
             }
         } catch (Exception e) {

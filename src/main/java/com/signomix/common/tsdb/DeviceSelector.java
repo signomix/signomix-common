@@ -60,10 +60,13 @@ public class DeviceSelector {
          * )
          * ORDER BY d.eui DESC LIMIT 100 OFFSET 0
          */
+
+        // devices not transmitting data for more than 1 week will be ignored
         String q0 = "(SELECT DISTINCT ON (ds.eui) "
                 + "ds.eui, ds.ts "
                 + "FROM devicestatus AS ds "
-                + "WHERE ds.eui=d.eui AND ds.alert<2 AND ds.tinterval>0 AND ds.ts < (CURRENT_TIMESTAMP - ds.tinterval * INTERVAL '1 millisecond') "
+                + "WHERE ds.eui=d.eui AND ds.alert<2 AND ds.ts > (CURRENT_TIMESTAMP - INTERVAL '1 week') "
+                + "AND ds.tinterval>0 AND ds.ts < (CURRENT_TIMESTAMP - ds.tinterval * INTERVAL '1 millisecond') "
                 + ")";
         StringBuffer sb = new StringBuffer()
                 .append("SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,")
