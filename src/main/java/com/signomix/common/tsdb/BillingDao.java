@@ -57,10 +57,11 @@ public class BillingDao implements BillingDaoIface {
     public Order createOrder(Order order) throws IotDatabaseException{
         int actualCount = getOrderCount(getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
         boolean saved = false;
+        String query;
         while (!saved) {
             order.id = buildId(actualCount, getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
-            String query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, name, surname, email, address, city, zip, country, vat, company_name, currency) "
-                    + "VALUES (?,? ,?,? ,?,? ,?,? ,?,? ,?,? ,?,? ,?,? ,?,?)";
+            query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, name, surname, email, address, city, zip, country, tax_no, company_name, currency, price, vat, vat_value, amount) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
                 pstmt.setString(1, order.id);
@@ -78,15 +79,21 @@ public class BillingDao implements BillingDaoIface {
                 pstmt.setString(13, order.city);
                 pstmt.setString(14, order.zip);
                 pstmt.setString(15, order.country);
-                pstmt.setString(16, order.vat);
+                pstmt.setString(16, order.taxNumber);
                 pstmt.setString(17, order.companyName);
                 pstmt.setString(18, order.currency);
+                pstmt.setDouble(19, order.price);
+                pstmt.setString(20, order.taxNumber);
+                pstmt.setDouble(21, order.vatValue);
+                pstmt.setDouble(22, order.total);
                 pstmt.execute();
                 saved = true;
             } catch (SQLException e) {
                 logger.error("Error creating order: " + e.getMessage());
+                actualCount++;
             } catch (Exception e) {
                 logger.error("Error creating order: " + e.getMessage());
+                actualCount++;
             }
         }
         return order;
@@ -134,11 +141,15 @@ public class BillingDao implements BillingDaoIface {
                 + "city VARCHAR(255),"
                 + "zip VARCHAR(255),"
                 + "country VARCHAR(255),"
-                + "vat VARCHAR(255),"
+                + "tax_no VARCHAR(255),"
                 + "company_name VARCHAR(255),"
                 + "currency VARCHAR(255),"
                 + "first_paid_at TIMESTAMP,"
-                + "next_payment_at TIMESTAMP"
+                + "next_payment_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "price DECIMAL(10,2),"
+                + "vat VARCHAR(10),"
+                + "vat_value DECIMAL(10,2),"
+                + "amount DECIMAL(10,2),"
                 + ")";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -183,7 +194,7 @@ public class BillingDao implements BillingDaoIface {
     }
 
     private String buildId(int lastOrder, int month, int year) {
-        String id = lastOrder + "/" + month + "/" + year;
+        String id = "Z/"+lastOrder + "/" + month + "/" + year+"/S";
         return id;
     }
 
@@ -222,7 +233,7 @@ public class BillingDao implements BillingDaoIface {
                     order.city = rs.getString("city");
                     order.zip = rs.getString("zip");
                     order.country = rs.getString("country");
-                    order.vat = rs.getString("vat");
+                    order.taxNumber = rs.getString("vat");
                     order.companyName = rs.getString("company_name");
                     order.currency = rs.getString("currency");
                 }

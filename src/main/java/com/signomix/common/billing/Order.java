@@ -16,7 +16,7 @@ public class Order {
     public String city;
     public String zip;
     public String country;
-    public String vat;
+    public String taxNumber;
     public String companyName;
     public Boolean yearly;
     public String currency;
@@ -24,6 +24,10 @@ public class Order {
     public Timestamp nextPaymentAt;
     public String paymentMethod;
     public Timestamp createdAt;
+    public Double price;
+    public String tax;
+    public Double vatValue;
+    public Double total;
 
 
     public Order() {
