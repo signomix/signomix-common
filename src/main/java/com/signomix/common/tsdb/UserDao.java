@@ -536,9 +536,9 @@ public class UserDao implements UserDaoIface {
                 user.createdAt=System.currentTimeMillis();
             }
             pstmt.setTimestamp(16, new java.sql.Timestamp(user.createdAt));
-            pstmt.setInt(17, user.services);
+            pstmt.setInt(17, user.services==null?0:user.services);
             pstmt.setString(18, user.phonePrefix);
-            pstmt.setLong(19, user.credits);
+            pstmt.setLong(19, user.credits==null?0L:user.credits);
             pstmt.setBoolean(20, user.autologin);
             pstmt.setString(21, user.preferredLanguage);
             pstmt.setLong(22, user.organization);

@@ -7,27 +7,28 @@ public class Order {
     public String id;
     public String uid;
     public Long userNumber;
-    public Integer accountType;
-    public Integer targetType;
-    public String name;
-    public String surname;
+    public Integer accountType; // actual account type
+    public Integer targetType; // ordered account type
+    public String name; // user name
+    public String surname; // user surname
     public String email;
     public String address;
     public String city;
     public String zip;
     public String country;
-    public String taxNumber;
+    public String taxNumber; // company tax number
     public String companyName;
-    public Boolean yearly;
-    public String currency;
+    public Boolean yearly; // true = yearly, false = monthly
+    public String currency; // EUR, USD, ...
     public Timestamp firstPaidAt;
     public Timestamp nextPaymentAt;
     public String paymentMethod;
     public Timestamp createdAt;
-    public Double price;
-    public String tax;
-    public Double vatValue;
-    public Double total;
+    public String serviceName;
+    public Double price; // price without VAT
+    public String tax; // VAT rate
+    public Double vatValue; // VAT value
+    public Double total; // price + VAT
 
 
     public Order() {

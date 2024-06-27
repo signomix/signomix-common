@@ -60,8 +60,9 @@ public class BillingDao implements BillingDaoIface {
         String query;
         while (!saved) {
             order.id = buildId(actualCount, getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
-            query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, name, surname, email, address, city, zip, country, tax_no, company_name, currency, price, vat, vat_value, amount) "
-                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, "
+            + "name, surname, email, address, city, zip, country, tax_no, company_name, currency, price, vat, vat_value, amount, service_name) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
                 pstmt.setString(1, order.id);
@@ -83,9 +84,10 @@ public class BillingDao implements BillingDaoIface {
                 pstmt.setString(17, order.companyName);
                 pstmt.setString(18, order.currency);
                 pstmt.setDouble(19, order.price);
-                pstmt.setString(20, order.taxNumber);
+                pstmt.setString(20, order.tax);
                 pstmt.setDouble(21, order.vatValue);
                 pstmt.setDouble(22, order.total);
+                pstmt.setString(23, order.serviceName);
                 pstmt.execute();
                 saved = true;
             } catch (SQLException e) {
@@ -146,17 +148,17 @@ public class BillingDao implements BillingDaoIface {
                 + "currency VARCHAR(255),"
                 + "first_paid_at TIMESTAMP,"
                 + "next_payment_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "service_name VARCHAR(255),"
                 + "price DECIMAL(10,2),"
                 + "vat VARCHAR(10),"
                 + "vat_value DECIMAL(10,2),"
-                + "amount DECIMAL(10,2),"
+                + "amount DECIMAL(10,2)"
                 + ")";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
-            logger.error("Error creating order tabl\n" + //
-                                "                pstmt.setLong(7, order.userNumber);e: " + e.getMessage());
+            logger.error("Error creating order tabl\n" +  e.getMessage());
         } catch (Exception e) {
             logger.error("Error creating order table: " + e.getMessage());
         }
@@ -233,9 +235,14 @@ public class BillingDao implements BillingDaoIface {
                     order.city = rs.getString("city");
                     order.zip = rs.getString("zip");
                     order.country = rs.getString("country");
-                    order.taxNumber = rs.getString("vat");
+                    order.taxNumber = rs.getString("tax_no");
                     order.companyName = rs.getString("company_name");
                     order.currency = rs.getString("currency");
+                    order.price = rs.getDouble("price");
+                    order.tax = rs.getString("vat");
+                    order.vatValue = rs.getDouble("vat_value");
+                    order.total = rs.getDouble("amount");
+                    order.serviceName = rs.getString("service_name");
                 }
             }
         } catch (Exception e) {
