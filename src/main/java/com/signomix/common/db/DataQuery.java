@@ -160,6 +160,10 @@ public class DataQuery {
                     dq.setProject(params[i + 1]);
                     i = i + 2;
                     break;
+                case "class":
+                    dq.setClassName(params[i + 1]);
+                    i = i + 2;
+                    break;
                 case "state": {
                     try {
                         dq.setState(Double.parseDouble(params[i + 1]));
