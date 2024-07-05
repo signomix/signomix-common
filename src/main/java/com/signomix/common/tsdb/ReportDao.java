@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.jboss.logging.Logger;
+
 import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.db.ReportDaoIface;
 
@@ -14,6 +16,8 @@ import io.agroal.api.AgroalDataSource;
  * Implements ReportDaoIface for PostgreSQL database
  */
 public class ReportDao implements ReportDaoIface {
+
+    private static final Logger logger = Logger.getLogger(ReportDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -29,8 +33,10 @@ public class ReportDao implements ReportDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("Error during backup", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("Error during backup", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
@@ -56,16 +62,20 @@ public class ReportDao implements ReportDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("Error during createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("Error during createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query2);) {
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("Error during createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("Error during createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
@@ -97,7 +107,9 @@ public class ReportDao implements ReportDaoIface {
                 if (rs.next()) {
                     isAvailable = rs.getInt(1) > 0;
                 }
+                rs.close();
             } catch (SQLException e) {
+                logger.error("Error during isAvailable", e);
                 e.printStackTrace();
             }
             if (isAvailable) {
@@ -116,9 +128,12 @@ public class ReportDao implements ReportDaoIface {
                     if (rs.next()) {
                         isAvailable = rs.getInt(1) > 0;
                     }
+                    rs.close();
                 } catch (SQLException e) {
+                    logger.error("Error during isAvailable", e);
                     e.printStackTrace();
                 } catch (Exception e) {
+                    logger.error("Error during isAvailable", e);
                     e.printStackTrace();
                 }
             } else {
@@ -133,9 +148,12 @@ public class ReportDao implements ReportDaoIface {
                     if (rs.next()) {
                         isAvailable = rs.getInt(1) > 0;
                     }
+                    rs.close();
                 } catch (SQLException e) {
+                    logger.error("Error during isAvailable", e);
                     e.printStackTrace();
                 } catch (Exception e) {
+                    logger.error("Error during isAvailable", e);
                     e.printStackTrace();
                 }
 
@@ -174,8 +192,10 @@ public class ReportDao implements ReportDaoIface {
             }
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("Error during saveReport", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("Error during saveReport", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }

@@ -24,7 +24,7 @@ public class SentinelDao implements SentinelDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
-    Logger logger = Logger.getLogger(SentinelDao.class);
+    private static final Logger logger = Logger.getLogger(SentinelDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -50,7 +50,7 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        logger.info("Creating sentinel tables...");
+        logger.debug("Creating sentinel tables...");
         String query = "CREATE TABLE IF NOT EXISTS sentinels ("
                 + "id BIGSERIAL PRIMARY KEY,"
                 + "tstamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,"
@@ -515,7 +515,7 @@ public class SentinelDao implements SentinelDaoIface {
         "FROM analyticdata " +
         "WHERE eui IN ("+euiList+") " + 
         "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;";
-        logger.info(query);
+        logger.debug(query);
         String eui;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {

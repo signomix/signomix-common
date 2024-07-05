@@ -21,8 +21,7 @@ public class ApplicationDao implements ApplicationDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
-    @Inject
-    Logger logger;
+    private static final Logger logger = Logger.getLogger(ApplicationDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -38,8 +37,10 @@ public class ApplicationDao implements ApplicationDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("backupDb", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("backupDb", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
@@ -56,14 +57,17 @@ public class ApplicationDao implements ApplicationDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sb.toString());) {
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         String indexQuery="CREATE INDEX IF NOT EXISTS idx_applications_name ON applications (name);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(indexQuery);) {
             pstmt.execute();
         } catch (SQLException e) {
+            logger.error("createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -72,6 +76,7 @@ public class ApplicationDao implements ApplicationDaoIface {
                 PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,"+DEFAULT_ORGANIZATION_ID+",0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
+            logger.error("createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -88,6 +93,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setString(4, application.configuration);
             pst.executeUpdate();
         } catch (SQLException e) {
+            logger.error("addApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
         return getApplication(application.name);
@@ -104,6 +110,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setLong(5, application.id);
             pst.executeUpdate();
         } catch (SQLException e) {
+            logger.error("updateApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
     }
@@ -115,6 +122,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setLong(1, id);
             pst.executeUpdate();
         } catch (SQLException e) {
+            logger.error("removeApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
     }
@@ -129,7 +137,9 @@ public class ApplicationDao implements ApplicationDaoIface {
             if (rs.next()) {
                 app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5));
             }
+            rs.close();
         } catch (SQLException e) {
+            logger.error("getApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
         return app;
@@ -145,7 +155,9 @@ public class ApplicationDao implements ApplicationDaoIface {
             if (rs.next()) {
                 app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5));
             }
+            rs.close();
         } catch (SQLException e) {
+            logger.error("getApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
         return app;
@@ -164,7 +176,9 @@ public class ApplicationDao implements ApplicationDaoIface {
                 result.add(
                         new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
             }
+            rs.close();
         } catch (SQLException e) {
+            logger.error("getApplications", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
         return result;
@@ -184,7 +198,9 @@ public class ApplicationDao implements ApplicationDaoIface {
                 result.add(
                         new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
             }
+            rs.close();
         } catch (SQLException e) {
+            logger.error("getApplications", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
         return result;

@@ -80,7 +80,7 @@ public class AuthDao implements AuthDaoIface {
         // TODO: RETURNING can be used for PostgreSQL
         try {
             String userUid = null;
-            LOG.info("getUser: " + token);
+            LOG.debug("getUser: " + token);
             if (null == token) {
                 return null;
             }
@@ -114,11 +114,12 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    LOG.info("getUserId: token found: " + token);
+                    LOG.debug("getUserId: token found: " + token);
                     userUid = rs.getString("uid");
                 } else {
                     LOG.warn("getUserId: token not found: " + token);
                 }
+                rs.close();
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
             } catch (Exception ex) {
@@ -130,7 +131,7 @@ public class AuthDao implements AuthDaoIface {
                     pstmt.setLong(1, lifetime);
                     pstmt.setString(2, token);
                     int count = pstmt.executeUpdate();
-                    LOG.info("getUserId: updated " + count + " rows");
+                    LOG.debug("getUserId: updated " + count + " rows");
                 } catch (SQLException ex) {
                     LOG.warn(ex.getMessage());
                 } catch (Exception ex) {
@@ -223,7 +224,7 @@ public class AuthDao implements AuthDaoIface {
     public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType tokenType,
             String payload) {
         try {
-            LOG.info("createTokenForUser: " + userId + " " + lifetime + " " + permanent);
+            LOG.debug("createTokenForUser: " + userId + " " + lifetime + " " + permanent);
             // String token = java.util.UUID.randomUUID().toString();
             Token t = new Token(userId, lifetime, permanent);
             t.setIssuer(issuer.uid);
@@ -242,7 +243,7 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setObject(5, tokenType.name(), java.sql.Types.OTHER);
                 pstmt.setString(6, payload);
                 int count = pstmt.executeUpdate();
-                LOG.info("createTokenForUser: inserted " + count + " rows");
+                LOG.debug("createTokenForUser: inserted " + count + " rows");
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
                 return null;
@@ -274,7 +275,7 @@ public class AuthDao implements AuthDaoIface {
             pstmt.setObject(5, token.getType().name(), java.sql.Types.OTHER);
             pstmt.setString(6, token.getPayload());
             int count = pstmt.executeUpdate();
-            LOG.info("saveToken: inserted " + count + " rows");
+            LOG.debug("saveToken: inserted " + count + " rows");
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
         } catch (Exception ex) {
@@ -284,7 +285,7 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void modifyToken(Token token) {
-        LOG.info("modifyToken: " + token.getToken() + " " + token.getLifetime() + " " + token.getPayload() + " "
+        LOG.debug("modifyToken: " + token.getToken() + " " + token.getLifetime() + " " + token.getPayload() + " "
                 + token.getIssuer() + " " + token.getType() + " " + token.getUid() + " " + token.isPermanent());
         String query;
         if (token.isPermanent()) {
@@ -303,7 +304,7 @@ public class AuthDao implements AuthDaoIface {
             pstmt.setString(5, token.getUid());
             pstmt.setString(6, token.getToken());
             int count = pstmt.executeUpdate();
-            LOG.info("modifyToken " + token.getToken() + " " + (token.isPermanent() ? "permanent" : "session")
+            LOG.debug("modifyToken " + token.getToken() + " " + (token.isPermanent() ? "permanent" : "session")
                     + ": updated " + count + " rows");
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
@@ -318,7 +319,7 @@ public class AuthDao implements AuthDaoIface {
         // TODO: RETURNING can be used for PostgreSQL
         try {
             String userUid = null;
-            LOG.info("getIssuer: " + token);
+            LOG.debug("getIssuer: " + token);
             if (null == token) {
                 return null;
             }
@@ -357,11 +358,12 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    LOG.info("getUserId: token found: " + token);
+                    LOG.debug("getUserId: token found: " + token);
                     userUid = rs.getString("uid");
                 } else {
                     LOG.warn("getUserId: token not found: " + token);
                 }
+                rs.close();
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
             } catch (Exception ex) {
@@ -435,6 +437,7 @@ public class AuthDao implements AuthDaoIface {
                 } else {
                     LOG.warn("getUserId: token not found: " + tokenID);
                 }
+                rs.close();
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
                 ex.printStackTrace();
@@ -504,6 +507,7 @@ public class AuthDao implements AuthDaoIface {
                 } else {
                     LOG.warn("getUserId: token not found: " + tokenID);
                 }
+                rs.close();
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
                 ex.printStackTrace();
@@ -565,6 +569,7 @@ public class AuthDao implements AuthDaoIface {
             } else {
                 LOG.warn("findTokenById: token not found: " + tokenId);
             }
+            rs.close();
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
             ex.printStackTrace();
@@ -623,10 +628,12 @@ public class AuthDao implements AuthDaoIface {
                 token.setType(TokenType.valueOf(rs.getString("type")));
                 token.setPayload(rs.getString("payload"));
                 token.setLifetime(rs.getTimestamp("eoflife").getTime() - rs.getTimestamp("tstamp").getTime());
+                rs.close();
                 return token;
             } else {
                 LOG.warn("getApiToken: token not found: " + user.uid);
             }
+            rs.close();
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
             ex.printStackTrace();

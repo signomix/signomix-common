@@ -18,7 +18,7 @@ import io.agroal.api.AgroalDataSource;
 
 public class DashboardDao implements DashboardIface {
 
-    Logger logger = Logger.getLogger(DashboardDao.class);
+    private static final Logger logger = Logger.getLogger(DashboardDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -319,7 +319,7 @@ public class DashboardDao implements DashboardIface {
             pstmt.setInt(2, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
-                    logger.info("getDashboards: " + rs.getString("id"));
+                    logger.debug("getDashboards: " + rs.getString("id"));
                     Dashboard dashboard = new Dashboard();
                     dashboard.setId(rs.getString("id"));
                     dashboard.setName(rs.getString("name"));
@@ -349,7 +349,7 @@ public class DashboardDao implements DashboardIface {
     public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset)
             throws IotDatabaseException {
         String query = "SELECT * FROM dashboards WHERE organization= ? ORDER BY name LIMIT ? OFFSET ?";
-        logger.info("getOrganizationDashboards: " + organizationId);
+        logger.debug("getOrganizationDashboards: " + organizationId);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
@@ -357,7 +357,7 @@ public class DashboardDao implements DashboardIface {
             pstmt.setInt(3, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
-                    logger.info("getDashboards: " + rs.getString("id"));
+                    logger.debug("getDashboards: " + rs.getString("id"));
                     Dashboard dashboard = new Dashboard();
                     dashboard.setId(rs.getString("id"));
                     dashboard.setName(rs.getString("name"));

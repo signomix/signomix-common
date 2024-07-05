@@ -59,6 +59,7 @@ public class ShortenerDao implements ShortenerDaoIface {
             if (rs.next()) {
                 target = rs.getString(1);
             }
+            rs.close();
             pst.close();
             conn.close();
             return target;

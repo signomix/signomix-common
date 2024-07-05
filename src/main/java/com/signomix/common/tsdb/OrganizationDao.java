@@ -18,7 +18,7 @@ import com.signomix.common.db.OrganizationDaoIface;
 import io.agroal.api.AgroalDataSource;
 
 public class OrganizationDao implements OrganizationDaoIface {
-    private static final Logger LOG = Logger.getLogger(UserDao.class);
+    private static final Logger LOG = Logger.getLogger(OrganizationDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -173,6 +173,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                 tenant.menuDefinition = rs.getString("menu_definition");
                 return tenant;
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
@@ -197,6 +198,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                 tenant.menuDefinition = rs.getString("menu_definition");
                 return tenant;
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
@@ -223,6 +225,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                 tenant.menuDefinition = rs.getString("menu_definition");
                 tenants.add(tenant);
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
@@ -239,6 +242,7 @@ public class OrganizationDao implements OrganizationDaoIface {
             while (rs.next()) {
                 paths.add(rs.getString("path"));
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
@@ -266,12 +270,13 @@ public class OrganizationDao implements OrganizationDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, user.uid);
             pst.setInt(2, tenant.id);
+            boolean result=false;
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
-                return true;
-            } else {
-                return false;
+                result=true;
             }
+            rs.close();
+            return result;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
@@ -310,6 +315,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                         rs.getInt("tenants"));
                 orgs.add(org);
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
@@ -329,8 +335,10 @@ public class OrganizationDao implements OrganizationDaoIface {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getInt("tenants"));
+                rs.close();
                 return org;
             }
+            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -351,8 +359,10 @@ public class OrganizationDao implements OrganizationDaoIface {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getInt("tenants"));
+                rs.close();
                 return org;
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }

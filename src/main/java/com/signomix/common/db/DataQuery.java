@@ -52,6 +52,9 @@ public class DataQuery {
      *
      */
     public Timestamp getToTsExclusive() {
+        if(null==toTs){
+            return null;
+        }
         Timestamp sooner = new Timestamp(toTs.getTime() - 1);
         sooner.setNanos(toTs.getNanos());
         return sooner;

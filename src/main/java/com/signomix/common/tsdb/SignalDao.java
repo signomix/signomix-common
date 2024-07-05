@@ -20,7 +20,7 @@ public class SignalDao implements SignalDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
-    public static final Logger logger = Logger.getLogger(SignalDao.class);
+    private static final Logger logger = Logger.getLogger(SignalDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -176,8 +176,10 @@ public class SignalDao implements SignalDaoIface {
                 signal.level = rs.getInt("level");
                 signal.messageEn = rs.getString("message_en");
                 signal.messagePl = rs.getString("message_pl");
+                rs.close();
                 return signal;
             }
+            rs.close();
             return null;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -221,8 +223,8 @@ public class SignalDao implements SignalDaoIface {
     @Override
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM user_signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
-        logger.info(query);
-        logger.info("userId: "+userId); 
+        logger.debug(query);
+        logger.debug("userId: "+userId); 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
@@ -246,7 +248,8 @@ public class SignalDao implements SignalDaoIface {
                 signal.messagePl = rs.getString("message_pl");
                 signals.add(signal);
             }
-            logger.info("found signals: "+signals.size());
+            logger.debug("found signals: "+signals.size());
+            rs.close();
             return signals;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -281,6 +284,7 @@ public class SignalDao implements SignalDaoIface {
                 signal.messagePl = rs.getString("message_pl");
                 signals.add(signal);
             }
+            rs.close();
             return signals;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);

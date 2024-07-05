@@ -262,8 +262,11 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(1, uid);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return buildUser(rs);
+                User u = buildUser(rs);
+                rs.close();
+                return u;
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -279,8 +282,11 @@ public class UserDao implements UserDaoIface {
             pstmt.setLong(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return buildUser(rs);
+                User u = buildUser(rs);
+                rs.close();
+                return u;
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -297,8 +303,11 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(2, password);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return buildUser(rs);
+                User u = buildUser(rs);
+                rs.close();
+                return u;
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -317,6 +326,7 @@ public class UserDao implements UserDaoIface {
             while (rs.next()) {
                 users.add(buildUser(rs));
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -477,6 +487,7 @@ public class UserDao implements UserDaoIface {
             while (rs.next()) {
                 users.add(buildUser(rs));
             }
+            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -501,6 +512,7 @@ public class UserDao implements UserDaoIface {
             while (rs.next()) {
                 users.add(buildUser(rs));
             }
+            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -560,6 +572,7 @@ public class UserDao implements UserDaoIface {
             if (rs.next()) {
                 userNumber = rs.getInt(1);
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -610,6 +623,7 @@ public class UserDao implements UserDaoIface {
             while (rs.next()) {
                 users.add(buildUser(rs));
             }
+            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
