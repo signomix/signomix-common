@@ -882,10 +882,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
             int updated = pstmt.executeUpdate();
             if (updated < 1) {
                 logger.warn("DB error updating device " + eui);
-                throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
-                        "DB error updating device " + eui, null);
+/*                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN,
+                        "DB error updating device " + eui, null); */
             } else {
-                logger.debug("Status rows updated: " + updated);
+                logger.info("Status rows updated: " + updated);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2440,6 +2440,26 @@ public class IotDatabaseDao implements IotDatabaseIface {
             e.printStackTrace();
             device.setPath("");
         }
+        try {
+            device.setApplicationConfig(rs.getString("appconfig"));
+        } catch (Exception e) {
+            device.setApplicationConfig("");
+        }
+        try {
+            device.setLastSeen(rs.getTimestamp("lastseen").getTime());
+        } catch (Exception e) {
+            // device.setLastSeen(0);
+        }
+        try {
+            device.setState(rs.getDouble("status"));
+        } catch (Exception e) {
+            // device.setState(0.0);
+        }
+        try {
+            device.setAlertStatus(rs.getInt("alert"));
+        } catch (Exception e) {
+            // device.setAlertStatus(0);
+        }
         return device;
     }
 
@@ -2742,6 +2762,43 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public List<Device> getDevicesRequiringAlert() throws IotDatabaseException {
+        ArrayList<Device> list = new ArrayList<>();
+        //TODO: not all device parameters are needed for this function
+        String query = "SELECT eui, name,"
+                + "userid, type, team, channels, code, decoder,"
+                + "devicekey, description, tinterval, template, pattern, commandscript, appid,"
+                + "groups, devid, appeui, active, project, latitude, longitude, altitude, retention, administrators,"
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path, appconfig,"
+                + "lastseen, status, alert "
+                + "FROM ("
+                + "SELECT s.eui,d.name,"
+                + "d.userid, d.type, d.team, d.channels, d.code, d.decoder,"
+                + "d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,"
+                + "d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,"
+                + "d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, '' AS appconfig,"
+                + "last(s.ts,s.ts) AS lastseen, last(s.status,s.ts) AS status, last(s.alert,s.ts) AS alert FROM devicestatus AS s "
+                + "LEFT JOIN devices AS d ON (d.eui=s.eui) "
+                + "WHERE s.tinterval>0 AND extract(epoch from now())*1000 - lastseen > extract(epoch from (2*s.tinterval) * INTERVAL '1 millisecond')*1000 "
+                + "GROUP BY d.eui,s.eui "
+                + ") AS q2 WHERE alert < 2";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Device device = buildDevice(rs);
+                list.add(device);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return list;
+    }
+
+    @Override
     public List<Device> getInactiveDevices() throws IotDatabaseException {
         DeviceSelector selector = new DeviceSelector(true);
         String query = selector.query;
@@ -2751,7 +2808,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             ArrayList<Device> list = new ArrayList<>();
             while (rs.next()) {
                 device = buildDevice(rs);
-                device = getDeviceStatusData(device);
+                device = getDeviceStatusData(device); // adds lastSeen, status,alert
                 list.add(device);
             }
             rs.close();
@@ -3679,6 +3736,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
             result = result.substring(0, result.length() - 1);
         }
         return result;
+    }
+
+    @Override
+    public void commit() {
+        String query = "COMMIT";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            //throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
     }
 
 }

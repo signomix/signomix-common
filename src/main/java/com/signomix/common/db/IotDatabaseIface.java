@@ -16,6 +16,7 @@ import com.signomix.common.iot.virtual.VirtualData;
 import io.agroal.api.AgroalDataSource;
 
 public interface IotDatabaseIface {
+    public void commit();
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
     public void setDatasource(AgroalDataSource ds);
@@ -53,6 +54,7 @@ public interface IotDatabaseIface {
     public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
     public List<Device> getInactiveDevices() throws IotDatabaseException;
+    public List<Device> getDevicesRequiringAlert() throws IotDatabaseException;
     public List<Device> getGroupDevices(String groupID) throws IotDatabaseException;
 
     //tags

@@ -1,0 +1,65 @@
+package com.signomix.common.tsdb;
+
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.QdbDaoIface;
+
+import io.agroal.api.AgroalDataSource;
+
+public class QuestDbDao implements QdbDaoIface {
+
+    private AgroalDataSource dataSource;
+
+    @Override
+    public void setDatasource(AgroalDataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    @Override
+    public void createStructure() throws IotDatabaseException {
+        String query = "CREATE TABLE IF NOT EXISTS data_access_events ("
+                + "ts TIMESTAMP, "
+                + "uid SYMBOL,"
+                + "organization_id LONG"
+                + ") timestamp(ts) PARTITION BY DAY";
+
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement()) {
+            statement.execute(query);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "createStructure1 " + e.getMessage());
+        }
+
+        query = "CREATE TABLE IF NOT EXISTS account_events ("
+                + "ts TIMESTAMP, "
+                + "uid SYMBOL,"
+                + "organization_id LONG,"
+                + "client_ip STRING,"
+                + "event_type SYMBOL,"
+                + "error_code INT,"
+                + ") timestamp(ts) PARTITION BY DAY";
+
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement()) {
+            statement.execute(query);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "createStructure2 " + e.getMessage());
+        }
+
+    }
+
+    @Override
+    public void deletePartition(String partition, int monthsBack) throws IotDatabaseException {
+        String query = "ALTER TABLE ? "
+                + "DROP PARTITION "
+                + "WHERE timestamp < dateadd('M', -1*?, systimestamp());";
+        try (var connection = dataSource.getConnection();
+                var statement = connection.prepareStatement(query)) {
+            statement.setString(1, partition);
+            statement.setInt(2, monthsBack);
+            statement.execute();
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "deletePartition " + e.getMessage());
+        }
+    }
+
+}

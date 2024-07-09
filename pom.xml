@@ -7,7 +7,7 @@
 
   <groupId>com.signomix</groupId>
   <artifactId>signomix-common</artifactId>
-  <version>1.13.3</version><!--versionCommon-->
+  <version>1.13.11</version><!--versionCommon-->
 
   <name>signomix-common</name>
   <!-- FIXME change it to the project's website -->
@@ -45,6 +45,11 @@
       <groupId>com.cedarsoftware</groupId>
       <artifactId>json-io</artifactId>
       <version>4.14.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.questdb</groupId>
+      <artifactId>questdb</artifactId>
+      <version>8.0.1</version>
     </dependency>
   </dependencies>
 

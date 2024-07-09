@@ -2630,4 +2630,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'getGroupDevices'");
     }
 
+    @Override
+    public List<Device> getDevicesRequiringAlert() throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevicesRequiringAlert'");
+    }
+
+    @Override
+    public void commit() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'commit'");
+    }
+
 }

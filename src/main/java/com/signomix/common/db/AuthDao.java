@@ -21,10 +21,12 @@ public class AuthDao implements AuthDaoIface {
     private static final Logger LOG = Logger.getLogger(AuthDao.class);
 
     private AgroalDataSource dataSource;
+    private String questDbConfig=null;
 
     @Override
-    public void setDatasource(AgroalDataSource dataSource) {
+    public void setDatasource(AgroalDataSource dataSource, String questDbConfig) {
         this.dataSource = dataSource;
+        this.questDbConfig = questDbConfig;
     }
 
     @Override

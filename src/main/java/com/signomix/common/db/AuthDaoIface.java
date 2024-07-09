@@ -7,7 +7,8 @@ import com.signomix.common.User;
 import io.agroal.api.AgroalDataSource;
 
 public interface AuthDaoIface {
-    public void setDatasource(AgroalDataSource ds);
+    
+    public void setDatasource(AgroalDataSource ds, String questDbConfig);
 
     public AgroalDataSource getDataSource();
 

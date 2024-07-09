@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.temporal.ChronoUnit;
 
 import javax.inject.Singleton;
 
@@ -18,16 +19,19 @@ import com.signomix.common.db.IotDatabaseException;
 
 import io.agroal.api.AgroalDataSource;
 import io.quarkus.cache.CacheResult;
+import io.questdb.client.Sender;
 
 @Singleton
 public class AuthDao implements AuthDaoIface {
     private static final Logger LOG = Logger.getLogger(AuthDao.class);
 
     private AgroalDataSource dataSource;
+    String questDbConfig = null;
 
     @Override
-    public void setDatasource(AgroalDataSource dataSource) {
+    public void setDatasource(AgroalDataSource dataSource, String questDbConfig) {
         this.dataSource = dataSource;
+        this.questDbConfig = questDbConfig;
     }
 
     @Override
@@ -629,6 +633,7 @@ public class AuthDao implements AuthDaoIface {
                 token.setPayload(rs.getString("payload"));
                 token.setLifetime(rs.getTimestamp("eoflife").getTime() - rs.getTimestamp("tstamp").getTime());
                 rs.close();
+                saveAPITokenUsage(token);
                 return token;
             } else {
                 LOG.warn("getApiToken: token not found: " + user.uid);
@@ -642,6 +647,21 @@ public class AuthDao implements AuthDaoIface {
             ex.printStackTrace();
         }
         return null;
+    }
+
+    private void saveAPITokenUsage(Token token) {
+        if(questDbConfig == null) {
+            LOG.error("questDbConfig is null");
+        }
+        try (
+            Sender sender = Sender.fromConfig(questDbConfig)) {
+            sender.table("api_events")
+                    .symbol("login", token.getUid())
+                    .symbol("event_type","get_token")
+                    .at(System.currentTimeMillis(), ChronoUnit.MILLIS);
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+        }
     }
 
     @Override
