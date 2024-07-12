@@ -901,20 +901,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String query = "COPY account_params to '/var/lib/postgresql/data/export/account_params.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY (SELECT * FROM analyticdata) to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY analyticdata to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commands to '/var/lib/postgresql/data/export/commands.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commandslog to '/var/lib/postgresql/data/export/commandslog.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboards to '/var/lib/postgresql/data/export/dashboards.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboardtemplates to '/var/lib/postgresql/data/export/dashboardtemplates.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devicechannels to '/var/lib/postgresql/data/export/devicechannels.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY (SELECT * FROM devicedata) to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY (SELECT * FROM devicestatus) to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicedata to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicestatus to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devices to '/var/lib/postgresql/data/export/devices.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY device_tags to '/var/lib/postgresql/data/export/device_tags.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devicetemplates to '/var/lib/postgresql/data/export/devicetemplates.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY groups to '/var/lib/postgresql/data/export/groups.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY (SELECT * FROM virtualdevicedata) to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
+                + "COPY virtualdevicedata to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
@@ -1967,10 +1967,18 @@ public class IotDatabaseDao implements IotDatabaseIface {
         sb.append("CREATE TABLE IF NOT EXISTS alerts (")
                 .append("id BIGSERIAL primary key ,")
                 .append("name varchar,")
-                .append("category varchar,").append("type varchar,").append("deviceeui varchar,")
-                .append("userid varchar,").append("payload varchar,").append("timepoint varchar,")
-                .append("serviceid varchar,").append("uuid varchar,").append("calculatedtimepoint bigint,")
-                .append("createdat bigint,").append("rooteventid bigint,").append("cyclic boolean);");
+                .append("category varchar,")
+                .append("type varchar,")
+                .append("deviceeui varchar,")
+                .append("userid varchar,")
+                .append("payload varchar,")
+                .append("timepoint varchar,")
+                .append("serviceid varchar,")
+                .append("uuid varchar,")
+                .append("calculatedtimepoint bigint,")
+                .append("createdat bigint,")
+                .append("rooteventid bigint,")
+                .append("cyclic boolean);");
         // devicechannels
         sb.append("CREATE TABLE IF NOT EXISTS devicechannels (")
                 .append("eui varchar primary key,")

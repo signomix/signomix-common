@@ -195,6 +195,23 @@ public class BillingDao implements BillingDaoIface {
         }   
     }
 
+    @Override
+    public void backupDb() throws IotDatabaseException {
+        String query=
+        "COPY orders TO '/var/lib/postgresql/data/export/orders.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("backupDb", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("backupDb", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+
+    }
+
     private String buildId(int lastOrder, int month, int year) {
         String id = "Z/"+lastOrder + "/" + month + "/" + year+"/S";
         return id;

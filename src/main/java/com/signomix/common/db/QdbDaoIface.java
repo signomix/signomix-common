@@ -8,5 +8,6 @@ public interface QdbDaoIface {
 
     public void setDatasource(AgroalDataSource dataSource);
     public void createStructure() throws IotDatabaseException;   
+    public void backupDb() throws IotDatabaseException;
     public void deletePartition(String partition, int monthsBack) throws IotDatabaseException;
 }

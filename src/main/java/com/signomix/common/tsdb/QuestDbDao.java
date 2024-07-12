@@ -48,6 +48,19 @@ public class QuestDbDao implements QdbDaoIface {
     }
 
     @Override
+    public void backupDb() throws IotDatabaseException {
+        String query = "COPY data_access_events TO '/var/lib/postgresql/data/export/data_access_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_events TO '/var/lib/postgresql/data/export/account_events.csv' DELIMITER ';' CSV HEADER;";
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement()) {
+            statement.execute(query);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "backupDb " + e.getMessage());
+        }
+
+    }
+
+    @Override
     public void deletePartition(String partition, int monthsBack) throws IotDatabaseException {
         String query = "ALTER TABLE ? "
                 + "DROP PARTITION "

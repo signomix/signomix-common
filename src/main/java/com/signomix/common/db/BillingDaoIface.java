@@ -8,6 +8,7 @@ public interface BillingDaoIface {
 
     public void setDatasource(AgroalDataSource dataSource);
     public void createStructure() throws IotDatabaseException;
+    public void backupDb() throws IotDatabaseException;
     /**
      * Get the last order number for the given month and year.
      * @param month
