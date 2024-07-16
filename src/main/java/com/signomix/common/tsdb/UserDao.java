@@ -317,11 +317,11 @@ public class UserDao implements UserDaoIface {
     @Override
     public List<User> getUsersByRole(String role) throws IotDatabaseException {
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id"
+                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE role LIKE ?";
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, "%," + role + ",%");
+            pstmt.setString(1, "%" + role + "%");
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 users.add(buildUser(rs));
@@ -330,7 +330,7 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return users;
     }
 
     @Override
