@@ -28,14 +28,17 @@ public class DataQuery {
     private boolean timeseries;
     private String project;
     private Double newValue;
+    private String eui;
     private String group;
     private Double state;
     private Timestamp fromTs;
     private Timestamp toTs;
+    private Timestamp toTsExclusive;
     private boolean virtual;
     private boolean dateParamPresent;
     private long offset;
     private String className;
+    private String tag;
 
     public Timestamp getFromTs() {
         return fromTs;
@@ -69,6 +72,7 @@ public class DataQuery {
         timeseries = false;
         project = null;
         newValue = null;
+        eui = null;
         group = null;
         state = null;
         // fromTs = new Timestamp(0);
@@ -79,6 +83,8 @@ public class DataQuery {
         dateParamPresent = false;
         offset = 0;
         className = null;
+        toTsExclusive=null;
+        tag=null;
     }
 
     public static DataQuery parse(String query) throws DataQueryException {
@@ -191,6 +197,14 @@ public class DataQuery {
                     break;
                 case "group":
                     dq.setGroup(params[i + 1]);
+                    i = i + 2;
+                    break;
+                case "eui":
+                    dq.setEui(params[i + 1]);
+                    i = i + 2;
+                    break;
+                case "tag":
+                    dq.setTag(params[i + 1]);
                     i = i + 2;
                     break;
                 case "new": {
@@ -442,6 +456,36 @@ public class DataQuery {
 
     public void setClassName(String className){
         this.className=className;
+    }
+
+    public void setEui(String eui) {
+        this.eui = eui;
+    }
+
+    public String getEui() {
+        return eui;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public String getTagName() {
+        if(tag==null){
+            return null;
+        }
+        return tag.split(":")[0];
+    }
+
+    public String getTagValue() {
+        if(tag==null){
+            return null;
+        }
+        return tag.split(":")[1];
     }
 
 }
