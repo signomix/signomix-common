@@ -88,8 +88,9 @@ public interface IotDatabaseIface {
     public void removeCommand(long id) throws IotDatabaseException;
     public void putCommandLog(String deviceEUI, IotEvent command) throws IotDatabaseException;
     public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException; 
-    public long getMaxCommandId() throws IotDatabaseException;
-    public long getMaxCommandId(String deviceEui) throws IotDatabaseException;
+    public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt) throws IotDatabaseException;
+    //public long getMaxCommandId() throws IotDatabaseException;
+    //public long getMaxCommandId(String deviceEui) throws IotDatabaseException;
     public int getChannelIndex(String deviceEUI, String channel) throws IotDatabaseException;
     
     //notifications

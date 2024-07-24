@@ -442,17 +442,36 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-    @Override
+/*     @Override
     public long getMaxCommandId() throws IotDatabaseException {
-        String query = "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog";
+        String query = "SELECT \n" + //
+                        "    MAX(A_max) AS max_id_A,\n" + //
+                        "    MAX(B_max) AS max_id_B\n" + //
+                        "FROM (\n" + //
+                        "    SELECT \n" + //
+                        "        MAX(id) AS A_max,\n" + //
+                        "        NULL AS B_max\n" + //
+                        "    FROM commands\n" + //
+                        "    UNION ALL\n" + //
+                        "    SELECT \n" + //
+                        "        NULL AS A_max,\n" + //
+                        "        MAX(id) AS B_max\n" + //
+                        "    FROM commandslog\n" + //
+                        ") AS max_values;";
         long result = 0;
-        long v1 = 0;
-        long v2 = 0;
+        Long v1 = 0L;
+        Long v2 = 0L;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
                 v1 = rs.getLong(1);
                 v1 = rs.getLong(2);
+            }
+            if(null==v1){
+                v1 = 0L;
+            }
+            if(null==v2){
+                v2 = 0L;
             }
             if (v1 > v2) {
                 result = v1;
@@ -464,9 +483,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
         }
         return result;
-    }
+    } */
 
-    @Override
+/*     @Override
     public long getMaxCommandId(String deviceEui) throws IotDatabaseException {
         String query = "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog "
                 + "WHERE commands.origin=commandslog.origin AND commands.origin like %@" + deviceEui;
@@ -489,7 +508,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
         }
         return result;
-    }
+    } */
 
     @Override
     public void removeCommand(long id) throws IotDatabaseException {
@@ -925,9 +944,44 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt) throws IotDatabaseException {
+        String query = "insert into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
+        String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
+        String command = payload;
+        boolean overwrite = false;
+        if (command.startsWith("&")) {
+        } else if (command.startsWith("#")) {
+            overwrite = true;
+            query = query2;
+        }
+        command = command.substring(1);
+        String origin = deviceEUI;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            if (overwrite) {
+                pst.setString(1, origin);
+                pst.setString(2, "");
+                pst.setString(3, type);
+                pst.setString(4, origin);
+                pst.setString(5, command);
+                pst.setLong(6, createdAt);
+            } else {
+                pst.setString(1, "");
+                pst.setString(2, type);
+                pst.setString(3, origin);
+                pst.setString(4, command);
+                pst.setLong(5, createdAt);
+            }
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+
+    }
+
+    @Override
     public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
-        String query = "insert into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
-        String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
+        String query = "insert into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
+        String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
         String command = (String) commandEvent.getPayload();
         boolean overwrite = false;
         if (command.startsWith("&")) {
@@ -942,20 +996,18 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (overwrite) {
-                pst.setString(1, origin);
-                pst.setLong(2, commandEvent.getId());
-                pst.setString(3, commandEvent.getCategory());
-                pst.setString(4, commandEvent.getType());
-                pst.setString(5, origin);
-                pst.setString(6, command);
-                pst.setLong(7, commandEvent.getCreatedAt());
-            } else {
                 pst.setLong(1, commandEvent.getId());
                 pst.setString(2, commandEvent.getCategory());
                 pst.setString(3, commandEvent.getType());
                 pst.setString(4, origin);
                 pst.setString(5, command);
                 pst.setLong(6, commandEvent.getCreatedAt());
+            } else {
+                pst.setString(1, commandEvent.getCategory());
+                pst.setString(2, commandEvent.getType());
+                pst.setString(3, origin);
+                pst.setString(4, command);
+                pst.setLong(5, commandEvent.getCreatedAt());
             }
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -2062,13 +2114,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("organization bigint default " + defaultOrganizationId + ");");
         // commands
         sb.append("CREATE TABLE IF NOT EXISTS commands (")
-                .append("id bigint,")
+                .append("id BIGSERIAL,")
                 .append("category varchar,")
                 .append("type varchar,")
                 .append("origin varchar,")
                 .append("payload varchar,")
                 .append("createdat bigint);");
-        // sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(origin);");
+        sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(id,origin);");
         // commandslog
         sb.append("CREATE TABLE IF NOT EXISTS commandslog (")
                 .append("id bigint,")
@@ -2077,8 +2129,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("origin varchar,")
                 .append("payload varchar,")
                 .append("createdat bigint);");
-        // sb.append("CREATE INDEX IF NOT EXISTS idxcommandslog on
-        // commandslog(origin);");
+        sb.append("CREATE INDEX IF NOT EXISTS idxcommandslog on commandslog(id,origin);");
         query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();

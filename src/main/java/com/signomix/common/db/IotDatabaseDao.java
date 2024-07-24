@@ -269,7 +269,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-    @Override
+/*     @Override
     public long getMaxCommandId() throws IotDatabaseException {
         String query = "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog";
         long result = 0;
@@ -314,7 +314,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
         }
         return result;
-    }
+    } */
 
     @Override
     public void removeCommand(long id) throws IotDatabaseException {
@@ -2640,6 +2640,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public void commit() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'commit'");
+    }
+
+    @Override
+    public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'putDeviceCommand'");
     }
 
 }
