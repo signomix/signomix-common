@@ -1,11 +1,12 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.User;
+import com.signomix.common.db.EventLogDaoIface;
 import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.QdbDaoIface;
 
 import io.agroal.api.AgroalDataSource;
 
-public class QuestDbDao implements QdbDaoIface {
+public class QuestDbDao implements EventLogDaoIface {
 
     private AgroalDataSource dataSource;
 
@@ -20,7 +21,7 @@ public class QuestDbDao implements QdbDaoIface {
                 + "ts TIMESTAMP, "
                 + "uid SYMBOL,"
                 + "organization_id LONG"
-                + ") timestamp(ts) PARTITION BY DAY";
+                + ") timestamp(ts) PARTITION BY DAY;";
 
         try (var connection = dataSource.getConnection();
                 var statement = connection.createStatement()) {
@@ -36,7 +37,7 @@ public class QuestDbDao implements QdbDaoIface {
                 + "client_ip STRING,"
                 + "event_type SYMBOL,"
                 + "error_code INT,"
-                + ") timestamp(ts) PARTITION BY DAY";
+                + ") timestamp(ts) PARTITION BY DAY;";
 
         try (var connection = dataSource.getConnection();
                 var statement = connection.createStatement()) {
@@ -73,6 +74,18 @@ public class QuestDbDao implements QdbDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "deletePartition " + e.getMessage());
         }
+    }
+
+    @Override
+    public void saveLoginEvent(User user, String remoteAddress, int resultCode) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'saveLoginEvent'");
+    }
+
+    @Override
+    public void saveLoginFailure(String login, String remoteAddress, int resultCode) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'saveLoginFailure'");
     }
 
 }

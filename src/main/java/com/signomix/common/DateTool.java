@@ -42,8 +42,6 @@ public class DateTool {
             if(zonePosition>0){
                 zoneId = input.substring(zonePosition+1);
                 timeString = input.substring(0,zonePosition);
-                System.out.println("zoneId="+zoneId);
-                System.out.println("timeString="+timeString);
             }
             millis = Long.parseLong(timeString.substring(1, timeString.length() - 1));
             unitSymbol = timeString.charAt(timeString.length() - 1);

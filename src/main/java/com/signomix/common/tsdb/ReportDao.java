@@ -83,13 +83,14 @@ public class ReportDao implements ReportDaoIface {
 
     /**
      * Check if a report is available for a given user
-     * In case userNumber is null, check if a report is available for a given organization, tenant and path.
+     * In case userNumber is null, check if a report is available for a given
+     * organization, tenant and path.
      * 
-     * @param className 
-     * @param userNumber 
-     * @param organization 
-     * @param tenant 
-     * @param path 
+     * @param className
+     * @param userNumber
+     * @param organization
+     * @param tenant
+     * @param path
      * @return boolean true if the report is available
      */
     @Override
@@ -97,17 +98,17 @@ public class ReportDao implements ReportDaoIface {
             throws IotDatabaseException {
         boolean isAvailable = false;
         if (userNumber != null) {
-            String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND user_id=? OR user_id=?;";
+            String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (user_id=? OR user_id=?);";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query2);) {
                 pstmt.setString(1, className);
                 pstmt.setLong(2, userNumber == null ? 0L : userNumber);
                 pstmt.setLong(3, 0);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    isAvailable = rs.getInt(1) > 0;
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        isAvailable = rs.getInt(1) > 0;
+                    }
                 }
-                rs.close();
             } catch (SQLException e) {
                 logger.error("Error during isAvailable", e);
                 e.printStackTrace();
@@ -116,19 +117,19 @@ public class ReportDao implements ReportDaoIface {
                 return true;
             }
         }
-        if (organization != null && path != null) {
+        if (organization != null && path != null && !path.isEmpty()) {
             if (tenant == null) {
-                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=? AND path=?;";
+                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=? AND path ~ ?;";
                 try (Connection conn = dataSource.getConnection();
                         PreparedStatement pstmt = conn.prepareStatement(query);) {
                     pstmt.setString(1, className);
                     pstmt.setInt(2, organization);
-                    pstmt.setString(3, path);
-                    ResultSet rs = pstmt.executeQuery();
-                    if (rs.next()) {
-                        isAvailable = rs.getInt(1) > 0;
+                    pstmt.setObject(3, path, java.sql.Types.OTHER);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            isAvailable = rs.getInt(1) > 0;
+                        }
                     }
-                    rs.close();
                 } catch (SQLException e) {
                     logger.error("Error during isAvailable", e);
                     e.printStackTrace();
@@ -137,18 +138,18 @@ public class ReportDao implements ReportDaoIface {
                     e.printStackTrace();
                 }
             } else {
-                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=? AND tenant=? AND path=?;";
+                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=? AND tenant=? AND path ~ ?;";
                 try (Connection conn = dataSource.getConnection();
                         PreparedStatement pstmt = conn.prepareStatement(query);) {
                     pstmt.setString(1, className);
                     pstmt.setInt(2, organization);
                     pstmt.setInt(3, tenant);
-                    pstmt.setString(4, path);
-                    ResultSet rs = pstmt.executeQuery();
-                    if (rs.next()) {
-                        isAvailable = rs.getInt(1) > 0;
+                    pstmt.setObject(4, path, java.sql.Types.OTHER);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            isAvailable = rs.getInt(1) > 0;
+                        }
                     }
-                    rs.close();
                 } catch (SQLException e) {
                     logger.error("Error during isAvailable", e);
                     e.printStackTrace();

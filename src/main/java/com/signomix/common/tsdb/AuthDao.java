@@ -399,7 +399,7 @@ public class AuthDao implements AuthDaoIface {
     public Token getToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
         Token token = null;
         try {
-            LOG.info("getToken: " + tokenID);
+            LOG.debug("getToken: " + tokenID);
             if (null == tokenID) {
                 return null;
             }
@@ -429,7 +429,7 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    LOG.info("getUserId: token found: " + tokenID);
+                    LOG.debug("getUserId: token found: " + tokenID);
                     token = new Token(rs.getString("uid"), lifetime,
                             tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
                     token.setIssuer(rs.getString("issuer"));
@@ -467,7 +467,7 @@ public class AuthDao implements AuthDaoIface {
 
         Token token = null;
         try {
-            LOG.info("getIssuer: " + tokenID);
+            LOG.debug("getIssuer: " + tokenID);
             if (null == tokenID) {
                 return null;
             }
@@ -501,7 +501,7 @@ public class AuthDao implements AuthDaoIface {
                 pstmt.setString(1, tokenValue);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    LOG.info("getUserId: token found: " + tokenID);
+                    LOG.debug("getUserId: token found: " + tokenID);
                     token = new Token(rs.getString("uid"), lifetime,
                             tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
                     token.setIssuer(rs.getString("issuer"));
@@ -525,7 +525,7 @@ public class AuthDao implements AuthDaoIface {
                     pstmt.setLong(1, lifetime);
                     pstmt.setString(2, tokenID);
                     int count = pstmt.executeUpdate();
-                    LOG.info("getUserId: updated " + count + " rows");
+                    LOG.debug("getUserId: updated " + count + " rows");
                 } catch (SQLException ex) {
                     LOG.warn(ex.getMessage());
                     ex.printStackTrace();
@@ -587,7 +587,7 @@ public class AuthDao implements AuthDaoIface {
     @Override
     public Token createApiToken(User issuer, long lifetimeMinutes, String key) {
         try {
-            LOG.info("createApiToken: " + issuer.uid + " " + lifetimeMinutes);
+            LOG.debug("createApiToken: " + issuer.uid + " " + lifetimeMinutes);
             Token t = new Token(issuer.uid, lifetimeMinutes, TokenType.API, key);
             t.setIssuer(issuer.uid);
             String query = "DELETE FROM ptokens WHERE uid=? AND type='API';"

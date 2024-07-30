@@ -7,10 +7,12 @@ package com.signomix.common.db;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-import com.signomix.common.DateTool;
 import org.jboss.logging.Logger;
+
+import com.signomix.common.DateTool;
 
 /**
  *
@@ -39,6 +41,7 @@ public class DataQuery {
     private long offset;
     private String className;
     private String tag;
+    private HashMap<String, String> parameters;
 
     public Timestamp getFromTs() {
         return fromTs;
@@ -85,6 +88,18 @@ public class DataQuery {
         className = null;
         toTsExclusive=null;
         tag=null;
+        parameters = new HashMap<>();
+    }
+
+    private static String clean(String query){
+        // replace non printable characters with space
+        String q = query.replaceAll("[^\\x20-\\x7E]", " ");
+        // remove multiple spaces
+        q = query.replaceAll("\\s+", " ");
+        // remove leading and trailing spaces
+        q = q.trim();
+        
+        return q;
     }
 
     public static DataQuery parse(String query) throws DataQueryException {
@@ -92,11 +107,11 @@ public class DataQuery {
         // TODO: parsing exception
         // TODO: 'to' or 'from' parameter removes 'last' (setLimit(0))
         DataQuery dq = new DataQuery();
-        String q = query.trim();
+        String q = clean(query);
         if (q.equalsIgnoreCase("last")) {
             q = "last 1";
         }
-        LOG.debug("data query: "+query);
+        LOG.debug("data query: "+q);
         String[] params = q.split(" ");
         for (int i = 0; i < params.length;) {
             switch (params[i].toLowerCase()) {
@@ -240,8 +255,9 @@ public class DataQuery {
                     i = i + 2;
                     break;
                 default:
-                    throw new DataQueryException(DataQueryException.PARSING_EXCEPTION,
-                            "unrecognized word " + params[i]);
+                    dq.putParameter(params[i],params[i+1]);
+                    i = i + 2;
+                break;
             }
         }
 
@@ -273,6 +289,18 @@ public class DataQuery {
             dq.setProject(null);
         }
         return dq;
+    }
+
+    public void putParameter(String key, String value){
+        parameters.put(key, value);
+    }
+
+    public String getParameter(String key){
+        return parameters.get(key);
+    }
+
+    public HashMap<String, String> getParameters(){
+        return parameters;
     }
 
     public List<String> getChannels() {
