@@ -83,7 +83,7 @@ public class EventLogDao implements EventLogDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "createStructure2 " + e.getMessage());
         }
-        query = "SELECT create_hypertable('account_events', 'ts',migrate_data => true);";
+        query = "SELECT create_hypertable('api_events', 'ts',migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
