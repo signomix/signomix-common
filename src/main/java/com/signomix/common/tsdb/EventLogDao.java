@@ -106,17 +106,17 @@ public class EventLogDao implements EventLogDaoIface {
         } catch (SQLException e) {
         }
 
-        query="SELECT add_retention_policy('api_events', INTERVAL '24 hours');";
+        query="SELECT add_retention_policy('api_events', INTERVAL '1 month');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
         }
-        query="SELECT add_retention_policy('account_events', INTERVAL '24 hours');";
+        query="SELECT add_retention_policy('account_events', INTERVAL '1 month');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
         }
-        query="SELECT add_retention_policy('data_access_events', INTERVAL '24 hours');";
+        query="SELECT add_retention_policy('data_access_events', INTERVAL '1 month');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
