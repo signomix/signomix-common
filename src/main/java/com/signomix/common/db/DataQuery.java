@@ -12,12 +12,14 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.signomix.common.DateTool;
 
 /**
  *
  * @author greg
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DataQuery {
     private static final Logger LOG = Logger.getLogger(DataQuery.class);
 
@@ -58,7 +60,7 @@ public class DataQuery {
      *
      */
     public Timestamp getToTsExclusive() {
-        if(null==toTs){
+        if (null == toTs) {
             return null;
         }
         Timestamp sooner = new Timestamp(toTs.getTime() - 1);
@@ -86,19 +88,19 @@ public class DataQuery {
         dateParamPresent = false;
         offset = 0;
         className = null;
-        toTsExclusive=null;
-        tag=null;
+        toTsExclusive = null;
+        tag = null;
         parameters = new HashMap<>();
     }
 
-    private static String clean(String query){
+    private static String clean(String query) {
         // replace non printable characters with space
         String q = query.replaceAll("[^\\x20-\\x7E]", " ");
         // remove multiple spaces
         q = query.replaceAll("\\s+", " ");
         // remove leading and trailing spaces
         q = q.trim();
-        
+
         return q;
     }
 
@@ -111,7 +113,7 @@ public class DataQuery {
         if (q.equalsIgnoreCase("last")) {
             q = "last 1";
         }
-        LOG.debug("data query: "+q);
+        LOG.debug("data query: " + q);
         String[] params = q.split(" ");
         for (int i = 0; i < params.length;) {
             switch (params[i].toLowerCase()) {
@@ -188,6 +190,10 @@ public class DataQuery {
                     dq.setClassName(params[i + 1]);
                     i = i + 2;
                     break;
+                case "report":
+                    dq.setClassName(params[i + 1]);
+                    i = i + 2;
+                    break;
                 case "state": {
                     try {
                         dq.setState(Double.parseDouble(params[i + 1]));
@@ -242,10 +248,6 @@ public class DataQuery {
                     i = i + 2;
                     dq.setLimit(0);
                     break;
-                case "report":
-                    dq.setClassName(params[i + 1]);
-                    i = i + 2;
-                    break;
                 case "sback":
                     try {
                         dq.offset = Long.parseLong(params[i + 1]);
@@ -255,9 +257,9 @@ public class DataQuery {
                     i = i + 2;
                     break;
                 default:
-                    dq.putParameter(params[i],params[i+1]);
+                    dq.putParameter(params[i], params[i + 1]);
                     i = i + 2;
-                break;
+                    break;
             }
         }
 
@@ -291,15 +293,15 @@ public class DataQuery {
         return dq;
     }
 
-    public void putParameter(String key, String value){
+    public void putParameter(String key, String value) {
         parameters.put(key, value);
     }
 
-    public String getParameter(String key){
+    public String getParameter(String key) {
         return parameters.get(key);
     }
 
-    public HashMap<String, String> getParameters(){
+    public HashMap<String, String> getParameters() {
         return parameters;
     }
 
@@ -446,7 +448,7 @@ public class DataQuery {
             fromTs = DateTool.parseTimestamp(fromStr, null, false);
             if (null != fromTs) {
                 dateParamPresent = true;
-                offset = (System.currentTimeMillis() - fromTs.getTime())/1000;
+                offset = (System.currentTimeMillis() - fromTs.getTime()) / 1000;
             }
         } catch (Exception ex) {
 
@@ -470,7 +472,8 @@ public class DataQuery {
     }
 
     /**
-     * Get offset in seconds as calculated from fromTs parameter or provided explicitly by 'sback' parameter
+     * Get offset in seconds as calculated from fromTs parameter or provided
+     * explicitly by 'sback' parameter
      * 
      * @return the offset - maximum time back from now in seconds to get data
      */
@@ -478,12 +481,12 @@ public class DataQuery {
         return offset;
     }
 
-    public String getClassName(){
+    public String getClassName() {
         return className;
     }
 
-    public void setClassName(String className){
-        this.className=className;
+    public void setClassName(String className) {
+        this.className = className;
     }
 
     public void setEui(String eui) {
@@ -503,14 +506,14 @@ public class DataQuery {
     }
 
     public String getTagName() {
-        if(tag==null){
+        if (tag == null) {
             return null;
         }
         return tag.split(":")[0];
     }
 
     public String getTagValue() {
-        if(tag==null){
+        if (tag == null) {
             return null;
         }
         return tag.split(":")[1];

@@ -458,50 +458,33 @@ public class AuthDao implements AuthDaoIface {
     }
 
     public Token updateToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
-        // TODO: update eoflife
-        // TODO: RETURNING can be used for PostgreSQL
-
         if (tokenID == null || tokenID.startsWith(Token.API_TOKEN_PREFIX)) {
             return null;
         }
-
         Token token = null;
         try {
             LOG.debug("getIssuer: " + tokenID);
-            if (null == tokenID) {
-                return null;
-            }
-            String querySession = "SELECT * FROM tokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
-            String queryPermanent = "SELECT * FROM ptokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
-
-            String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
-            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
-            String query, updateQuery;
+            String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=? "
+                    + "RETURNING uid, issuer, payload, tstamp, token";
+            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?"
+                    + "RETURNING uid, issuer, payload, tstamp, token";
+            // String query;
+            String updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + tokenID);
             if (tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX)) {
-                query = queryPermanent;
                 updateQuery = updatePermanent;
                 lifetime = permanentTokenLifetime;
             } else {
-                query = querySession;
                 updateQuery = updateSession;
                 lifetime = sessionTokenLifetime;
             }
             try (Connection conn = dataSource.getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(query);) {
-                String tokenValue;
-                if (tokenID.startsWith(Token.API_TOKEN_PREFIX)) {
-                    tokenValue = HashMaker.md5Java(tokenID);
-                } else {
-                    tokenValue = tokenID;
-                }
-                pstmt.setString(1, tokenValue);
+                    PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                pstmt.setLong(1, lifetime);
+                pstmt.setString(2, tokenID);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    LOG.debug("getUserId: token found: " + tokenID);
                     token = new Token(rs.getString("uid"), lifetime,
                             tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
                     token.setIssuer(rs.getString("issuer"));
@@ -509,30 +492,14 @@ public class AuthDao implements AuthDaoIface {
                     token.setTimestamp(rs.getTimestamp("tstamp").getTime());
                     token.setToken(rs.getString("token"));
                 } else {
-                    LOG.warn("getUserId: token not found: " + tokenID);
+                    LOG.warn("updateToken: token not found: " + tokenID);
                 }
-                rs.close();
             } catch (SQLException ex) {
                 LOG.warn(ex.getMessage());
                 ex.printStackTrace();
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
                 ex.printStackTrace();
-            }
-            if (token != null) {
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
-                    pstmt.setLong(1, lifetime);
-                    pstmt.setString(2, tokenID);
-                    int count = pstmt.executeUpdate();
-                    LOG.debug("getUserId: updated " + count + " rows");
-                } catch (SQLException ex) {
-                    LOG.warn(ex.getMessage());
-                    ex.printStackTrace();
-                } catch (Exception ex) {
-                    LOG.error(ex.getMessage());
-                    ex.printStackTrace();
-                }
             }
             return token;
         } catch (Exception e) {
@@ -650,14 +617,14 @@ public class AuthDao implements AuthDaoIface {
     }
 
     private void saveAPITokenUsage(Token token) {
-        if(questDbConfig == null) {
+        if (questDbConfig == null) {
             LOG.error("questDbConfig is null");
         }
         try (
-            Sender sender = Sender.fromConfig(questDbConfig)) {
+                Sender sender = Sender.fromConfig(questDbConfig)) {
             sender.table("api_events")
                     .symbol("login", token.getUid())
-                    .symbol("event_type","get_token")
+                    .symbol("event_type", "get_token")
                     .at(System.currentTimeMillis(), ChronoUnit.MILLIS);
         } catch (Exception e) {
             LOG.error(e.getMessage());
