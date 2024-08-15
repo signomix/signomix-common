@@ -8,8 +8,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import javax.inject.Inject;
-
 import org.jboss.logging.Logger;
 
 import com.signomix.common.billing.Order;

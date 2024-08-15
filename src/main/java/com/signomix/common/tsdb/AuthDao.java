@@ -82,8 +82,9 @@ public class AuthDao implements AuthDaoIface {
     public String getUserId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
+        String userUid = null;
         try {
-            String userUid = null;
+            
             LOG.debug("getUser: " + token);
             if (null == token) {
                 return null;
@@ -142,12 +143,13 @@ public class AuthDao implements AuthDaoIface {
                     LOG.error(ex.getMessage());
                 }
             }
-            return userUid;
+            
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
             return null;
         }
+        return userUid;
     }
 
     @Override
@@ -321,8 +323,9 @@ public class AuthDao implements AuthDaoIface {
     public String getIssuerId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
+        String userUid = null;
         try {
-            String userUid = null;
+            
             LOG.debug("getIssuer: " + token);
             if (null == token) {
                 return null;
@@ -388,12 +391,13 @@ public class AuthDao implements AuthDaoIface {
              * }
              * }
              */
-            return userUid;
+            
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
             return null;
         }
+        return userUid;
     }
 
     public Token getToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
@@ -449,12 +453,13 @@ public class AuthDao implements AuthDaoIface {
                 LOG.error(ex.getMessage());
                 ex.printStackTrace();
             }
-            return token;
+            
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
             return null;
         }
+        return token;
     }
 
     public Token updateToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
@@ -501,12 +506,13 @@ public class AuthDao implements AuthDaoIface {
                 LOG.error(ex.getMessage());
                 ex.printStackTrace();
             }
-            return token;
+            
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error(e.getMessage());
             return null;
         }
+        return token;
     }
 
     @Override
@@ -586,12 +592,14 @@ public class AuthDao implements AuthDaoIface {
     @Override
     public Token getApiToken(User user) {
         String query = "SELECT * FROM ptokens WHERE uid=? AND type='API' AND eoflife>=CURRENT_TIMESTAMP";
+        Token token = null;
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, user.uid);
+            
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                Token token = new Token(rs.getString("uid"), 0, true);
+                token = new Token(rs.getString("uid"), 0, true);
                 token.setIssuer(rs.getString("issuer"));
                 token.setPayload(rs.getString("payload"));
                 token.setTimestamp(rs.getTimestamp("tstamp").getTime());
@@ -601,7 +609,6 @@ public class AuthDao implements AuthDaoIface {
                 token.setLifetime(rs.getTimestamp("eoflife").getTime() - rs.getTimestamp("tstamp").getTime());
                 rs.close();
                 saveAPITokenUsage(token);
-                return token;
             } else {
                 LOG.warn("getApiToken: token not found: " + user.uid);
             }
@@ -613,7 +620,7 @@ public class AuthDao implements AuthDaoIface {
             LOG.error(ex.getMessage());
             ex.printStackTrace();
         }
-        return null;
+        return token;
     }
 
     private void saveAPITokenUsage(Token token) {

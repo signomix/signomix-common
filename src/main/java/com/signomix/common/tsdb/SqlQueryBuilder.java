@@ -32,7 +32,13 @@ public class SqlQueryBuilder {
         String projectQuery = " and project=?";
         String statusQuery = " and state=?";
         String wherePart = " and tstamp between ? and ?";
-        String orderPart = " order by tstamp desc limit ?";
+        String order = "desc";
+        if(dq.getSortBy()!=null){
+            if(dq.getSortBy().equals("asc")){
+                order = "asc";
+            }
+        }
+        String orderPart = " order by tstamp "+order+" limit ?";
         query = defaultQuery;
         if (null != dq.getProject()) {
             query = query.concat(projectQuery);

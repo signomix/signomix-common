@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
-import com.signomix.common.HashMaker;
 import com.signomix.common.User;
 import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.db.UserDaoIface;
@@ -70,7 +69,8 @@ public class UserDao implements UserDaoIface {
                 .append("credits bigint,")
                 .append("autologin boolean,")
                 .append("language varchar,")
-                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + ",") // REMOVED: " references organizations(id),"
+                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + ",") // REMOVED: " references
+                                                                                        // organizations(id),"
                 .append("path ltree DEFAULT ''::ltree,")
                 .append("phone integer);")
                 .append("create index if not exists users_user_number_idx on users(user_number);");
@@ -87,96 +87,98 @@ public class UserDao implements UserDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
 
- /*        User user = new User();
-        user.uid = "admin";
-        user.type = User.OWNER;
-        user.email = "";
-        user.name = "admin";
-        user.surname = "admin";
-        user.role = "";
-        user.confirmString = "";
-        user.password = HashMaker.md5Java("test123");
-        user.generalNotificationChannel = "";
-        user.infoNotificationChannel = "";
-        user.warningNotificationChannel = "";
-        user.alertNotificationChannel = "";
-        user.confirmed = true;
-        user.unregisterRequested = false;
-        user.authStatus = 1;
-        user.createdAt = System.currentTimeMillis();
-        user.number = 0L;
-        user.services = 0;
-        user.phonePrefix = "";
-        user.credits = 0L;
-        user.autologin = false;
-        user.preferredLanguage = "en";
-        user.organization = DEFAULT_ORGANIZATION_ID;
-        user.path = "";
-        try {
-            addUser(user);
-        } catch (IotDatabaseException e) {
-            LOG.warn("Error inserting default admin user", e);
-        }
-        user = new User();
-        user.uid = "tester1";
-        user.type = User.USER;
-        user.email = "";
-        user.name = "tester";
-        user.surname = "tester";
-        user.role = "";
-        user.confirmString = "";
-        user.password = HashMaker.md5Java("signomix");
-        user.generalNotificationChannel = "";
-        user.infoNotificationChannel = "";
-        user.warningNotificationChannel = "";
-        user.alertNotificationChannel = "";
-        user.confirmed = true;
-        user.unregisterRequested = false;
-        user.authStatus = 1;
-        user.createdAt = System.currentTimeMillis();
-        user.number = null;
-        user.services = 0;
-        user.phonePrefix = "";
-        user.credits = 0L;
-        user.autologin = false;
-        user.preferredLanguage = "en";
-        user.organization = DEFAULT_ORGANIZATION_ID;
-        user.path = "";
-        try {
-            addUser(user);
-        } catch (IotDatabaseException e) {
-            LOG.warn("Error inserting default admin user", e);
-        }
-        user = new User();
-        user.uid = "public";
-        user.type = User.READONLY;
-        user.email = "";
-        user.name = "Public";
-        user.surname = "User";
-        user.role = "";
-        user.confirmString = "";
-        user.password = HashMaker.md5Java("public");
-        user.generalNotificationChannel = "";
-        user.infoNotificationChannel = "";
-        user.warningNotificationChannel = "";
-        user.alertNotificationChannel = "";
-        user.confirmed = true;
-        user.unregisterRequested = false;
-        user.authStatus = 1;
-        user.createdAt = System.currentTimeMillis();
-        user.number = null;
-        user.services = 0;
-        user.phonePrefix = "";
-        user.credits = 0L;
-        user.autologin = false;
-        user.preferredLanguage = "en";
-        user.organization = DEFAULT_ORGANIZATION_ID;
-        user.path = "";
-        try {
-            addUser(user);
-        } catch (IotDatabaseException e) {
-            LOG.warn("Error inserting default admin user", e);
-        } */
+        /*
+         * User user = new User();
+         * user.uid = "admin";
+         * user.type = User.OWNER;
+         * user.email = "";
+         * user.name = "admin";
+         * user.surname = "admin";
+         * user.role = "";
+         * user.confirmString = "";
+         * user.password = HashMaker.md5Java("test123");
+         * user.generalNotificationChannel = "";
+         * user.infoNotificationChannel = "";
+         * user.warningNotificationChannel = "";
+         * user.alertNotificationChannel = "";
+         * user.confirmed = true;
+         * user.unregisterRequested = false;
+         * user.authStatus = 1;
+         * user.createdAt = System.currentTimeMillis();
+         * user.number = 0L;
+         * user.services = 0;
+         * user.phonePrefix = "";
+         * user.credits = 0L;
+         * user.autologin = false;
+         * user.preferredLanguage = "en";
+         * user.organization = DEFAULT_ORGANIZATION_ID;
+         * user.path = "";
+         * try {
+         * addUser(user);
+         * } catch (IotDatabaseException e) {
+         * LOG.warn("Error inserting default admin user", e);
+         * }
+         * user = new User();
+         * user.uid = "tester1";
+         * user.type = User.USER;
+         * user.email = "";
+         * user.name = "tester";
+         * user.surname = "tester";
+         * user.role = "";
+         * user.confirmString = "";
+         * user.password = HashMaker.md5Java("signomix");
+         * user.generalNotificationChannel = "";
+         * user.infoNotificationChannel = "";
+         * user.warningNotificationChannel = "";
+         * user.alertNotificationChannel = "";
+         * user.confirmed = true;
+         * user.unregisterRequested = false;
+         * user.authStatus = 1;
+         * user.createdAt = System.currentTimeMillis();
+         * user.number = null;
+         * user.services = 0;
+         * user.phonePrefix = "";
+         * user.credits = 0L;
+         * user.autologin = false;
+         * user.preferredLanguage = "en";
+         * user.organization = DEFAULT_ORGANIZATION_ID;
+         * user.path = "";
+         * try {
+         * addUser(user);
+         * } catch (IotDatabaseException e) {
+         * LOG.warn("Error inserting default admin user", e);
+         * }
+         * user = new User();
+         * user.uid = "public";
+         * user.type = User.READONLY;
+         * user.email = "";
+         * user.name = "Public";
+         * user.surname = "User";
+         * user.role = "";
+         * user.confirmString = "";
+         * user.password = HashMaker.md5Java("public");
+         * user.generalNotificationChannel = "";
+         * user.infoNotificationChannel = "";
+         * user.warningNotificationChannel = "";
+         * user.alertNotificationChannel = "";
+         * user.confirmed = true;
+         * user.unregisterRequested = false;
+         * user.authStatus = 1;
+         * user.createdAt = System.currentTimeMillis();
+         * user.number = null;
+         * user.services = 0;
+         * user.phonePrefix = "";
+         * user.credits = 0L;
+         * user.autologin = false;
+         * user.preferredLanguage = "en";
+         * user.organization = DEFAULT_ORGANIZATION_ID;
+         * user.path = "";
+         * try {
+         * addUser(user);
+         * } catch (IotDatabaseException e) {
+         * LOG.warn("Error inserting default admin user", e);
+         * }
+         */
 
     }
 
@@ -227,15 +229,15 @@ public class UserDao implements UserDaoIface {
         user.autologin = rs.getBoolean("autologin");
         user.preferredLanguage = rs.getString("language");
         user.organization = rs.getLong("organization");
-        try{
+        try {
             user.path = rs.getObject("tpath").toString();
-        }catch(NullPointerException e){
-            user.path="";
+        } catch (NullPointerException e) {
+            user.path = "";
         }
-        try{
-            user.tenant=rs.getInt("tenant_id");
-        }catch(NullPointerException e){
-            user.tenant=null;
+        try {
+            user.tenant = rs.getInt("tenant_id");
+        } catch (NullPointerException e) {
+            user.tenant = null;
         }
         user.phone = rs.getInt("phone");
         return user;
@@ -278,19 +280,18 @@ public class UserDao implements UserDaoIface {
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE user_number=?";
+        User u = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                User u = buildUser(rs);
-                rs.close();
-                return u;
+                u = buildUser(rs);
             }
             rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return u;
     }
 
     @Override
@@ -298,20 +299,19 @@ public class UserDao implements UserDaoIface {
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE uid=? AND password=?";
+        User u = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, login);
             pstmt.setString(2, password);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                User u = buildUser(rs);
-                rs.close();
-                return u;
+                u = buildUser(rs);
             }
             rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return u;
     }
 
     @Override
@@ -345,7 +345,7 @@ public class UserDao implements UserDaoIface {
             pstmt.setString(2, user.email);
             pstmt.setString(3, user.name);
             pstmt.setString(4, user.surname);
-            pstmt.setString(5, user.role!=null?user.role:"");
+            pstmt.setString(5, user.role != null ? user.role : "");
             pstmt.setString(6, user.confirmString);
             pstmt.setString(7, user.generalNotificationChannel);
             pstmt.setString(8, user.infoNotificationChannel);
@@ -366,9 +366,9 @@ public class UserDao implements UserDaoIface {
             } else {
                 pstmt.setInt(21, user.phone);
             }
-            if(user.password==null || user.password.isEmpty()){
+            if (user.password == null || user.password.isEmpty()) {
                 pstmt.setNull(22, java.sql.Types.VARCHAR);
-            }else{
+            } else {
                 pstmt.setString(22, user.password);
             }
             pstmt.setString(23, user.uid);
@@ -379,91 +379,109 @@ public class UserDao implements UserDaoIface {
     }
 
     /**
-     * Check if user object has all parameters set or basic parameters or notification parameters
+     * Check if user object has all parameters set or basic parameters or
+     * notification parameters
      * only then uses the correct update method
+     * 
      * @param user
      * @throws IotDatabaseException
      */
-/*     @Override
-    public void updateUser(User user) throws IotDatabaseException {
-        LOG.info("updateUser (new): " + user.uid);
-        if(user.generalNotificationChannel!=null || user.infoNotificationChannel!=null || user.warningNotificationChannel!=null || user.alertNotificationChannel!=null){
-            updateUserNotifications(user);
-            LOG.info("updateUserNotifications: " + user.uid);
-        }else if(user.email!=null && user.name!=null){
-            updateUserBasicParams(user);
-            LOG.info("updateUserBasicParams: " + user.uid);
-        }
-    }
-
-    private void updateUserNotifications(User user) throws IotDatabaseException {
-        LOG.info("generalNotificationChannel: " + user.generalNotificationChannel);
-        String query = "UPDATE users SET "
-                + "generalchannel=?,infochannel=?,warningchannel=?,alertchannel=? "
-                + "WHERE uid=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, user.generalNotificationChannel==null?"":user.generalNotificationChannel);
-            pstmt.setString(2, user.infoNotificationChannel==null?"":user.infoNotificationChannel);
-            pstmt.setString(3, user.warningNotificationChannel==null?"":user.warningNotificationChannel);
-            pstmt.setString(4, user.alertNotificationChannel==null?"":user.alertNotificationChannel);
-            pstmt.setString(5, user.uid);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
-    } */
+    /*
+     * @Override
+     * public void updateUser(User user) throws IotDatabaseException {
+     * LOG.info("updateUser (new): " + user.uid);
+     * if(user.generalNotificationChannel!=null ||
+     * user.infoNotificationChannel!=null || user.warningNotificationChannel!=null
+     * || user.alertNotificationChannel!=null){
+     * updateUserNotifications(user);
+     * LOG.info("updateUserNotifications: " + user.uid);
+     * }else if(user.email!=null && user.name!=null){
+     * updateUserBasicParams(user);
+     * LOG.info("updateUserBasicParams: " + user.uid);
+     * }
+     * }
+     * 
+     * private void updateUserNotifications(User user) throws IotDatabaseException {
+     * LOG.info("generalNotificationChannel: " + user.generalNotificationChannel);
+     * String query = "UPDATE users SET "
+     * + "generalchannel=?,infochannel=?,warningchannel=?,alertchannel=? "
+     * + "WHERE uid=?";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setString(1,
+     * user.generalNotificationChannel==null?"":user.generalNotificationChannel);
+     * pstmt.setString(2,
+     * user.infoNotificationChannel==null?"":user.infoNotificationChannel);
+     * pstmt.setString(3,
+     * user.warningNotificationChannel==null?"":user.warningNotificationChannel);
+     * pstmt.setString(4,
+     * user.alertNotificationChannel==null?"":user.alertNotificationChannel);
+     * pstmt.setString(5, user.uid);
+     * pstmt.executeUpdate();
+     * } catch (SQLException e) {
+     * e.printStackTrace();
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * } catch (Exception e) {
+     * e.printStackTrace();
+     * throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+     * }
+     * }
+     */
 
     /**
      * Update all user parameters except notifications
+     * 
      * @param user
      */
-/*     private void updateUserBasicParams(User user) throws IotDatabaseException{
-        String query = "UPDATE users SET "
-                + "type=?,email=?,name=?,surname=?,role=?,secret=?,"
-                + "confirmed=?,unregisterreq=?,authstatus=?,created=?,"
-                + "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, phone=? "
-                + "WHERE uid=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setInt(1, user.type);
-            pstmt.setString(2, user.email);
-            pstmt.setString(3, user.name);
-            pstmt.setString(4, user.surname);
-            pstmt.setString(5, user.role!=null?user.role:"");
-            pstmt.setString(6, user.confirmString);
-            pstmt.setBoolean(7, user.confirmed);
-            pstmt.setBoolean(8, user.unregisterRequested);
-            pstmt.setInt(9, user.authStatus);
-            pstmt.setTimestamp(10, new java.sql.Timestamp(user.createdAt));
-            pstmt.setInt(11, user.services);
-            if(user.phonePrefix==null){
-                user.phonePrefix="";
-            }else{
-                pstmt.setString(12, user.phonePrefix);
-            }
-            if(user.credits==null){
-                user.credits=0L;
-            }else{
-                pstmt.setLong(13, user.credits);
-            }
-            pstmt.setBoolean(14, user.autologin);
-            pstmt.setString(15, user.preferredLanguage);
-            pstmt.setLong(16, user.organization);
-            if (user.phone == null) {
-                pstmt.setNull(17, java.sql.Types.INTEGER);
-            } else {
-                pstmt.setInt(17, user.phone);
-            }
-            pstmt.setString(18, user.uid);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    } */
+    /*
+     * private void updateUserBasicParams(User user) throws IotDatabaseException{
+     * String query = "UPDATE users SET "
+     * + "type=?,email=?,name=?,surname=?,role=?,secret=?,"
+     * + "confirmed=?,unregisterreq=?,authstatus=?,created=?,"
+     * +
+     * "services=?,phoneprefix=?,credits=?,autologin=?,language=?,organization=?, phone=? "
+     * + "WHERE uid=?";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setInt(1, user.type);
+     * pstmt.setString(2, user.email);
+     * pstmt.setString(3, user.name);
+     * pstmt.setString(4, user.surname);
+     * pstmt.setString(5, user.role!=null?user.role:"");
+     * pstmt.setString(6, user.confirmString);
+     * pstmt.setBoolean(7, user.confirmed);
+     * pstmt.setBoolean(8, user.unregisterRequested);
+     * pstmt.setInt(9, user.authStatus);
+     * pstmt.setTimestamp(10, new java.sql.Timestamp(user.createdAt));
+     * pstmt.setInt(11, user.services);
+     * if(user.phonePrefix==null){
+     * user.phonePrefix="";
+     * }else{
+     * pstmt.setString(12, user.phonePrefix);
+     * }
+     * if(user.credits==null){
+     * user.credits=0L;
+     * }else{
+     * pstmt.setLong(13, user.credits);
+     * }
+     * pstmt.setBoolean(14, user.autologin);
+     * pstmt.setString(15, user.preferredLanguage);
+     * pstmt.setLong(16, user.organization);
+     * if (user.phone == null) {
+     * pstmt.setNull(17, java.sql.Types.INTEGER);
+     * } else {
+     * pstmt.setInt(17, user.phone);
+     * }
+     * pstmt.setString(18, user.uid);
+     * pstmt.executeUpdate();
+     * } catch (SQLException e) {
+     * e.printStackTrace();
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * }
+     */
 
     /*    
     */
@@ -527,14 +545,14 @@ public class UserDao implements UserDaoIface {
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
                 + "services,phoneprefix,credits,autologin,language,organization, phone) "
                 + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
-        try (Connection conn = dataSource.getConnection(); 
-        PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
             pstmt.setString(1, user.uid);
             pstmt.setInt(2, user.type);
             pstmt.setString(3, user.email);
             pstmt.setString(4, user.name);
             pstmt.setString(5, user.surname);
-            pstmt.setString(6, user.role!=null?user.role:"");
+            pstmt.setString(6, user.role != null ? user.role : "");
             pstmt.setString(7, user.confirmString);
             pstmt.setString(8, user.password);
             pstmt.setString(9, user.generalNotificationChannel);
@@ -544,13 +562,13 @@ public class UserDao implements UserDaoIface {
             pstmt.setBoolean(13, user.confirmed);
             pstmt.setBoolean(14, user.unregisterRequested);
             pstmt.setInt(15, user.authStatus);
-            if(user.createdAt==null || user.createdAt==0){
-                user.createdAt=System.currentTimeMillis();
+            if (user.createdAt == null || user.createdAt == 0) {
+                user.createdAt = System.currentTimeMillis();
             }
             pstmt.setTimestamp(16, new java.sql.Timestamp(user.createdAt));
-            pstmt.setInt(17, user.services==null?0:user.services);
+            pstmt.setInt(17, user.services == null ? 0 : user.services);
             pstmt.setString(18, user.phonePrefix);
-            pstmt.setLong(19, user.credits==null?0L:user.credits);
+            pstmt.setLong(19, user.credits == null ? 0L : user.credits);
             pstmt.setBoolean(20, user.autologin);
             pstmt.setString(21, user.preferredLanguage);
             pstmt.setLong(22, user.organization);
@@ -576,7 +594,7 @@ public class UserDao implements UserDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        if(userNumber<0){
+        if (userNumber < 0) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "User number not found");
         }
         return userNumber;
@@ -646,16 +664,16 @@ public class UserDao implements UserDaoIface {
     @Override
     public void addTenantUser(Long organizationId, Integer tenantId, Long userNumber, String path)
             throws IotDatabaseException {
-                String query = "INSERT INTO tenant_users(organization_id, tenant_id, user_id, path) VALUES(?, ?, ?, ?)";
-                try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-                    pst.setLong(1, organizationId);
-                    pst.setInt(2, tenantId);
-                    pst.setLong(3, userNumber);
-                    pst.setObject(4, path, java.sql.Types.OTHER);
-                    boolean updated = pst.executeUpdate() > 0;
-                } catch (SQLException e) {
-                    throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-                }
+        String query = "INSERT INTO tenant_users(organization_id, tenant_id, user_id, path) VALUES(?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setLong(1, organizationId);
+            pst.setInt(2, tenantId);
+            pst.setLong(3, userNumber);
+            pst.setObject(4, path, java.sql.Types.OTHER);
+            boolean updated = pst.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
     }
 
 }

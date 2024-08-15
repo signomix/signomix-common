@@ -43,6 +43,8 @@ public class DataQuery {
     private long offset;
     private String className;
     private String tag;
+    private String sortOrder;
+    private String sortBy;
     private HashMap<String, String> parameters;
 
     public Timestamp getFromTs() {
@@ -91,10 +93,15 @@ public class DataQuery {
         toTsExclusive = null;
         tag = null;
         parameters = new HashMap<>();
+        sortOrder = "DESC";
+        sortBy = "timestamp";
     }
 
     private static String clean(String query) {
         // replace non printable characters with space
+        if(query==null){
+            return "";
+        }
         String q = query.replaceAll("[^\\x20-\\x7E]", " ");
         // remove multiple spaces
         q = query.replaceAll("\\s+", " ");
@@ -228,6 +235,18 @@ public class DataQuery {
                     dq.setTag(params[i + 1]);
                     i = i + 2;
                     break;
+                case "sort":
+                    dq.sortBy = params[i + 1];
+                    i = i + 2;
+                    break;
+                case "ascending":
+                    dq.sortOrder = "ASC";
+                    i = i + 1;
+                    break;
+                case "descending":
+                    dq.sortOrder = "DESC";
+                    i = i + 1;
+                    break;
                 case "new": {
                     try {
                         Double n = Double.parseDouble(params[i + 1]);
@@ -257,7 +276,11 @@ public class DataQuery {
                     i = i + 2;
                     break;
                 default:
-                    dq.putParameter(params[i], params[i + 1]);
+                    try{
+                        dq.putParameter(params[i], params[i + 1]);
+                    }catch(Exception e){
+                        LOG.info("error parsing query (unknown param): ["+query+"]");
+                    }
                     i = i + 2;
                     break;
             }
@@ -291,6 +314,22 @@ public class DataQuery {
             dq.setProject(null);
         }
         return dq;
+    }
+
+    public void setSortOrder(String order) {
+        this.sortOrder = order;
+    }
+
+    public String getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortBy(String sortBy) {
+        this.sortBy = sortBy;
+    }
+
+    public String getSortBy() {
+        return sortBy;
     }
 
     public void putParameter(String key, String value) {

@@ -195,13 +195,14 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public SentinelConfig getConfig(long id) throws IotDatabaseException {
+        SentinelConfig config = null;
         String query = "SELECT * FROM sentinels WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
-                    SentinelConfig config = new SentinelConfig();
+                    config = new SentinelConfig();
                     config.id = rs.getLong("id");
                     config.name = rs.getString("name");
                     config.active = rs.getBoolean("active");
@@ -222,7 +223,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.administrators = rs.getString("administrators");
                     config.timeShift = rs.getInt("time_shift");
                     config.hysteresis = rs.getDouble("hysteresis");
-                    return config;
+
                 }
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -230,11 +231,12 @@ public class SentinelDao implements SentinelDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return config;
     }
 
     @Override
     public List<SentinelConfig> getConfigs(String userId, int limit, int offset) throws IotDatabaseException {
+        java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         String query = "SELECT * FROM sentinels WHERE user_id=? OR team LIKE ? OR administrators LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -244,7 +246,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setInt(4, limit);
             pstmt.setInt(5, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -269,7 +271,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
-                return configs;
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
@@ -277,12 +279,14 @@ public class SentinelDao implements SentinelDaoIface {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return configs;
 
     }
 
     @Override
     public List<SentinelConfig> getOrganizationConfigs(long organizationId, int limit, int offset)
             throws IotDatabaseException {
+        java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         String query = "SELECT * FROM sentinels WHERE organization_id=? ORDER BY id DESC LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -290,7 +294,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -315,18 +319,20 @@ public class SentinelDao implements SentinelDaoIface {
                     config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
-                return configs;
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return configs;
     }
 
     @Override
     public List<SentinelConfig> getConfigsByDevice(String deviceEui, int limit, int offset)
             throws IotDatabaseException {
+        java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         String query = "SELECT * FROM sentinels WHERE device_eui=? ORDER BY id DESC LIMIT ? OFFSET ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -334,7 +340,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -359,13 +365,14 @@ public class SentinelDao implements SentinelDaoIface {
                     config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
-                return configs;
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return configs;
     }
 
     /**
@@ -380,13 +387,14 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public Map<String, Map<String, String>> getDeviceChannelsByConfigId(long configId)
             throws IotDatabaseException {
+        HashMap<String, Map<String, String>> devices = new HashMap<>();
         String query = "SELECT eui,channels FROM sentinel_devices WHERE sentinel_id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, configId);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 HashMap<String, String> channels = new HashMap<>();
-                HashMap<String, Map<String, String>> devices = new HashMap<>();
+
                 String channelsStr;
                 while (rs.next()) {
                     channelsStr = rs.getString("channels");
@@ -401,13 +409,14 @@ public class SentinelDao implements SentinelDaoIface {
                     }
                     devices.put(rs.getString("eui"), channels);
                 }
-                return devices;
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return devices;
     }
 
     /**
@@ -424,11 +433,11 @@ public class SentinelDao implements SentinelDaoIface {
         String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
                 + "WHERE eui IN (SELECT eui FROM sentinel_devices WHERE sentinel_id=?) "
                 + "AND tstamp > now() - INTERVAL '24 hours' ORDER BY eui, tstamp DESC;";
-
+        java.util.ArrayList<List> values = new java.util.ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, sentinelConfigId);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<List> values = new java.util.ArrayList<>();
+
                 while (rs.next()) {
                     java.util.ArrayList<Object> row = new java.util.ArrayList<>();
                     row.add(rs.getString("eui"));
@@ -459,98 +468,102 @@ public class SentinelDao implements SentinelDaoIface {
                     row.add(rs.getDouble("d24"));
                     values.add(row);
                 }
-                return values;
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return values;
     }
 
     /**
      * Returns last values for given devices.
      * Result is list of lists. Each list contains: deviceEui, timestamp, d1, d2,
      * d3, d4, d5, d6, d7, d8, d9, d10,
-     * Example result: [ [ "eui1", "2020-01-01 00:00:00", 1.0, 2.0, 3.0 ], [ "eui2",    
+     * Example result: [ [ "eui1", "2020-01-01 00:00:00", 1.0, 2.0, 3.0 ], [ "eui2",
      * * "2020-01-01 00:00:00", 4.0, 5.0, 6.0 ] ]
      * 
      * @param euis        set of device euis
      * @param secondsBack number of seconds to look back for data
      */
     @Override
-    public List<List> getLastValuesOfDevices(Set<String> euis, long secondsBack) throws IotDatabaseException{
+    public List<List> getLastValuesOfDevices(Set<String> euis, long secondsBack) throws IotDatabaseException {
         String euiList = String.join(",", euis.stream().map(eui -> "'" + eui + "'").collect(Collectors.toList()));
-        /* String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
-                + "WHERE eui IN ("+euiList+") "
-                + "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;"; */
-        String query =
-        "SELECT DISTINCT ON (eui) " + 
-        "eui, tstamp, " +
-        "d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24," +
-        "d1-LAG (d1) OVER (ORDER BY tstamp) as d1diff," +
-        "d2-LAG (d2) OVER (ORDER BY tstamp) as d2diff," +
-        "d3-LAG (d3) OVER (ORDER BY tstamp) as d3diff," +
-        "d4-LAG (d4) OVER (ORDER BY tstamp) as d4diff," +
-        "d5-LAG (d5) OVER (ORDER BY tstamp) as d5diff," +
-        "d6-LAG (d6) OVER (ORDER BY tstamp) as d6diff," +
-        "d7-LAG (d7) OVER (ORDER BY tstamp) as d7diff," +
-        "d8-LAG (d8) OVER (ORDER BY tstamp) as d8diff," +
-        "d9-LAG (d9) OVER (ORDER BY tstamp) as d9diff," +
-        "d10-LAG (d10) OVER (ORDER BY tstamp) as d10diff," +
-        "d11-LAG (d11) OVER (ORDER BY tstamp) as d11diff," +
-        "d12-LAG (d12) OVER (ORDER BY tstamp) as d12diff," +
-        "d13-LAG (d13) OVER (ORDER BY tstamp) as d13diff," +
-        "d14-LAG (d14) OVER (ORDER BY tstamp) as d14diff," +
-        "d15-LAG (d15) OVER (ORDER BY tstamp) as d15diff," +
-        "d16-LAG (d16) OVER (ORDER BY tstamp) as d16diff," +
-        "d17-LAG (d17) OVER (ORDER BY tstamp) as d17diff," +
-        "d18-LAG (d18) OVER (ORDER BY tstamp) as d18diff," +
-        "d19-LAG (d19) OVER (ORDER BY tstamp) as d19diff," +
-        "d20-LAG (d20) OVER (ORDER BY tstamp) as d20diff," +
-        "d21-LAG (d21) OVER (ORDER BY tstamp) as d21diff," +
-        "d22-LAG (d22) OVER (ORDER BY tstamp) as d22diff," +
-        "d23-LAG (d23) OVER (ORDER BY tstamp) as d23diff," +
-        "d24-LAG (d24) OVER (ORDER BY tstamp) as d24diff " +
-        "FROM analyticdata " +
-        "WHERE eui IN ("+euiList+") " + 
-        "AND tstamp > now() - INTERVAL '"+secondsBack+" seconds' ORDER BY eui, tstamp DESC;";
+        /*
+         * String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
+         * + "WHERE eui IN ("+euiList+") "
+         * + "AND tstamp > now() - INTERVAL '"
+         * +secondsBack+" seconds' ORDER BY eui, tstamp DESC;";
+         */
+        String query = "SELECT DISTINCT ON (eui) " +
+                "eui, tstamp, " +
+                "d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24," +
+                "d1-LAG (d1) OVER (ORDER BY tstamp) as d1diff," +
+                "d2-LAG (d2) OVER (ORDER BY tstamp) as d2diff," +
+                "d3-LAG (d3) OVER (ORDER BY tstamp) as d3diff," +
+                "d4-LAG (d4) OVER (ORDER BY tstamp) as d4diff," +
+                "d5-LAG (d5) OVER (ORDER BY tstamp) as d5diff," +
+                "d6-LAG (d6) OVER (ORDER BY tstamp) as d6diff," +
+                "d7-LAG (d7) OVER (ORDER BY tstamp) as d7diff," +
+                "d8-LAG (d8) OVER (ORDER BY tstamp) as d8diff," +
+                "d9-LAG (d9) OVER (ORDER BY tstamp) as d9diff," +
+                "d10-LAG (d10) OVER (ORDER BY tstamp) as d10diff," +
+                "d11-LAG (d11) OVER (ORDER BY tstamp) as d11diff," +
+                "d12-LAG (d12) OVER (ORDER BY tstamp) as d12diff," +
+                "d13-LAG (d13) OVER (ORDER BY tstamp) as d13diff," +
+                "d14-LAG (d14) OVER (ORDER BY tstamp) as d14diff," +
+                "d15-LAG (d15) OVER (ORDER BY tstamp) as d15diff," +
+                "d16-LAG (d16) OVER (ORDER BY tstamp) as d16diff," +
+                "d17-LAG (d17) OVER (ORDER BY tstamp) as d17diff," +
+                "d18-LAG (d18) OVER (ORDER BY tstamp) as d18diff," +
+                "d19-LAG (d19) OVER (ORDER BY tstamp) as d19diff," +
+                "d20-LAG (d20) OVER (ORDER BY tstamp) as d20diff," +
+                "d21-LAG (d21) OVER (ORDER BY tstamp) as d21diff," +
+                "d22-LAG (d22) OVER (ORDER BY tstamp) as d22diff," +
+                "d23-LAG (d23) OVER (ORDER BY tstamp) as d23diff," +
+                "d24-LAG (d24) OVER (ORDER BY tstamp) as d24diff " +
+                "FROM analyticdata " +
+                "WHERE eui IN (" + euiList + ") " +
+                "AND tstamp > now() - INTERVAL '" + secondsBack + " seconds' ORDER BY eui, tstamp DESC;";
         logger.debug(query);
         String eui;
+        java.util.ArrayList<List> values = new java.util.ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<List> values = new java.util.ArrayList<>();
+
                 while (rs.next()) {
                     java.util.ArrayList<LastDataPair> row = new java.util.ArrayList<>();
-                    eui=rs.getString("eui");
-                    //row.add(rs.getTimestamp("tstamp"));
-                    row.add(new LastDataPair(eui,rs.getDouble("d1"),rs.getDouble("d1diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d2"),rs.getDouble("d2diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d3"),rs.getDouble("d3diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d4"),rs.getDouble("d4diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d5"),rs.getDouble("d5diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d6"),rs.getDouble("d6diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d7"),rs.getDouble("d7diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d8"),rs.getDouble("d8diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d9"),rs.getDouble("d9diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d10"),rs.getDouble("d10diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d11"),rs.getDouble("d11diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d12"),rs.getDouble("d12diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d13"),rs.getDouble("d13diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d14"),rs.getDouble("d14diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d15"),rs.getDouble("d15diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d16"),rs.getDouble("d16diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d17"),rs.getDouble("d17diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d18"),rs.getDouble("d18diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d19"),rs.getDouble("d19diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d20"),rs.getDouble("d20diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d21"),rs.getDouble("d21diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d22"),rs.getDouble("d22diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d23"),rs.getDouble("d23diff")));
-                    row.add(new LastDataPair(eui,rs.getDouble("d24"),rs.getDouble("d24diff")));
+                    eui = rs.getString("eui");
+                    // row.add(rs.getTimestamp("tstamp"));
+                    row.add(new LastDataPair(eui, rs.getDouble("d1"), rs.getDouble("d1diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d2"), rs.getDouble("d2diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d3"), rs.getDouble("d3diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d4"), rs.getDouble("d4diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d5"), rs.getDouble("d5diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d6"), rs.getDouble("d6diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d7"), rs.getDouble("d7diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d8"), rs.getDouble("d8diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d9"), rs.getDouble("d9diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d10"), rs.getDouble("d10diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d11"), rs.getDouble("d11diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d12"), rs.getDouble("d12diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d13"), rs.getDouble("d13diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d14"), rs.getDouble("d14diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d15"), rs.getDouble("d15diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d16"), rs.getDouble("d16diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d17"), rs.getDouble("d17diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d18"), rs.getDouble("d18diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d19"), rs.getDouble("d19diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d20"), rs.getDouble("d20diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d21"), rs.getDouble("d21diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d22"), rs.getDouble("d22diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d23"), rs.getDouble("d23diff")));
+                    row.add(new LastDataPair(eui, rs.getDouble("d24"), rs.getDouble("d24diff")));
                     values.add(row);
                 }
-                return values;
+
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -559,6 +572,7 @@ public class SentinelDao implements SentinelDaoIface {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return values;
     }
 
     @Override
@@ -566,11 +580,11 @@ public class SentinelDao implements SentinelDaoIface {
         String query = "SELECT DISTINCT ON (eui) * FROM analyticdata "
                 + "WHERE eui=? "
                 + "AND tstamp > now() - INTERVAL '15 minutes' ORDER BY eui, tstamp DESC;";
-
+        java.util.ArrayList<List> values = new java.util.ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<List> values = new java.util.ArrayList<>();
+
                 while (rs.next()) {
                     java.util.ArrayList<Object> row = new java.util.ArrayList<>();
                     row.add(rs.getString("eui"));
@@ -601,13 +615,14 @@ public class SentinelDao implements SentinelDaoIface {
                     row.add(rs.getDouble("d24"));
                     values.add(row);
                 }
-                return values;
+                
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return values;
     }
 
     @Override
@@ -672,21 +687,23 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public Map<String, String> getDevices(long configId) throws IotDatabaseException {
         String query = "SELECT eui,channels FROM sentinel_devices WHERE sentinel_id=?";
+        HashMap<String, String> devices = new HashMap<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, configId);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                HashMap<String, String> devices = new HashMap<>();
+                
                 while (rs.next()) {
                     devices.put(rs.getString("eui"), rs.getString("channels"));
                 }
-                return devices;
+                
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return devices;
     }
 
     @Override
@@ -712,12 +729,13 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public int getSentinelStatus(long sentinelId) throws IotDatabaseException {
         String query = "SELECT DISTINCT ON (sentinel_id) level FROM sentinel_events WHERE sentinel_id=? AND tstamp > now() - INTERVAL '24 hours' ORDER BY sentinel_id, tstamp DESC;";
+        int status=0;
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, sentinelId);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
-                    return rs.getInt("level");
+                    status = rs.getInt("level");
                 }
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -725,13 +743,14 @@ public class SentinelDao implements SentinelDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return 0;
+        return status;
     }
 
     @Override
     public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset)
             throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE tag_name=? AND tag_value=? ORDER BY id DESC LIMIT ? OFFSET ?";
+        java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
@@ -739,7 +758,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setInt(3, limit);
             pstmt.setInt(4, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+                
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -764,25 +783,27 @@ public class SentinelDao implements SentinelDaoIface {
                     config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
-                return configs;
+                
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return configs;
     }
 
     @Override
     public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE group_eui=? ORDER BY id DESC LIMIT ? OFFSET ?";
+        java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, groupName);
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
+                
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -807,13 +828,14 @@ public class SentinelDao implements SentinelDaoIface {
                     config.hysteresis = rs.getDouble("hysteresis");
                     configs.add(config);
                 }
-                return configs;
+                
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return configs;
     }
 
 }

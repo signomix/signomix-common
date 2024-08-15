@@ -158,12 +158,13 @@ public class SignalDao implements SignalDaoIface {
     @Override
     public Signal getSignalById(long id) throws IotDatabaseException {
         String query = "SELECT * FROM user_signals WHERE id=?";
+        Signal signal = null;
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
             ResultSet rs = pstmt.executeQuery();
             if(rs.next()){
-                Signal signal = new Signal();
+                signal = new Signal();
                 signal.id = rs.getLong("id");
                 signal.createdAt = rs.getTimestamp("created_at");
                 signal.readAt = rs.getTimestamp("read_at");
@@ -176,16 +177,15 @@ public class SignalDao implements SignalDaoIface {
                 signal.level = rs.getInt("level");
                 signal.messageEn = rs.getString("message_en");
                 signal.messagePl = rs.getString("message_pl");
-                rs.close();
-                return signal;
+                
             }
             rs.close();
-            return null;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return signal;
     }
 
     @Override
@@ -225,13 +225,14 @@ public class SignalDao implements SignalDaoIface {
         String query = "SELECT * FROM user_signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         logger.debug(query);
         logger.debug("userId: "+userId); 
+        ArrayList<Signal> signals = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
             ResultSet rs = pstmt.executeQuery();
-            ArrayList<Signal> signals = new ArrayList<>();
+            
             while(rs.next()){
                 Signal signal = new Signal();
                 signal.id = rs.getLong("id");
@@ -250,24 +251,26 @@ public class SignalDao implements SignalDaoIface {
             }
             logger.debug("found signals: "+signals.size());
             rs.close();
-            return signals;
+            
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return signals;
     }
 
     @Override
     public List<Signal> getOrganizationSignals(long organizationId, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM user_signals WHERE organization_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        ArrayList<Signal> signals = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
             ResultSet rs = pstmt.executeQuery();
-            ArrayList<Signal> signals = new ArrayList<>();
+            
             while(rs.next()){
                 Signal signal = new Signal();
                 signal.id = rs.getLong("id");
@@ -285,12 +288,13 @@ public class SignalDao implements SignalDaoIface {
                 signals.add(signal);
             }
             rs.close();
-            return signals;
+            
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+        return signals;
     }
 
 }

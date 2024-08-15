@@ -34,15 +34,55 @@ public class Widget {
     private String rounding;
     private String icon;
     private String config;
+    private boolean axisOptions;
+    private boolean yAxisAutoScale;
+    private boolean chartArea;
+    private boolean chartMarkers;
     
     public Widget(){
         width=1;
         modified=false;
+        axisOptions=false;
+        yAxisAutoScale=false;
+        chartArea=false;
+        chartMarkers=false;
     }
     
     public Widget(String userID, String name){
         width=1;
         modified=false;
+    }
+
+    public boolean isAxisOptions() {
+        return axisOptions;
+    }   
+
+    public void setAxisOptions(boolean axisOptions) {
+        this.axisOptions = axisOptions;
+    }
+
+    public boolean isyAxisAutoScale() {
+        return yAxisAutoScale;
+    }
+
+    public void setyAxisAutoScale(boolean yAxisAutoScale) {
+        this.yAxisAutoScale = yAxisAutoScale;
+    }
+
+    public boolean isChartArea() {
+        return chartArea;
+    }
+
+    public void setChartArea(boolean chartArea) {
+        this.chartArea = chartArea;
+    }
+
+    public boolean isChartMarkers() {
+        return chartMarkers;
+    }
+
+    public void setChartMarkers(boolean chartMarkers) {
+        this.chartMarkers = chartMarkers;
     }
     
 

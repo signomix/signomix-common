@@ -105,12 +105,13 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public Dashboard getDashboard(String dashboardId) throws IotDatabaseException {
+        Dashboard dashboard=null;
         String query = "SELECT * FROM dashboards WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboardId);
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
-                    Dashboard dashboard = new Dashboard();
+                    dashboard = new Dashboard();
                     dashboard.setId(rs.getString("id"));
                     dashboard.setName(rs.getString("name"));
                     dashboard.setUserID(rs.getString("userid"));
@@ -122,7 +123,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setAdministrators(rs.getString("administrators"));
                     dashboard.setItemsFromJson(rs.getString("items"));
                     dashboard.setOrganizationId(rs.getLong("organization"));
-                    return dashboard;
+                    
                 }
             }
         } catch (SQLException e) {
@@ -130,7 +131,7 @@ public class DashboardDao implements DashboardIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return dashboard;
     }
 
     @Override
@@ -161,16 +162,17 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public DashboardTemplate getDashboardTemplate(String dashboardTemplateId) throws IotDatabaseException {
+        DashboardTemplate dashboardTemplate=null;
         String query = "SELECT * FROM dashboardtemplates WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboardTemplateId);
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
-                    DashboardTemplate dashboardTemplate = new DashboardTemplate();
+                    dashboardTemplate = new DashboardTemplate();
                     dashboardTemplate.setId(rs.getString("id"));
                     dashboardTemplate.setTitle(rs.getString("title"));
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
-                    return dashboardTemplate;
+                    
                 }
             }
         } catch (SQLException e) {
@@ -178,7 +180,7 @@ public class DashboardDao implements DashboardIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return dashboardTemplate;
     }
 
     @Override

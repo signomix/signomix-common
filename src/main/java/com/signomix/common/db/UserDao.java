@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
-import com.signomix.common.Organization;
 import com.signomix.common.User;
 
 import io.agroal.api.AgroalDataSource;
@@ -248,111 +247,131 @@ public class UserDao implements UserDaoIface {
         }
     }
 
-/*     @Override
-    public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description from organizations";
-        if (limit != null) {
-            query += " LIMIT " + limit;
-        }
-        if (offset != null) {
-            query += " OFFSET " + offset;
-        }
-        List<Organization> orgs = new ArrayList<>();
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Organization org = new Organization(
-                        rs.getLong("id"),
-                        rs.getString("code"),
-                        rs.getString("name"),
-                        rs.getString("description"));
-                orgs.add(org);
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-        return orgs;
-    }
-
-    @Override
-    public Organization getOrganization(long id) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description from organizations where id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                Organization org = new Organization(
-                        rs.getLong("id"),
-                        rs.getString("code"),
-                        rs.getString("name"),
-                        rs.getString("description"));
-                return org;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-        return null;
-    }
-
-    @Override
-    public Organization getOrganization(String code) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description from organizations where code=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, code);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                Organization org = new Organization(
-                        rs.getLong("id"),
-                        rs.getString("code"),
-                        rs.getString("name"),
-                        rs.getString("description"));
-                return org;
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-        return null;
-    }
-
-    @Override
-    public void addOrganization(Organization org) throws IotDatabaseException {
-        String query = "INSERT INTO organizations (code,name,description) VALUES (?,?,?)";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, org.code);
-            pstmt.setString(2, org.name);
-            pstmt.setString(3, org.description);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    }
-
-    @Override
-    public void updateOrganization(Organization org) throws IotDatabaseException {
-        String query = "UPDATE organizations SET code=?,name=?,description=? WHERE id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, org.code);
-            pstmt.setString(2, org.name);
-            pstmt.setString(3, org.description);
-            pstmt.setLong(4, org.id);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    }
-
-    @Override
-    public void deleteOrganization(long id) throws IotDatabaseException {
-        String query = "DELETE FROM organizations WHERE id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, id);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    }
-*/
+    /*
+     * @Override
+     * public List<Organization> getOrganizations(Integer limit, Integer offset)
+     * throws IotDatabaseException {
+     * String query = "SELECT id,code,name,description from organizations";
+     * if (limit != null) {
+     * query += " LIMIT " + limit;
+     * }
+     * if (offset != null) {
+     * query += " OFFSET " + offset;
+     * }
+     * List<Organization> orgs = new ArrayList<>();
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * ResultSet rs = pstmt.executeQuery();
+     * while (rs.next()) {
+     * Organization org = new Organization(
+     * rs.getLong("id"),
+     * rs.getString("code"),
+     * rs.getString("name"),
+     * rs.getString("description"));
+     * orgs.add(org);
+     * }
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * return orgs;
+     * }
+     * 
+     * @Override
+     * public Organization getOrganization(long id) throws IotDatabaseException {
+     * String query =
+     * "SELECT id,code,name,description from organizations where id=?";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setLong(1, id);
+     * ResultSet rs = pstmt.executeQuery();
+     * if (rs.next()) {
+     * Organization org = new Organization(
+     * rs.getLong("id"),
+     * rs.getString("code"),
+     * rs.getString("name"),
+     * rs.getString("description"));
+     * return org;
+     * }
+     * } catch (SQLException e) {
+     * e.printStackTrace();
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * return null;
+     * }
+     * 
+     * @Override
+     * public Organization getOrganization(String code) throws IotDatabaseException
+     * {
+     * String query =
+     * "SELECT id,code,name,description from organizations where code=?";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setString(1, code);
+     * ResultSet rs = pstmt.executeQuery();
+     * if (rs.next()) {
+     * Organization org = new Organization(
+     * rs.getLong("id"),
+     * rs.getString("code"),
+     * rs.getString("name"),
+     * rs.getString("description"));
+     * return org;
+     * }
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * return null;
+     * }
+     * 
+     * @Override
+     * public void addOrganization(Organization org) throws IotDatabaseException {
+     * String query =
+     * "INSERT INTO organizations (code,name,description) VALUES (?,?,?)";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setString(1, org.code);
+     * pstmt.setString(2, org.name);
+     * pstmt.setString(3, org.description);
+     * pstmt.executeUpdate();
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * }
+     * 
+     * @Override
+     * public void updateOrganization(Organization org) throws IotDatabaseException
+     * {
+     * String query =
+     * "UPDATE organizations SET code=?,name=?,description=? WHERE id=?";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setString(1, org.code);
+     * pstmt.setString(2, org.name);
+     * pstmt.setString(3, org.description);
+     * pstmt.setLong(4, org.id);
+     * pstmt.executeUpdate();
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * }
+     * 
+     * @Override
+     * public void deleteOrganization(long id) throws IotDatabaseException {
+     * String query = "DELETE FROM organizations WHERE id=?";
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * pstmt.setLong(1, id);
+     * pstmt.executeUpdate();
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * }
+     */
     @Override
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
             throws IotDatabaseException {

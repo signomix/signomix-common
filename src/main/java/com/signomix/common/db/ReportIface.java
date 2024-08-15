@@ -1,5 +1,7 @@
 package com.signomix.common.db;
 
+import java.util.HashMap;
+
 import com.signomix.common.User;
 
 import io.agroal.api.AgroalDataSource;
@@ -9,6 +11,7 @@ public interface ReportIface {
         /**
          * Get report result as ReportResult object.
          * This is the method to be used primarily by desktop widgets.
+         * 
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -112,7 +115,7 @@ public interface ReportIface {
 
         /**
          * Get report result as CSV string.
-         *      
+         * 
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -126,5 +129,11 @@ public interface ReportIface {
                         AgroalDataSource logsDs,
                         DataQuery query,
                         User user);
+
+        /**
+         * Set report options.
+         * @param options
+         */
+        public void setOptions(HashMap<String, Object> options);
 
 }
