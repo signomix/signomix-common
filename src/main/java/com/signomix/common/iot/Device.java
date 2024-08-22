@@ -7,14 +7,13 @@ package com.signomix.common.iot;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.signomix.common.Tag;
 
 /**
  * Description
@@ -22,7 +21,7 @@ import com.signomix.common.Tag;
  * @author Grzegorz Skorupa <g.skorupa at gmail.com>
  */
 public class Device {
-    Logger LOG=Logger.getLogger(Device.class);
+    Logger LOG = Logger.getLogger(Device.class);
 
     public static String GENERIC = "GENERIC";
     public static String TTN = "TTN";
@@ -79,6 +78,7 @@ public class Device {
     private String tags;
     private boolean dashboard; // if true then default dashboard is created automatically for this device
     private String path; // device location in organization tree
+    private Timestamp createdAt;
 
     public boolean isDashboard() {
         return dashboard;
@@ -120,9 +120,18 @@ public class Device {
         orgApplicationId = 1L;
         applicationConfig = null;
         organizationId = 1L;
-        writable=false;
+        writable = false;
         tags = "";
         dashboard = true;
+        createdAt = new Timestamp(0);
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     public void print() {
@@ -291,7 +300,7 @@ public class Device {
         });
         String result = sb.toString();
         // just in case remove all whitespaces
-        result = result.replaceAll("\\s+","");
+        result = result.replaceAll("\\s+", "");
         if (!result.isEmpty()) {
             result = result.substring(0, result.length() - 1);
         }
@@ -312,7 +321,7 @@ public class Device {
      * @param channels the channels to set
      */
     public void setChannels(LinkedHashMap channels) {
-        if(null!=channels){
+        if (null != channels) {
             this.channels = channels;
         }
     }
@@ -736,7 +745,7 @@ public class Device {
     }
 
     public HashMap<String, Object> getConfigurationMap() {
-        if(null==configuration || configuration.trim().isEmpty()){
+        if (null == configuration || configuration.trim().isEmpty()) {
             System.out.println("EMPTY CONFIG");
             return new HashMap<>();
         }
@@ -758,11 +767,13 @@ public class Device {
         return tags;
     }
 
-    /* public void setStatusData(DeviceStatus statusData) {
-        this.state = statusData.status;
-        this.alertStatus = statusData.alert;
-        this.transmissionInterval = statusData.transmissionInterval;
-    } */
+    /*
+     * public void setStatusData(DeviceStatus statusData) {
+     * this.state = statusData.status;
+     * this.alertStatus = statusData.alert;
+     * this.transmissionInterval = statusData.transmissionInterval;
+     * }
+     */
 
     public void setPath(String path) {
         this.path = path;
@@ -771,5 +782,5 @@ public class Device {
     public String getPath() {
         return path;
     }
-    
+
 }

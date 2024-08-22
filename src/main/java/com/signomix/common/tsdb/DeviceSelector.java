@@ -32,7 +32,7 @@ public class DeviceSelector {
                 .append("SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,")
                 .append("d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,")
                 .append("d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,")
-                .append("d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, a.configuration, ")
+                .append("d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, d.createdat, a.configuration, ")
                 .append(this.writable)
                 .append(" FROM devices AS d ")
                 .append(" LEFT JOIN applications AS a ON d.organizationapp=a.id WHERE d.active = true  AND d.tinterval>0 ");
@@ -72,7 +72,7 @@ public class DeviceSelector {
                 .append("SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,")
                 .append("d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,")
                 .append("d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,")
-                .append("d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, a.configuration, ")
+                .append("d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, d.createdat, a.configuration, ")
                 .append("false as writable")
                 .append(" FROM devices AS d ")
                 .append(" LEFT JOIN applications AS a ON d.organizationapp=a.id ")
@@ -144,7 +144,7 @@ public class DeviceSelector {
                 .append("SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,")
                 .append("d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,")
                 .append("d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,")
-                .append("d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path,")
+                .append("d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, d.createdat,")
                 .append("a.configuration, ")
                 .append(this.writable)
                 .append(" FROM devices AS d ")
@@ -177,7 +177,7 @@ public class DeviceSelector {
         query = "SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,"
                 + "d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,"
                 + "d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,"
-                + "d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, a.configuration, "
+                + "d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, d.createdat, a.configuration, "
                 + writable
                 + "FROM devices AS d "
                 + "LEFT JOIN applications AS a ON d.organizationapp=a.id "

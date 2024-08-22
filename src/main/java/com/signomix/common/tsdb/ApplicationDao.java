@@ -45,14 +45,15 @@ public class ApplicationDao implements ApplicationDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        StringBuilder sb=new StringBuilder("");
+        StringBuilder sb = new StringBuilder("");
         sb.append("CREATE SEQUENCE IF NOT EXISTS id_app_seq;");
         sb.append("create table IF NOT EXISTS applications (")
                 .append("id bigint default id_app_seq.nextval primary key,")
-                .append("organization bigint default "+DEFAULT_ORGANIZATION_ID+",")
+                .append("organization bigint default " + DEFAULT_ORGANIZATION_ID + ",")
                 .append("version bigint default 0,")
                 .append("name varchar UNIQUE, configuration varchar);");
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sb.toString());) {
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sb.toString());) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("createStructure", e);
@@ -61,8 +62,9 @@ public class ApplicationDao implements ApplicationDaoIface {
             logger.error("createStructure", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        String indexQuery="CREATE INDEX IF NOT EXISTS idx_applications_name ON applications (name);";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(indexQuery);) {
+        String indexQuery = "CREATE INDEX IF NOT EXISTS idx_applications_name ON applications (name);";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(indexQuery);) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("createStructure", e);
@@ -71,7 +73,8 @@ public class ApplicationDao implements ApplicationDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pst = conn.prepareStatement("INSERT INTO applications values (0,"+DEFAULT_ORGANIZATION_ID+",0,'system','{}');");) {
+                PreparedStatement pst = conn.prepareStatement(
+                        "INSERT INTO applications values (0," + DEFAULT_ORGANIZATION_ID + ",0,'system','{}');");) {
             pst.executeUpdate();
         } catch (SQLException e) {
             logger.error("createStructure", e);
@@ -131,11 +134,12 @@ public class ApplicationDao implements ApplicationDaoIface {
         String query = "SELECT id,organization,version,name,configuration FROM applications WHERE id=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, id);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5));
+            try (ResultSet rs = pst.executeQuery();) {
+                if (rs.next()) {
+                    app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4),
+                            rs.getString(5));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             logger.error("getApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
@@ -149,11 +153,12 @@ public class ApplicationDao implements ApplicationDaoIface {
         String query = "SELECT id,organization,version,name,configuration FROM applications WHERE name=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, name);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5));
+            try (ResultSet rs = pst.executeQuery();) {
+                if (rs.next()) {
+                    app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4),
+                            rs.getString(5));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             logger.error("getApplication", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
@@ -169,12 +174,13 @@ public class ApplicationDao implements ApplicationDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setInt(1, limit);
             pst.setInt(2, offset);
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                result.add(
-                        new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
+            try (ResultSet rs = pst.executeQuery();) {
+                while (rs.next()) {
+                    result.add(
+                            new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4),
+                                    rs.getString(5)));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             logger.error("getApplications", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
@@ -191,12 +197,13 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setLong(1, organizationId);
             pst.setInt(2, limit);
             pst.setInt(3, offset);
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                result.add(
-                        new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
+            try (ResultSet rs = pst.executeQuery();) {
+                while (rs.next()) {
+                    result.add(
+                            new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4),
+                                    rs.getString(5)));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             logger.error("getApplications", e);
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());

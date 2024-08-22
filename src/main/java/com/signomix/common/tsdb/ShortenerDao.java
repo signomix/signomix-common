@@ -55,17 +55,15 @@ public class ShortenerDao implements ShortenerDaoIface {
         String target = "";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, path);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                target = rs.getString(1);
+            try (ResultSet rs = pst.executeQuery();) {
+                if (rs.next()) {
+                    target = rs.getString(1);
+                }
             }
-            rs.close();
-            pst.close();
-            conn.close();
-            return target;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
+        return target;
     }
 
     @Override

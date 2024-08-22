@@ -257,22 +257,21 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String uid) throws IotDatabaseException {
+        User u = null;
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, uid);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                User u = buildUser(rs);
-                rs.close();
-                return u;
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    u = buildUser(rs);
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        return null;
+        return u;
     }
 
     @Override
@@ -283,11 +282,11 @@ public class UserDao implements UserDaoIface {
         User u = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                u = buildUser(rs);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    u = buildUser(rs);
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -303,11 +302,11 @@ public class UserDao implements UserDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, login);
             pstmt.setString(2, password);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                u = buildUser(rs);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    u = buildUser(rs);
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -322,11 +321,11 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, "%" + role + "%");
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                users.add(buildUser(rs));
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    users.add(buildUser(rs));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -501,11 +500,11 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                users.add(buildUser(rs));
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    users.add(buildUser(rs));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -526,11 +525,11 @@ public class UserDao implements UserDaoIface {
         }
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                users.add(buildUser(rs));
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    users.add(buildUser(rs));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -586,11 +585,11 @@ public class UserDao implements UserDaoIface {
         query = "SELECT user_number FROM users WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, user.uid);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                userNumber = rs.getInt(1);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    userNumber = rs.getInt(1);
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
@@ -637,11 +636,11 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, tenantId);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                users.add(buildUser(rs));
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    users.add(buildUser(rs));
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }

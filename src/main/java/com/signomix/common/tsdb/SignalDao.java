@@ -15,7 +15,6 @@ import com.signomix.common.iot.sentinel.Signal;
 
 import io.agroal.api.AgroalDataSource;
 
-
 public class SignalDao implements SignalDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
@@ -76,7 +75,7 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
-         query = "CREATE TABLE IF NOT EXISTS user_signals ("
+        query = "CREATE TABLE IF NOT EXISTS user_signals ("
                 + "id BIGSERIAL, "
                 + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
                 + "read_at TIMESTAMPTZ,"
@@ -111,7 +110,7 @@ public class SignalDao implements SignalDaoIface {
             pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
-        } 
+        }
 
         // indexes
         query = "CREATE INDEX IF NOT EXISTS signals_org_created_idx ON signals(organization_id, created_at);";
@@ -162,24 +161,24 @@ public class SignalDao implements SignalDaoIface {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if(rs.next()){
-                signal = new Signal();
-                signal.id = rs.getLong("id");
-                signal.createdAt = rs.getTimestamp("created_at");
-                signal.readAt = rs.getTimestamp("read_at");
-                signal.sentAt = rs.getTimestamp("sent_at");
-                signal.deliveredAt = rs.getTimestamp("delivered_at");
-                signal.userId = rs.getString("user_id");
-                signal.organizationId = rs.getLong("organization_id");
-                signal.sentinelConfigId = rs.getLong("sentinel_config_id");
-                signal.deviceEui = rs.getString("device_eui");
-                signal.level = rs.getInt("level");
-                signal.messageEn = rs.getString("message_en");
-                signal.messagePl = rs.getString("message_pl");
-                
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    signal = new Signal();
+                    signal.id = rs.getLong("id");
+                    signal.createdAt = rs.getTimestamp("created_at");
+                    signal.readAt = rs.getTimestamp("read_at");
+                    signal.sentAt = rs.getTimestamp("sent_at");
+                    signal.deliveredAt = rs.getTimestamp("delivered_at");
+                    signal.userId = rs.getString("user_id");
+                    signal.organizationId = rs.getLong("organization_id");
+                    signal.sentinelConfigId = rs.getLong("sentinel_config_id");
+                    signal.deviceEui = rs.getString("device_eui");
+                    signal.level = rs.getInt("level");
+                    signal.messageEn = rs.getString("message_en");
+                    signal.messagePl = rs.getString("message_pl");
+
+                }
             }
-            rs.close();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
@@ -193,7 +192,7 @@ public class SignalDao implements SignalDaoIface {
         String query = "UPDATE user_signals SET read_at=?, sent_at=?, delivered_at=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
-                    //TODO: null timestamps
+            // TODO: null timestamps
             pstmt.setTimestamp(1, signal.readAt);
             pstmt.setTimestamp(2, signal.sentAt);
             pstmt.setTimestamp(3, signal.deliveredAt);
@@ -224,34 +223,34 @@ public class SignalDao implements SignalDaoIface {
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM user_signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         logger.debug(query);
-        logger.debug("userId: "+userId); 
+        logger.debug("userId: " + userId);
         ArrayList<Signal> signals = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userId);
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while(rs.next()){
-                Signal signal = new Signal();
-                signal.id = rs.getLong("id");
-                signal.createdAt = rs.getTimestamp("created_at");
-                signal.readAt = rs.getTimestamp("read_at");
-                signal.sentAt = rs.getTimestamp("sent_at");
-                signal.deliveredAt = rs.getTimestamp("delivered_at");
-                signal.userId = rs.getString("user_id");
-                signal.organizationId = rs.getLong("organization_id");
-                signal.sentinelConfigId = rs.getLong("sentinel_config_id");
-                signal.deviceEui = rs.getString("device_eui");
-                signal.level = rs.getInt("level");
-                signal.messageEn = rs.getString("message_en");
-                signal.messagePl = rs.getString("message_pl");
-                signals.add(signal);
+            try (ResultSet rs = pstmt.executeQuery();) {
+
+                while (rs.next()) {
+                    Signal signal = new Signal();
+                    signal.id = rs.getLong("id");
+                    signal.createdAt = rs.getTimestamp("created_at");
+                    signal.readAt = rs.getTimestamp("read_at");
+                    signal.sentAt = rs.getTimestamp("sent_at");
+                    signal.deliveredAt = rs.getTimestamp("delivered_at");
+                    signal.userId = rs.getString("user_id");
+                    signal.organizationId = rs.getLong("organization_id");
+                    signal.sentinelConfigId = rs.getLong("sentinel_config_id");
+                    signal.deviceEui = rs.getString("device_eui");
+                    signal.level = rs.getInt("level");
+                    signal.messageEn = rs.getString("message_en");
+                    signal.messagePl = rs.getString("message_pl");
+                    signals.add(signal);
+                }
+                logger.debug("found signals: " + signals.size());
             }
-            logger.debug("found signals: "+signals.size());
-            rs.close();
-            
+
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
@@ -269,26 +268,26 @@ public class SignalDao implements SignalDaoIface {
             pstmt.setLong(1, organizationId);
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while(rs.next()){
-                Signal signal = new Signal();
-                signal.id = rs.getLong("id");
-                signal.createdAt = rs.getTimestamp("created_at");
-                signal.readAt = rs.getTimestamp("read_at");
-                signal.sentAt = rs.getTimestamp("sent_at");
-                signal.deliveredAt = rs.getTimestamp("delivered_at");
-                signal.userId = rs.getString("user_id");
-                signal.organizationId = rs.getLong("organization_id");
-                signal.sentinelConfigId = rs.getLong("sentinel_config_id");
-                signal.deviceEui = rs.getString("device_eui");
-                signal.level = rs.getInt("level");
-                signal.messageEn = rs.getString("message_en");
-                signal.messagePl = rs.getString("message_pl");
-                signals.add(signal);
+            try (ResultSet rs = pstmt.executeQuery();) {
+
+                while (rs.next()) {
+                    Signal signal = new Signal();
+                    signal.id = rs.getLong("id");
+                    signal.createdAt = rs.getTimestamp("created_at");
+                    signal.readAt = rs.getTimestamp("read_at");
+                    signal.sentAt = rs.getTimestamp("sent_at");
+                    signal.deliveredAt = rs.getTimestamp("delivered_at");
+                    signal.userId = rs.getString("user_id");
+                    signal.organizationId = rs.getLong("organization_id");
+                    signal.sentinelConfigId = rs.getLong("sentinel_config_id");
+                    signal.deviceEui = rs.getString("device_eui");
+                    signal.level = rs.getInt("level");
+                    signal.messageEn = rs.getString("message_en");
+                    signal.messagePl = rs.getString("message_pl");
+                    signals.add(signal);
+                }
             }
-            rs.close();
-            
+
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {

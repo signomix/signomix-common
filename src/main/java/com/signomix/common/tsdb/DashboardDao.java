@@ -123,7 +123,6 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setAdministrators(rs.getString("administrators"));
                     dashboard.setItemsFromJson(rs.getString("items"));
                     dashboard.setOrganizationId(rs.getLong("organization"));
-                    
                 }
             }
         } catch (SQLException e) {
