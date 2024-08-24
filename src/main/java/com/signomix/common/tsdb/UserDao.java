@@ -485,11 +485,40 @@ public class UserDao implements UserDaoIface {
     /*    
     */
     @Override
-    public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset)
+    public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset, String searchField,
+            String searchValue)
             throws IotDatabaseException {
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE organization=? AND tenant_users.user_id IS NULL ";
+
+        String wherePart;
+        int numberOfSearchParams = 0;
+        switch (searchField) {
+            case "email":
+                wherePart = " AND email LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            case "name":
+                wherePart = " AND name LIKE ? OR surname LIKE ?";
+                numberOfSearchParams = 2;
+                break;
+            case "login":
+                wherePart = " AND uid LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            /* case "path":
+                wherePart = " AND path LIKE ?";
+                numberOfSearchParams = 1;
+                break; */
+            case "role":
+                wherePart = " AND role LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            default:
+                wherePart = "";
+        }
+        query += wherePart;
         if (limit != null) {
             query += " LIMIT " + limit;
         }
@@ -500,6 +529,12 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
+            if (!wherePart.isEmpty()) {
+                pstmt.setString(2, searchValue);
+                if (numberOfSearchParams > 1) {
+                    pstmt.setString(3, searchValue);
+                }
+            }
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     users.add(buildUser(rs));
@@ -513,10 +548,39 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public List<User> getUsers(Integer limit, Integer offset) throws IotDatabaseException {
+    public List<User> getUsers(Integer limit, Integer offset, String searchField, String searchValue)
+            throws IotDatabaseException {
         // String query = "SELECT * from users";
+
+        String wherePart;
+        int numberOfSearchParams = 0;
+        switch (searchField) {
+            case "email":
+                wherePart = " WHERE email LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            case "name":
+                wherePart = " WHERE name LIKE ? OR surname LIKE ?";
+                numberOfSearchParams = 2;
+                break;
+            case "login":
+                wherePart = " WHERE uid LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            /* case "path":
+                wherePart = " WHERE path LIKE ?";
+                numberOfSearchParams = 1;
+                break; */
+            case "role":
+                wherePart = " WHERE role LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            default:
+                wherePart = "";
+        }
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id ";
+        query += wherePart;
         if (limit != null) {
             query += " LIMIT " + limit;
         }
@@ -525,6 +589,12 @@ public class UserDao implements UserDaoIface {
         }
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            if (!wherePart.isEmpty()) {
+                pstmt.setString(1, "%" + searchValue + "%");
+                if(numberOfSearchParams>1){
+                    pstmt.setString(2, "%" + searchValue + "%");
+                }
+            }
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     users.add(buildUser(rs));
@@ -623,10 +693,38 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset) throws IotDatabaseException {
+    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset, String searchField,
+            String searchValue) throws IotDatabaseException {
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
                 + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
                 + "WHERE tenant_users.tenant_id=?";
+        String wherePart;
+        int numberOfSearchParams = 0;
+        switch (searchField) {
+            case "email":
+                wherePart = " AND email LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            case "name":
+                wherePart = " AND name LIKE ? OR surname LIKE ?";
+                numberOfSearchParams = 2;
+                break;
+            case "login":
+                wherePart = " AND uid LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            /* case "path":
+                wherePart = " AND path LIKE ?";
+                numberOfSearchParams = 1;
+                break; */
+            case "role":
+                wherePart = " AND role LIKE ?";
+                numberOfSearchParams = 1;
+                break;
+            default:
+                wherePart = "";
+        }
+        query += wherePart;
         if (limit != null) {
             query += " LIMIT " + limit;
         }
@@ -636,6 +734,12 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, tenantId);
+            if(!wherePart.isEmpty()){
+                pstmt.setString(2, searchValue);
+                if(numberOfSearchParams>1){
+                    pstmt.setString(3, searchValue);
+                }
+            }
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     users.add(buildUser(rs));
