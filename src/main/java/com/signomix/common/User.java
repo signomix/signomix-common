@@ -70,6 +70,7 @@ public class User {
     public Integer phone;
     public Integer tenant;
     public String pathRoot="";
+    public Integer devicesCounter = null;
 
     /**
      * Clones given user
@@ -107,6 +108,7 @@ public class User {
         if(cloned.uid!=null) result.uid=cloned.uid;
         if(cloned.unregisterRequested!=null) result.unregisterRequested=cloned.unregisterRequested;
         if(cloned.warningNotificationChannel!=null) result.warningNotificationChannel=cloned.warningNotificationChannel;
+        if(cloned.devicesCounter!=null) result.devicesCounter=cloned.devicesCounter;
         
         // fix nulls
         if (cloned.services == null) {

@@ -2375,6 +2375,26 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public Integer getUserDevicesCount(String userId) throws IotDatabaseException {
+        Integer count = 0;
+        String query = "SELECT COUNT(*) FROM devices WHERE userid=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, userId);
+            try (ResultSet rs = pst.executeQuery();) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+            logger.error(query);
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return count;
+    }
+
+    @Override
     public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset,
             String searchString)
             throws IotDatabaseException {
