@@ -554,6 +554,9 @@ public class UserDao implements UserDaoIface {
 
         String wherePart;
         int numberOfSearchParams = 0;
+        if(searchField==null){
+            searchField = "";
+        }
         switch (searchField) {
             case "email":
                 wherePart = " WHERE email LIKE ?";

@@ -46,6 +46,8 @@ public class DataQuery {
     private String sortOrder;
     private String sortBy;
     private HashMap<String, String> parameters;
+    private boolean notNull;
+
 
     public Timestamp getFromTs() {
         return fromTs;
@@ -53,6 +55,14 @@ public class DataQuery {
 
     public Timestamp getToTs() {
         return toTs;
+    }
+
+    public void setNotNull(boolean notNull) {
+        this.notNull = notNull;
+    }
+
+    public boolean isNotNull() {
+        return notNull;
     }
 
     /**
@@ -95,6 +105,7 @@ public class DataQuery {
         parameters = new HashMap<>();
         sortOrder = "DESC";
         sortBy = "timestamp";
+        notNull = false;
     }
 
     private static String clean(String query) {
@@ -127,6 +138,7 @@ public class DataQuery {
                 case "get":
                 case "where":
                 case "as":
+                case "using":
                     i = i + 1;
                     break;
                 case "last":
@@ -194,9 +206,6 @@ public class DataQuery {
                     i = i + 2;
                     break;
                 case "class":
-                    dq.setClassName(params[i + 1]);
-                    i = i + 2;
-                    break;
                 case "report":
                     dq.setClassName(params[i + 1]);
                     i = i + 2;
@@ -274,6 +283,10 @@ public class DataQuery {
                         e.printStackTrace();
                     }
                     i = i + 2;
+                    break;
+                case "notnull":
+                    dq.setNotNull(true);
+                    i = i + 1;
                     break;
                 default:
                     try{
