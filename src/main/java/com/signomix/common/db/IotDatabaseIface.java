@@ -82,7 +82,7 @@ public interface IotDatabaseIface {
     public void updateDeviceChannels(String deviceEUI, String channels) throws IotDatabaseException;
     public void updateDeviceStatus(String eui, long transmissionInterval, Double newStatus, int newAlertStatus) throws IotDatabaseException;
     
-    public ChannelData getLastValue(String userID, String deviceID, String channel) throws IotDatabaseException;
+    public ChannelData getLastValue(String userID, String deviceID, String channel, boolean skipNull) throws IotDatabaseException;
     public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException;
     
     public IotEvent getFirstCommand(String deviceEUI) throws IotDatabaseException;

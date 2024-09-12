@@ -68,7 +68,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public ChannelData getLastValue(String userID, String deviceEUI, String channel) throws IotDatabaseException {
+    public ChannelData getLastValue(String userID, String deviceEUI, String channel, boolean skipNull)
+            throws IotDatabaseException {
         int channelIndex = getChannelIndex(deviceEUI, channel);
         if (channelIndex < 0) {
             return null;
@@ -76,6 +77,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String columnName = "d" + (channelIndex);
         String query = "select eui,userid,day,dtime,tstamp," + columnName
                 + " from devicedata where eui=? order by tstamp desc limit 1";
+        if (skipNull) {
+            query = "select eui,userid,day,dtime,tstamp," + columnName
+                    + " from devicedata where eui=? and " + columnName + " is not null order by tstamp desc limit 1";
+        }
         ChannelData result = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, deviceEUI);
@@ -269,52 +274,60 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-/*     @Override
-    public long getMaxCommandId() throws IotDatabaseException {
-        String query = "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog";
-        long result = 0;
-        long v1 = 0;
-        long v2 = 0;
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                v1 = rs.getLong(1);
-                v1 = rs.getLong(2);
-            }
-            if (v1 > v2) {
-                result = v1;
-            } else {
-                result = v2;
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
-        }
-        return result;
-    }
-
-    @Override
-    public long getMaxCommandId(String deviceEui) throws IotDatabaseException {
-        String query = "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog "
-                + "WHERE commands.origin=commandslog.origin AND commands.origin like %@" + deviceEui;
-        long result = 0;
-        long v1 = 0;
-        long v2 = 0;
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                v1 = rs.getLong(1);
-                v1 = rs.getLong(2);
-            }
-            if (v1 > v2) {
-                result = v1;
-            } else {
-                result = v2;
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
-        }
-        return result;
-    } */
+    /*
+     * @Override
+     * public long getMaxCommandId() throws IotDatabaseException {
+     * String query =
+     * "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog"
+     * ;
+     * long result = 0;
+     * long v1 = 0;
+     * long v2 = 0;
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pst =
+     * conn.prepareStatement(query);) {
+     * ResultSet rs = pst.executeQuery();
+     * if (rs.next()) {
+     * v1 = rs.getLong(1);
+     * v1 = rs.getLong(2);
+     * }
+     * if (v1 > v2) {
+     * result = v1;
+     * } else {
+     * result = v2;
+     * }
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
+     * }
+     * return result;
+     * }
+     * 
+     * @Override
+     * public long getMaxCommandId(String deviceEui) throws IotDatabaseException {
+     * String query =
+     * "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog "
+     * + "WHERE commands.origin=commandslog.origin AND commands.origin like %@" +
+     * deviceEui;
+     * long result = 0;
+     * long v1 = 0;
+     * long v2 = 0;
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pst =
+     * conn.prepareStatement(query);) {
+     * ResultSet rs = pst.executeQuery();
+     * if (rs.next()) {
+     * v1 = rs.getLong(1);
+     * v1 = rs.getLong(2);
+     * }
+     * if (v1 > v2) {
+     * result = v1;
+     * } else {
+     * result = v2;
+     * }
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
+     * }
+     * return result;
+     * }
+     */
 
     @Override
     public void removeCommand(long id) throws IotDatabaseException {
@@ -1809,9 +1822,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
      * @return list of device data
      */
     @Override
-    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset, String searchString )
+    public List<Device> getUserDevices(User user, boolean withStatus, Integer limit, Integer offset,
+            String searchString)
             throws IotDatabaseException {
-                //TODO: implement searchString
+        // TODO: implement searchString
         ArrayList<Device> devices = new ArrayList<>();
 
         if (user.organization != defaultOrganizationId) {
@@ -1848,9 +1862,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset, String searchString)
+    public List<Device> getOrganizationDevices(long organizationId, boolean withStatus, Integer limit, Integer offset,
+            String searchString)
             throws IotDatabaseException {
-                //TODO: implement searchString 
+        // TODO: implement searchString
         ArrayList<Device> devices = new ArrayList<>();
         String query = "SELECT * FROM devices WHERE organization=? LIMIT ? OFFSET ?";
         Device device;
@@ -2506,7 +2521,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset, String searchString) throws IotDatabaseException {
+    public List<DeviceGroup> getUserGroups(String userID, int limit, int offset, String searchString)
+            throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getUserGroups'");
     }
@@ -2548,7 +2564,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'addDeviceTag'");
     }
 
-
     @Override
     public void updateDeviceTag(User user, String deviceEui, String tagName, String tagValue) {
         // TODO Auto-generated method stub
@@ -2562,7 +2577,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit, Integer offset) {
+    public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit,
+            Integer offset) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDevicesByTag'");
     }
@@ -2618,7 +2634,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search,Integer limit, Integer offset)
+    public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search,
+            Integer limit, Integer offset)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesByPath'");

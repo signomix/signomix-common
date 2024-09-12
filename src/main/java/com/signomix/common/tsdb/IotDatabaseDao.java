@@ -71,14 +71,18 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public ChannelData getLastValue(String userID, String deviceEUI, String channel) throws IotDatabaseException {
+    public ChannelData getLastValue(String userID, String deviceEUI, String channel, boolean skipNull) throws IotDatabaseException {
         int channelIndex = getChannelIndex(deviceEUI, channel);
         if (channelIndex < 0) {
             return null;
         }
         String columnName = "d" + (channelIndex);
         String query = "select eui,userid,tstamp," + columnName
-                + " from devicedata where eui=? order by tstamp desc limit 1";
+                + " from analyticdata where eui=? order by tstamp desc limit 1";
+        if(skipNull){
+            query = "select eui,userid,tstamp," + columnName
+                + " from analyticdata where eui=? and "+columnName+" is not null order by tstamp desc limit 1";
+        }
         ChannelData result = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, deviceEUI);
@@ -1890,7 +1894,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return result;
         }
         String columnName = "d" + channelIndex;
-        String query = "select " + columnName + " from devicedata where eui=? order by tstamp desc limit ?";
+        String query = "select " + columnName + " from analyticdata where eui=? and "+columnName+"is not null order by tstamp desc limit ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, deviceEUI);
             pst.setInt(2, scope);
@@ -1908,7 +1912,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException {
-        String query = "select eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from devicedata where eui=? order by tstamp desc limit 1";
+        String query = "select eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from analyticdata where eui=? order by tstamp desc limit 1";
         List<String> channels = getDeviceChannels(deviceEUI);
         ArrayList<ChannelData> row = new ArrayList<>();
         ArrayList<List> result = new ArrayList<>();
