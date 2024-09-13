@@ -97,6 +97,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e1) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e1.getMessage());
         }
         return result;
     }
@@ -1894,7 +1896,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return result;
         }
         String columnName = "d" + channelIndex;
-        String query = "select " + columnName + " from analyticdata where eui=? and "+columnName+"is not null order by tstamp desc limit ?";
+        String query = "select " + columnName + " from analyticdata where eui=? and "+columnName+" is not null order by tstamp desc limit ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, deviceEUI);
             pst.setInt(2, scope);
