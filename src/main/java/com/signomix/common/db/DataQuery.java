@@ -23,6 +23,7 @@ import com.signomix.common.DateTool;
 public class DataQuery {
     private static final Logger LOG = Logger.getLogger(DataQuery.class);
 
+    private String source;
     private int limit;
     public int average;
     public int minimum;
@@ -48,6 +49,13 @@ public class DataQuery {
     private HashMap<String, String> parameters;
     private boolean notNull;
 
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getSource() {
+        return source;
+    }
 
     public Timestamp getFromTs() {
         return fromTs;
@@ -131,6 +139,7 @@ public class DataQuery {
         if (q.equalsIgnoreCase("last")) {
             q = "last 1";
         }
+        dq.setSource(q);
         LOG.debug("data query: " + q);
         String[] params = q.split(" ");
         for (int i = 0; i < params.length;) {
