@@ -2672,4 +2672,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'getUserDevicesCount'");
     }
 
+    @Override
+    public void putCommandLog(long id, String deviceEUI, String type, String payload, long createdAt)
+            throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'putCommandLog'");
+    }
+
 }

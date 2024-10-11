@@ -1,16 +1,18 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.ReportDaoIface;
+import com.signomix.common.db.ReportDefinition;
+
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.logging.Logger;
-
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.ReportDaoIface;
-
-import io.agroal.api.AgroalDataSource;
 
 /**
  * Implements ReportDaoIface for PostgreSQL database
@@ -28,7 +30,8 @@ public class ReportDao implements ReportDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY reports to '/var/lib/postgresql/data/export/reports.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY reports to '/var/lib/postgresql/data/export/reports.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY report_definitions to '/var/lib/postgresql/data/export/report_definitions.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
@@ -48,15 +51,15 @@ public class ReportDao implements ReportDaoIface {
                 + "organization INTEGER,"
                 + "tenant INTEGER,"
                 + "path LTREE,"
-                + "user_id INTEGER,"
+                + "userid INTEGER,"
                 + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
-                + "UNIQUE NULLS NOT DISTINCT (class_name, organization, tenant, path, user_id)"
+                + "UNIQUE NULLS NOT DISTINCT (class_name, organization, tenant, path, userid)"
                 + ")";
         String query2 = "CREATE INDEX IF NOT EXISTS reports_idx ON reports (path);"
                 + "CREATE INDEX IF NOT EXISTS reports_idx2 ON reports (class_name);"
                 + "CREATE INDEX IF NOT EXISTS reports_idx3 ON reports (organization);"
                 + "CREATE INDEX IF NOT EXISTS reports_idx4 ON reports (tenant);"
-                + "CREATE INDEX IF NOT EXISTS reports_idx5 ON reports (user_id);";
+                + "CREATE INDEX IF NOT EXISTS reports_idx5 ON reports (userid);";
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -70,6 +73,37 @@ public class ReportDao implements ReportDaoIface {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query2);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during createStructure", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during createStructure", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+
+        // create report_definitons table
+        String query3 = "CREATE TABLE IF NOT EXISTS report_definitions ("
+                + "id SERIAL PRIMARY KEY,"
+                + "organization INTEGER,"
+                + "tenant INTEGER,"
+                + "path LTREE,"
+                + "userid VARCHAR,"
+                + "team VARCHAR,"
+                + "administrators VARCHAR,"
+                + "definition VARCHAR,"
+                + "name VARCHAR,"
+                + "description VARCHAR,"
+                + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
+                + "UNIQUE NULLS NOT DISTINCT (class_name, organization, tenant, path, userid)"
+                + ")";
+        String query4 = "CREATE INDEX IF NOT EXISTS report_definitions_idx ON report_definitions (path);"
+                + "CREATE INDEX IF NOT EXISTS report_definitions_idx2 ON report_definitions (organization);"
+                + "CREATE INDEX IF NOT EXISTS report_definitions_idx3 ON report_definitions (tenant);"
+                + "CREATE INDEX IF NOT EXISTS report_definitions_idx4 ON report_definitions (userid);";
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query3);) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("Error during createStructure", e);
@@ -98,7 +132,7 @@ public class ReportDao implements ReportDaoIface {
             throws IotDatabaseException {
         boolean isAvailable = false;
         if (userNumber != null) {
-            String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (user_id=? OR user_id=?);";
+            String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (userid=? OR userid=?);";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query2);) {
                 pstmt.setString(1, className);
@@ -166,8 +200,7 @@ public class ReportDao implements ReportDaoIface {
     @Override
     public void saveReport(String className, Long userNumber, Integer organization, Integer tenant, String path)
             throws IotDatabaseException {
-        String query = "INSERT INTO reports (class_name, organization, tenant, path, user_id) VALUES (?,?,?,?,?) "
-                + "ON CONFLICT (class_name, organization, tenant, path, user_id) DO NOTHING;";
+        String query = "INSERT INTO reports (class_name, organization, tenant, path, userid) VALUES (?,?,?,?,?); ";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, className);
@@ -200,5 +233,213 @@ public class ReportDao implements ReportDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
+
+    @Override
+    public void saveReportDefinition(ReportDefinition reportDefinition) throws IotDatabaseException {
+        String query = "INSERT INTO report_definitions (organization, tenant, path, userid, team, administrators, definition, name, description) VALUES (?,?,?,?,?,?,?,?,?); ";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            if (reportDefinition.organization == null) {
+                pstmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(1, reportDefinition.organization);
+            }
+            if (reportDefinition.tenant == null) {
+                pstmt.setNull(2, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(2, reportDefinition.tenant);
+            }
+            if (reportDefinition.path == null) {
+                pstmt.setNull(3, java.sql.Types.OTHER);
+            } else {
+                pstmt.setString(3, reportDefinition.path);
+            }
+            if (reportDefinition.userLogin == null) {
+                pstmt.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setString(4, reportDefinition.userLogin);
+            }
+            if(reportDefinition.team == null){
+                pstmt.setNull(5, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(5, reportDefinition.team);
+            }
+            if(reportDefinition.administrators == null){
+                pstmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(6, reportDefinition.administrators);
+            }
+            if (reportDefinition.definition == null) {
+                pstmt.setNull(5, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(5, reportDefinition.definition);
+            }
+            if (reportDefinition.name == null) {
+                pstmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(6, reportDefinition.name);
+            }
+            if (reportDefinition.description == null) {
+                pstmt.setNull(7, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(7, reportDefinition.description);
+            }
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during saveReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during saveReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public ReportDefinition getReportDefinition(Integer id) throws IotDatabaseException {
+        String query = "SELECT * FROM report_definitions WHERE id=?;";
+        ReportDefinition reportDefinition = null;
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    reportDefinition = new ReportDefinition();
+                    reportDefinition.id = rs.getInt("id");
+                    reportDefinition.organization = rs.getInt("organization");
+                    reportDefinition.tenant = rs.getInt("tenant");
+                    reportDefinition.path = rs.getString("path");
+                    reportDefinition.userLogin = rs.getString("userid");
+                    reportDefinition.team = rs.getString("team");
+                    reportDefinition.administrators = rs.getString("administrators");
+                    reportDefinition.definition = rs.getString("definition");
+                    reportDefinition.name = rs.getString("name");
+                    reportDefinition.description = rs.getString("description");
+                }
+                return reportDefinition;
+            }
+        } catch (SQLException e) {
+            logger.error("Error during getReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during getReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public boolean deleteReportDefinition(Integer id) throws IotDatabaseException {
+        String query = "DELETE FROM report_definitions WHERE id=?;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setInt(1, id);
+            return pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during deleteReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during deleteReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateReportDefinition(Integer id, ReportDefinition reportDefinition) throws IotDatabaseException {
+        String query = "UPDATE report_definitions SET organization=?, tenant=?, path=?, userid=?, team=?, administrators=?, definition=?, name=?, description=? WHERE id=?;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            if (reportDefinition.organization == null) {
+                pstmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(1, reportDefinition.organization);
+            }
+            if (reportDefinition.tenant == null) {
+                pstmt.setNull(2, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setInt(2, reportDefinition.tenant);
+            }
+            if (reportDefinition.path == null) {
+                pstmt.setNull(3, java.sql.Types.OTHER);
+            } else {
+                pstmt.setString(3, reportDefinition.path);
+            }
+            if (reportDefinition.userLogin == null) {
+                pstmt.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                pstmt.setString(4, reportDefinition.userLogin);
+            }
+            if(reportDefinition.team == null){
+                pstmt.setNull(5, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(5, reportDefinition.team);
+            }
+            if(reportDefinition.administrators == null){
+                pstmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(6, reportDefinition.administrators);
+            }
+            if (reportDefinition.definition == null) {
+                pstmt.setNull(7, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(7, reportDefinition.definition);
+            }
+            if (reportDefinition.name == null) {
+                pstmt.setNull(8, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(8, reportDefinition.name);
+            }
+            if (reportDefinition.description == null) {
+                pstmt.setNull(9, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(9, reportDefinition.description);
+            }
+            pstmt.setInt(10, id);
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during updateReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during updateReportDefinition", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<ReportDefinition> getReportDefinitions(String userLogin) throws IotDatabaseException {
+        String query = "SELECT * FROM report_definitions WHERE userid=? or report_definitions.team LIKE ? "+
+        "OR report_definition.administrators LIKE ? ORDER BY name DESC;";
+
+        ArrayList<ReportDefinition> reportDefinitions = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userLogin);
+            pstmt.setString(2, "%,"+userLogin+",%");
+            pstmt.setString(3, "%,"+userLogin+",%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    ReportDefinition reportDefinition = new ReportDefinition();
+                    reportDefinition.id = rs.getInt("id");
+                    reportDefinition.organization = rs.getInt("organization");
+                    reportDefinition.tenant = rs.getInt("tenant");
+                    reportDefinition.path = rs.getString("path");
+                    reportDefinition.userLogin = rs.getString("userid");
+                    reportDefinition.team = rs.getString("team");
+                    reportDefinition.administrators = rs.getString("administrators");
+                    reportDefinition.definition = rs.getString("definition");
+                    reportDefinition.name = rs.getString("name");
+                    reportDefinition.description = rs.getString("description");
+                    reportDefinitions.add(reportDefinition);
+                }
+                return reportDefinitions;
+            }
+        } catch (SQLException e) {
+            logger.error("Error during getReportDefinitions", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during getReportDefinitions", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    
 
 }

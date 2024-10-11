@@ -1,9 +1,8 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.User;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
-
-import com.signomix.common.User;
 
 public class DeviceSelector {
     public static final Logger logger = Logger.getLogger(DeviceSelector.class);
@@ -177,7 +176,7 @@ public class DeviceSelector {
         query = "SELECT d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder,"
                 + "d.devicekey, d.description, d.tinterval, d.template, d.pattern, d.commandscript, d.appid,"
                 + "d.groups, d.devid, d.appeui, d.active, d.project, d.latitude, d.longitude, d.altitude, d.retention, d.administrators,"
-                + "d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, d.createdat, a.configuration, "
+                + "d.framecheck, d.configuration, d.organization, d.organizationapp, d.defaultdashboard, d.path, d.createdat, d.downlink, a.configuration, "
                 + writable
                 + "FROM devices AS d "
                 + "LEFT JOIN applications AS a ON d.organizationapp=a.id "

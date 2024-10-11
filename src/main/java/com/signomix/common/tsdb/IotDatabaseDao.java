@@ -71,7 +71,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public ChannelData getLastValue(String userID, String deviceEUI, String channel, boolean skipNull) throws IotDatabaseException {
+    public ChannelData getLastValue(String userID, String deviceEUI, String channel, boolean skipNull)
+            throws IotDatabaseException {
         int channelIndex = getChannelIndex(deviceEUI, channel);
         if (channelIndex < 0) {
             return null;
@@ -79,9 +80,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String columnName = "d" + (channelIndex);
         String query = "select eui,userid,tstamp," + columnName
                 + " from analyticdata where eui=? order by tstamp desc limit 1";
-        if(skipNull){
+        if (skipNull) {
             query = "select eui,userid,tstamp," + columnName
-                + " from analyticdata where eui=? and "+columnName+" is not null order by tstamp desc limit 1";
+                    + " from analyticdata where eui=? and " + columnName + " is not null order by tstamp desc limit 1";
         }
         ChannelData result = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -598,6 +599,26 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public void putCommandLog(long id, String deviceEUI, String type, String payload, long createdAt)
+            throws IotDatabaseException {
+        String query = "insert into commandslog (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
+
+        String origin = deviceEUI;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setLong(1, id);
+            pst.setString(2, "");
+            pst.setString(3, type);
+            pst.setString(4, origin);
+            pst.setString(5, payload);
+            pst.setLong(6, createdAt);
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+
+    }
+
+    @Override
     public void addAlert(IotEvent event) throws IotDatabaseException {
         String userStr = event.getOrigin().substring(0, event.getOrigin().indexOf("\t"));
         String[] users = userStr.split(";");
@@ -977,11 +998,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
         String command = payload;
         boolean overwrite = false;
         if (command.startsWith("&")) {
+            command = command.substring(1);
         } else if (command.startsWith("#")) {
+            command = command.substring(1);
             overwrite = true;
             query = query2;
+        } else {
+            // overwrite = false
+            // comand string is not modified
         }
-        command = command.substring(1);
+
         String origin = deviceEUI;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             if (overwrite) {
@@ -1896,7 +1922,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return result;
         }
         String columnName = "d" + channelIndex;
-        String query = "select " + columnName + " from analyticdata where eui=? and "+columnName+" is not null order by tstamp desc limit ?";
+        String query = "select " + columnName + " from analyticdata where eui=? and " + columnName
+                + " is not null order by tstamp desc limit ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, deviceEUI);
             pst.setInt(2, scope);
@@ -2537,6 +2564,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setOrgApplicationId(rs.getLong("organizationapp"));
         device.setDashboard(rs.getBoolean("defaultdashboard"));
         try {
+            device.setDownlink(rs.getString("downlink"));
+        } catch (Exception e) {
+            device.setDownlink("");
+        }
+        try {
             device.setWritable(rs.getBoolean("writable"));
         } catch (Exception e) {
             device.setWritable(true); // writable won't be used in new access logic
@@ -2567,7 +2599,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (Exception e) {
             // device.setAlertStatus(0);
         }
-        try{
+        try {
             device.setCreatedAt(rs.getTimestamp("createdat"));
         } catch (Exception e) {
             e.printStackTrace();

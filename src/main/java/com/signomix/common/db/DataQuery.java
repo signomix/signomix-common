@@ -4,16 +4,14 @@
  */
 package com.signomix.common.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.signomix.common.DateTool;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
 import org.jboss.logging.Logger;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.signomix.common.DateTool;
 
 /**
  *
@@ -48,6 +46,14 @@ public class DataQuery {
     private String sortBy;
     private HashMap<String, String> parameters;
     private boolean notNull;
+    private Integer intervalValue;
+    private String intervalName;
+    private boolean firstInInterval;
+    private String fromInterval; // interval from
+    private String toInterval; // interval to
+    private Boolean isInterval; // is interval
+    private Boolean intervalTimestampAtEnd; // is interval timestamp at the end of interval
+    private boolean intervalDeltas; // is interval deltas
 
     public void setSource(String source) {
         this.source = source;
@@ -71,6 +77,10 @@ public class DataQuery {
 
     public boolean isNotNull() {
         return notNull;
+    }
+
+    public Boolean isIntervalDeltas() {
+        return intervalDeltas;
     }
 
     /**
@@ -114,11 +124,19 @@ public class DataQuery {
         sortOrder = "DESC";
         sortBy = "timestamp";
         notNull = false;
+        intervalValue = null;
+        intervalName = null;
+        firstInInterval = false;
+        fromInterval = null;
+        toInterval = null;
+        isInterval = false;
+        intervalTimestampAtEnd = true;
+        intervalDeltas = false;
     }
 
     private static String clean(String query) {
         // replace non printable characters with space
-        if(query==null){
+        if (query == null) {
             return "";
         }
         String q = query.replaceAll("[^\\x20-\\x7E]", " ");
@@ -297,11 +315,47 @@ public class DataQuery {
                     dq.setNotNull(true);
                     i = i + 1;
                     break;
+                case "interval":
+                    try {
+                        dq.intervalValue = Integer.parseInt(params[i + 1]);
+                        dq.isInterval = true;
+                    } catch (Exception e) {
+                        LOG.info("error parsing query (unknown param): [" + query + "]");
+                    }
+                    i = i + 2;
+                    break;
+                case "start":
+                    dq.intervalTimestampAtEnd = false;
+                    i = i + 1;
+                    break;
+                case "end":
+                    dq.intervalTimestampAtEnd = true;
+                    i = i + 1;
+                    break;
+                case "first":
+                    dq.firstInInterval = true;
+                    i = i + 1;
+                    break;
+                case "second":
+                case "minute":
+                case "hour":
+                case "day":
+                case "week":
+                case "month":
+                case "quarter":
+                case "year":
+                    dq.intervalName = params[i];
+                    i = i + 1;
+                    break;
+                case "deltas":
+                    dq.intervalDeltas = true;
+                    i = i + 1;
+                    break;
                 default:
-                    try{
+                    try {
                         dq.putParameter(params[i], params[i + 1]);
-                    }catch(Exception e){
-                        LOG.info("error parsing query (unknown param): ["+query+"]");
+                    } catch (Exception e) {
+                        LOG.info("error parsing query (unknown param): [" + query + "]");
                     }
                     i = i + 2;
                     break;
@@ -336,6 +390,42 @@ public class DataQuery {
             dq.setProject(null);
         }
         return dq;
+    }
+
+    /*
+     * private static String getIntervalSymbol(String intervalStr) throws Exception{
+     * String[]
+     * allowed={"second","minute","hour","day","week","month","quarter","year"};
+     * if(Arrays.asList(allowed).contains(intervalStr.toLowerCase())){
+     * return intervalStr.toLowerCase();
+     * }else{
+     * throw new Exception("Invalid interval value");
+     * }
+     * }
+     */
+
+    public Boolean isInterval() {
+        return isInterval;
+    }
+
+    public Boolean isIntervalTimestampAtEnd() {
+        return intervalTimestampAtEnd;
+    }
+
+    public boolean isFirstInInterval() {
+        return firstInInterval;
+    }
+
+    public String getInterval() {
+        return intervalValue + " " + intervalName;
+    }
+
+    public Integer getIntervalValue() {
+        return intervalValue;
+    }
+
+    public String getIntervalName() {
+        return intervalName;
     }
 
     public void setSortOrder(String order) {

@@ -1,8 +1,5 @@
 package com.signomix.common.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.signomix.common.Tag;
 import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
@@ -12,8 +9,9 @@ import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
-
 import io.agroal.api.AgroalDataSource;
+import java.util.ArrayList;
+import java.util.List;
 
 public interface IotDatabaseIface {
     public void commit();
@@ -88,6 +86,7 @@ public interface IotDatabaseIface {
     public IotEvent getFirstCommand(String deviceEUI) throws IotDatabaseException;
     public void removeCommand(long id) throws IotDatabaseException;
     public void putCommandLog(String deviceEUI, IotEvent command) throws IotDatabaseException;
+    public void putCommandLog(long id, String deviceEUI, String type, String payload, long createdAt) throws IotDatabaseException;
     public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException; 
     public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt) throws IotDatabaseException;
     //public long getMaxCommandId() throws IotDatabaseException;

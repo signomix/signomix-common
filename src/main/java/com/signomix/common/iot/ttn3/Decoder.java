@@ -1,17 +1,19 @@
 
 package com.signomix.common.iot.ttn3;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
+import java.util.HashMap;
+import java.util.Map;
+import org.jboss.logging.Logger;
 
 /**
  *
  * @author greg
  */
 public class Decoder {
+
+    private static final Logger logger = Logger.getLogger(Decoder.class);
     
     /*
     public String deviceEui;
@@ -62,7 +64,7 @@ public class Decoder {
         args.put(JsonWriter.PRETTY_PRINT, true);
         args.put(JsonWriter.TYPE, false);
         rxMetadataJson=JsonWriter.objectToJson(data.rxMetadata, args);
-        System.out.println(rxMetadataJson);
+        logger.debug(rxMetadataJson);
         return data;
     }
     

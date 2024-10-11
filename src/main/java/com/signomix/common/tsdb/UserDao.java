@@ -1,19 +1,16 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.User;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.UserDaoIface;
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.User;
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.UserDaoIface;
-
-import io.agroal.api.AgroalDataSource;
 
 public class UserDao implements UserDaoIface {
 
@@ -87,99 +84,6 @@ public class UserDao implements UserDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
 
-        /*
-         * User user = new User();
-         * user.uid = "admin";
-         * user.type = User.OWNER;
-         * user.email = "";
-         * user.name = "admin";
-         * user.surname = "admin";
-         * user.role = "";
-         * user.confirmString = "";
-         * user.password = HashMaker.md5Java("test123");
-         * user.generalNotificationChannel = "";
-         * user.infoNotificationChannel = "";
-         * user.warningNotificationChannel = "";
-         * user.alertNotificationChannel = "";
-         * user.confirmed = true;
-         * user.unregisterRequested = false;
-         * user.authStatus = 1;
-         * user.createdAt = System.currentTimeMillis();
-         * user.number = 0L;
-         * user.services = 0;
-         * user.phonePrefix = "";
-         * user.credits = 0L;
-         * user.autologin = false;
-         * user.preferredLanguage = "en";
-         * user.organization = DEFAULT_ORGANIZATION_ID;
-         * user.path = "";
-         * try {
-         * addUser(user);
-         * } catch (IotDatabaseException e) {
-         * LOG.warn("Error inserting default admin user", e);
-         * }
-         * user = new User();
-         * user.uid = "tester1";
-         * user.type = User.USER;
-         * user.email = "";
-         * user.name = "tester";
-         * user.surname = "tester";
-         * user.role = "";
-         * user.confirmString = "";
-         * user.password = HashMaker.md5Java("signomix");
-         * user.generalNotificationChannel = "";
-         * user.infoNotificationChannel = "";
-         * user.warningNotificationChannel = "";
-         * user.alertNotificationChannel = "";
-         * user.confirmed = true;
-         * user.unregisterRequested = false;
-         * user.authStatus = 1;
-         * user.createdAt = System.currentTimeMillis();
-         * user.number = null;
-         * user.services = 0;
-         * user.phonePrefix = "";
-         * user.credits = 0L;
-         * user.autologin = false;
-         * user.preferredLanguage = "en";
-         * user.organization = DEFAULT_ORGANIZATION_ID;
-         * user.path = "";
-         * try {
-         * addUser(user);
-         * } catch (IotDatabaseException e) {
-         * LOG.warn("Error inserting default admin user", e);
-         * }
-         * user = new User();
-         * user.uid = "public";
-         * user.type = User.READONLY;
-         * user.email = "";
-         * user.name = "Public";
-         * user.surname = "User";
-         * user.role = "";
-         * user.confirmString = "";
-         * user.password = HashMaker.md5Java("public");
-         * user.generalNotificationChannel = "";
-         * user.infoNotificationChannel = "";
-         * user.warningNotificationChannel = "";
-         * user.alertNotificationChannel = "";
-         * user.confirmed = true;
-         * user.unregisterRequested = false;
-         * user.authStatus = 1;
-         * user.createdAt = System.currentTimeMillis();
-         * user.number = null;
-         * user.services = 0;
-         * user.phonePrefix = "";
-         * user.credits = 0L;
-         * user.autologin = false;
-         * user.preferredLanguage = "en";
-         * user.organization = DEFAULT_ORGANIZATION_ID;
-         * user.path = "";
-         * try {
-         * addUser(user);
-         * } catch (IotDatabaseException e) {
-         * LOG.warn("Error inserting default admin user", e);
-         * }
-         */
-
     }
 
     @Override
@@ -240,6 +144,11 @@ public class UserDao implements UserDaoIface {
             user.tenant = null;
         }
         user.phone = rs.getInt("phone");
+        try {
+            user.devicesCounter = rs.getInt("devices_counter");
+        } catch (Exception e) {
+            user.devicesCounter = -1;
+        }
         return user;
     }
 
@@ -258,9 +167,11 @@ public class UserDao implements UserDaoIface {
     @Override
     public User getUser(String uid) throws IotDatabaseException {
         User u = null;
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
-                + "WHERE uid=?";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id " +
+                "WHERE uid=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, uid);
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -276,9 +187,11 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(long id) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
-                + "WHERE user_number=?";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id " +
+                "WHERE user_number=?";
         User u = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
@@ -295,9 +208,11 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public User getUser(String login, String password) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
-                + "WHERE uid=? AND password=?";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id " +
+                "WHERE uid=? AND password=?";
         User u = null;
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, login);
@@ -315,9 +230,11 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public List<User> getUsersByRole(String role) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
-                + "WHERE role LIKE ?";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id " +
+                "WHERE role LIKE ?";
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, "%" + role + "%");
@@ -488,9 +405,11 @@ public class UserDao implements UserDaoIface {
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset, String searchField,
             String searchValue)
             throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
-                + "WHERE organization=? AND tenant_users.user_id IS NULL ";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id " +
+                "WHERE organization=? AND tenant_users.user_id IS NULL ";
 
         String wherePart;
         int numberOfSearchParams = 0;
@@ -507,10 +426,12 @@ public class UserDao implements UserDaoIface {
                 wherePart = " AND uid LIKE ?";
                 numberOfSearchParams = 1;
                 break;
-            /* case "path":
-                wherePart = " AND path LIKE ?";
-                numberOfSearchParams = 1;
-                break; */
+            /*
+             * case "path":
+             * wherePart = " AND path LIKE ?";
+             * numberOfSearchParams = 1;
+             * break;
+             */
             case "role":
                 wherePart = " AND role LIKE ?";
                 numberOfSearchParams = 1;
@@ -554,7 +475,7 @@ public class UserDao implements UserDaoIface {
 
         String wherePart;
         int numberOfSearchParams = 0;
-        if(searchField==null){
+        if (searchField == null) {
             searchField = "";
         }
         switch (searchField) {
@@ -570,10 +491,12 @@ public class UserDao implements UserDaoIface {
                 wherePart = " WHERE uid LIKE ?";
                 numberOfSearchParams = 1;
                 break;
-            /* case "path":
-                wherePart = " WHERE path LIKE ?";
-                numberOfSearchParams = 1;
-                break; */
+            /*
+             * case "path":
+             * wherePart = " WHERE path LIKE ?";
+             * numberOfSearchParams = 1;
+             * break;
+             */
             case "role":
                 wherePart = " WHERE role LIKE ?";
                 numberOfSearchParams = 1;
@@ -581,8 +504,10 @@ public class UserDao implements UserDaoIface {
             default:
                 wherePart = "";
         }
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id ";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id ";
         query += wherePart;
         if (limit != null) {
             query += " LIMIT " + limit;
@@ -594,7 +519,7 @@ public class UserDao implements UserDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             if (!wherePart.isEmpty()) {
                 pstmt.setString(1, "%" + searchValue + "%");
-                if(numberOfSearchParams>1){
+                if (numberOfSearchParams > 1) {
                     pstmt.setString(2, "%" + searchValue + "%");
                 }
             }
@@ -698,9 +623,11 @@ public class UserDao implements UserDaoIface {
     @Override
     public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset, String searchField,
             String searchValue) throws IotDatabaseException {
-        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id FROM users "
-                + "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id "
-                + "WHERE tenant_users.tenant_id=?";
+        String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
+                "(SELECT count(*) FROM devices WHERE devices.userid=users.uid) AS devices_counter " +
+                "FROM users " +
+                "LEFT JOIN tenant_users ON users.user_number=tenant_users.user_id " +
+                "WHERE tenant_users.tenant_id=?";
         String wherePart;
         int numberOfSearchParams = 0;
         switch (searchField) {
@@ -716,10 +643,12 @@ public class UserDao implements UserDaoIface {
                 wherePart = " AND uid LIKE ?";
                 numberOfSearchParams = 1;
                 break;
-            /* case "path":
-                wherePart = " AND path LIKE ?";
-                numberOfSearchParams = 1;
-                break; */
+            /*
+             * case "path":
+             * wherePart = " AND path LIKE ?";
+             * numberOfSearchParams = 1;
+             * break;
+             */
             case "role":
                 wherePart = " AND role LIKE ?";
                 numberOfSearchParams = 1;
@@ -737,9 +666,9 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, tenantId);
-            if(!wherePart.isEmpty()){
+            if (!wherePart.isEmpty()) {
                 pstmt.setString(2, searchValue);
-                if(numberOfSearchParams>1){
+                if (numberOfSearchParams > 1) {
                     pstmt.setString(3, searchValue);
                 }
             }

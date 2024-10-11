@@ -1,20 +1,17 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.db.DashboardIface;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.gui.Dashboard;
+import com.signomix.common.gui.DashboardTemplate;
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.db.DashboardIface;
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.gui.Dashboard;
-import com.signomix.common.gui.DashboardTemplate;
-
-import io.agroal.api.AgroalDataSource;
 
 public class DashboardDao implements DashboardIface {
 
@@ -268,10 +265,10 @@ public class DashboardDao implements DashboardIface {
                     pstmt.setString(2, userId);
                     idxLimit = 3;
                 }
-                if(!searchCondition.isEmpty()){
-                    pstmt.setString(idxLimit, "%" + searchParts[1] + "%");
-                    idxLimit++;
-                }
+            }
+            if(!searchCondition.isEmpty()){
+                pstmt.setString(idxLimit, "%" + searchParts[1] + "%");
+                idxLimit++;
             }
             pstmt.setInt(idxLimit, limit);
             pstmt.setInt(idxLimit+1, offset);
