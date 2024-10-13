@@ -1,19 +1,16 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.SignalDaoIface;
+import com.signomix.common.iot.sentinel.Signal;
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.SignalDaoIface;
-import com.signomix.common.iot.sentinel.Signal;
-
-import io.agroal.api.AgroalDataSource;
 
 public class SignalDao implements SignalDaoIface {
 
@@ -148,8 +145,10 @@ public class SignalDao implements SignalDaoIface {
             pstmt.setString(7, signal.messagePl);
             pstmt.execute();
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
