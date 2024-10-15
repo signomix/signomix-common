@@ -2122,7 +2122,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d23 double precision,")
                 .append("d24 double precision,")
                 .append("project varchar,")
-                .append("state double precision);");
+                .append("state double precision,")
+                .append("protected boolean default false);");
         sb.append("CREATE TABLE IF NOT EXISTS analyticdata (")
                 .append("eui text not null,")
                 .append("userid text,")
@@ -2152,7 +2153,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("d23 double precision,")
                 .append("d24 double precision,")
                 .append("project text,")
-                .append("state double precision);");
+                .append("state double precision,")
+                .append("protected boolean default false);");
         // .append("PRIMARY KEY (eui,tstamp) );");
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
