@@ -3,7 +3,6 @@ package com.signomix.common.tsdb;
 import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.db.ReportDaoIface;
 import com.signomix.common.db.ReportDefinition;
-
 import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -91,11 +89,10 @@ public class ReportDao implements ReportDaoIface {
                 + "userid VARCHAR,"
                 + "team VARCHAR,"
                 + "administrators VARCHAR,"
-                + "definition VARCHAR,"
+                + "dql VARCHAR,"
                 + "name VARCHAR,"
                 + "description VARCHAR,"
-                + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,"
-                + "UNIQUE NULLS NOT DISTINCT (class_name, organization, tenant, path, userid)"
+                + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP"
                 + ")";
         String query4 = "CREATE INDEX IF NOT EXISTS report_definitions_idx ON report_definitions (path);"
                 + "CREATE INDEX IF NOT EXISTS report_definitions_idx2 ON report_definitions (organization);"
@@ -106,7 +103,7 @@ public class ReportDao implements ReportDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query3);) {
             pstmt.execute();
         } catch (SQLException e) {
-            logger.error("Error during createStructure", e);
+            logger.error("Error during createStructure: "+ e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             logger.error("Error during createStructure", e);
@@ -226,17 +223,17 @@ public class ReportDao implements ReportDaoIface {
             }
             pstmt.execute();
         } catch (SQLException e) {
-            logger.error("Error during saveReport", e);
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            logger.warn("Error during saveReport1: " +e.getMessage());
+            //throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
-            logger.error("Error during saveReport", e);
+            logger.error("Error during saveReport2"+e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
 
     @Override
     public void saveReportDefinition(ReportDefinition reportDefinition) throws IotDatabaseException {
-        String query = "INSERT INTO report_definitions (organization, tenant, path, userid, team, administrators, definition, name, description) VALUES (?,?,?,?,?,?,?,?,?); ";
+        String query = "INSERT INTO report_definitions (organization, tenant, path, userid, team, administrators, dql, name, description) VALUES (?,?,?,?,?,?,?,?,?); ";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             if (reportDefinition.organization == null) {
@@ -269,10 +266,10 @@ public class ReportDao implements ReportDaoIface {
             } else {
                 pstmt.setString(6, reportDefinition.administrators);
             }
-            if (reportDefinition.definition == null) {
+            if (reportDefinition.dql == null) {
                 pstmt.setNull(5, java.sql.Types.VARCHAR);
             } else {
-                pstmt.setString(5, reportDefinition.definition);
+                pstmt.setString(5, reportDefinition.dql);
             }
             if (reportDefinition.name == null) {
                 pstmt.setNull(6, java.sql.Types.VARCHAR);
@@ -311,7 +308,7 @@ public class ReportDao implements ReportDaoIface {
                     reportDefinition.userLogin = rs.getString("userid");
                     reportDefinition.team = rs.getString("team");
                     reportDefinition.administrators = rs.getString("administrators");
-                    reportDefinition.definition = rs.getString("definition");
+                    reportDefinition.dql = rs.getString("dql");
                     reportDefinition.name = rs.getString("name");
                     reportDefinition.description = rs.getString("description");
                 }
@@ -344,7 +341,7 @@ public class ReportDao implements ReportDaoIface {
 
     @Override
     public void updateReportDefinition(Integer id, ReportDefinition reportDefinition) throws IotDatabaseException {
-        String query = "UPDATE report_definitions SET organization=?, tenant=?, path=?, userid=?, team=?, administrators=?, definition=?, name=?, description=? WHERE id=?;";
+        String query = "UPDATE report_definitions SET organization=?, tenant=?, path=?, userid=?, team=?, administrators=?, dql=?, name=?, description=? WHERE id=?;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             if (reportDefinition.organization == null) {
@@ -377,10 +374,10 @@ public class ReportDao implements ReportDaoIface {
             } else {
                 pstmt.setString(6, reportDefinition.administrators);
             }
-            if (reportDefinition.definition == null) {
+            if (reportDefinition.dql == null) {
                 pstmt.setNull(7, java.sql.Types.VARCHAR);
             } else {
-                pstmt.setString(7, reportDefinition.definition);
+                pstmt.setString(7, reportDefinition.dql);
             }
             if (reportDefinition.name == null) {
                 pstmt.setNull(8, java.sql.Types.VARCHAR);
@@ -424,7 +421,7 @@ public class ReportDao implements ReportDaoIface {
                     reportDefinition.userLogin = rs.getString("userid");
                     reportDefinition.team = rs.getString("team");
                     reportDefinition.administrators = rs.getString("administrators");
-                    reportDefinition.definition = rs.getString("definition");
+                    reportDefinition.dql = rs.getString("dql");
                     reportDefinition.name = rs.getString("name");
                     reportDefinition.description = rs.getString("description");
                     reportDefinitions.add(reportDefinition);

@@ -3,7 +3,6 @@ package com.signomix.common.tsdb;
 import com.signomix.common.User;
 import com.signomix.common.db.EventLogDaoIface;
 import com.signomix.common.db.IotDatabaseException;
-
 import io.agroal.api.AgroalDataSource;
 
 public class QuestDbDao implements EventLogDaoIface {
@@ -36,7 +35,7 @@ public class QuestDbDao implements EventLogDaoIface {
                 + "organization_id LONG,"
                 + "client_ip STRING,"
                 + "event_type SYMBOL,"
-                + "error_code INT,"
+                + "error_code INT"
                 + ") timestamp(ts) PARTITION BY DAY;";
 
         try (var connection = dataSource.getConnection();

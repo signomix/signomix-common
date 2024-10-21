@@ -1,19 +1,15 @@
 package com.signomix.common.db;
 
+import com.signomix.common.iot.Application;
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.iot.Application;
-
-import io.agroal.api.AgroalDataSource;
 
 public class ApplicationDao implements ApplicationDaoIface {
 
@@ -83,7 +79,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setLong(1, application.organization);
             pst.setLong(2, application.version);
             pst.setString(3, application.name);
-            pst.setString(4, application.configuration);
+            pst.setString(4, application.description);
             pst.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
@@ -98,7 +94,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setLong(1, application.organization);
             pst.setLong(2, application.version);
             pst.setString(3, application.name);
-            pst.setString(4, application.configuration);
+            pst.setString(4, application.description);
             pst.setLong(5, application.id);
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -187,5 +183,17 @@ public class ApplicationDao implements ApplicationDaoIface {
         }
         return result;
     }
+
+/*     @Override
+    public ApplicationConfig getApplicationConfig(long applicationId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getApplicationConfig'");
+    }
+
+    @Override
+    public void setApplicationConfig(long applicationId, ApplicationConfig config) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setApplicationConfig'");
+    } */
 
 }

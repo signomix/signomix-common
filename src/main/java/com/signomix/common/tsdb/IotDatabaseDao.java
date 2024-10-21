@@ -825,7 +825,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + " d.eui, d.name, d.userid, d.type, d.team, d.channels, d.code, d.decoder, d.devicekey, d.description, d.lastseen, d.tinterval,"
                 + " d.lastframe, d.template, d.pattern, d.downlink, d.commandscript, d.appid, d.groups, d.alert,"
                 + " d.appeui, d.devid, d.active, d.project, d.latitude, d.longitude, d.altitude, d.state, d.retention,"
-                + " d.administrators, d.framecheck, d.configuration, d.organization, d.organizationapp, a.configuration FROM devices AS d"
+                + " d.administrators, d.framecheck, d.configuration, d.organization, d.organizationapp, a.config AS appconfig FROM devices AS d"
                 + " LEFT JOIN applications AS a WHERE d.organizationapp=a.id";
         return query;
     }

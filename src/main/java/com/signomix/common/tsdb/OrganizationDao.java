@@ -60,7 +60,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
-            LOG.warn("Error inserting default organization", e2);
+            LOG.warn("Error inserting default organization "+ e2.getMessage());
             // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
             // e2.getMessage(), e2);
         }
