@@ -2688,7 +2688,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != updatedDevice.getOrgApplicationId()) {
                 pst.setLong(28, updatedDevice.getOrgApplicationId());
             } else {
-                pst.setLong(28, defaultOrganizationId);
+                //pst.setLong(28, defaultOrganizationId);
+                pst.setNull(28, java.sql.Types.BIGINT);
             }
             pst.setBoolean(29, updatedDevice.isDashboard());
             if (null == updatedDevice.getPath() || updatedDevice.getPath().isEmpty()) {
@@ -2814,7 +2815,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != device.getOrgApplicationId()) {
                 pst.setLong(29, device.getOrgApplicationId());
             } else {
-                pst.setLong(29, defaultApplicationId);
+                //pst.setLong(29, defaultApplicationId);
+                pst.setNull(29, java.sql.Types.BIGINT);
             }
             pst.setBoolean(30, device.isDashboard());
             if (null == device.getPath() || device.getPath().isEmpty()) {

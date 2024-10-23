@@ -4,16 +4,14 @@
  */
 package com.signomix.common.iot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-
 import org.jboss.logging.Logger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Description
@@ -752,11 +750,16 @@ public class Device {
         HashMap<String, Object> mapping;
         try {
             mapping = new ObjectMapper().readValue(configuration.trim(), HashMap.class);
-            return mapping;
         } catch (IOException ex) {
             LOG.warn("Error parsing configuration: " + ex.getMessage());
             return new HashMap<>();
         }
+        if(applicationConfig!=null){
+            applicationConfig.keySet().forEach(key -> {
+                mapping.put(key, applicationConfig.get(key));
+            }); 
+        }
+        return mapping;
     }
 
     public void setTags(String tags) {

@@ -129,6 +129,7 @@ public class ReportDao implements ReportDaoIface {
             throws IotDatabaseException {
         boolean isAvailable = false;
         if (userNumber != null) {
+            logger.debug("Checking report availability for user: " + userNumber+" class: "+className); ;
             String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (userid=? OR userid=?);";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query2);) {

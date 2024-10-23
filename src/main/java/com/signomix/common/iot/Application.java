@@ -14,6 +14,19 @@ public class Application {
     public String name;
     public String description;
     public ApplicationConfig config;
+    public String decoder;
+    public String code;
+
+    public Application() {
+        this.id = 0L;
+        this.organization = 0L;
+        this.version = 0L;
+        this.name = "";
+        this.description = "";
+        this.config = new ApplicationConfig();
+        this.decoder = "";
+        this.code = "";
+    }
 
     public Application(Long id, Long organization, Long version, String name, String description) {
         this.id = id;
@@ -22,6 +35,8 @@ public class Application {
         this.name = name;
         this.description = description;
         this.config = new ApplicationConfig();
+        this.decoder = "";
+        this.code = "";
     }
 
     public Application(Long id, Long organization, Long version, String name, String description,
@@ -32,6 +47,8 @@ public class Application {
         this.name = name;
         this.description = description;
         this.config = config;
+        this.decoder = "";
+        this.code = "";
     }
 
     public void setConfig(ApplicationConfig config) {

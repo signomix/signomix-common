@@ -84,7 +84,7 @@ public class ApplicationDao implements ApplicationDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
-        return getApplication(application.name);
+        return getApplication(application.organization, application.name);
     }
 
     @Override
@@ -130,19 +130,8 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public Application getApplication(String name) throws IotDatabaseException {
-        Application app = null;
-        String query = "SELECT id,organization,version,name,configuration FROM applications WHERE name=?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setString(1, name);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5));
-            }
-        } catch (SQLException e) {
-            throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
-        }
-        return app;
+    public Application getApplication(long organizationId, String name) throws IotDatabaseException {
+        throw new UnsupportedOperationException("Unimplemented method 'getApplication'");
     }
 
     @Override
