@@ -622,7 +622,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public void addAlert(IotEvent event) throws IotDatabaseException {
         String userStr = event.getOrigin().substring(0, event.getOrigin().indexOf("\t"));
         String[] users = userStr.split(";");
-        String deviceEui = event.getOrigin().substring(event.getOrigin().indexOf("\t") + 2);
+        String deviceEui = event.getOrigin().substring(event.getOrigin().indexOf("\t") + 1);
         String query = "insert into alerts (name,category,type,deviceeui,userid,payload,timepoint,serviceid,uuid,calculatedtimepoint,createdat,rooteventid,cyclic) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
         for (String user : users) {
             if (user.isEmpty()) {
@@ -2564,6 +2564,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setConfiguration(rs.getString("configuration"));
         device.setOrganizationId(rs.getLong("organization"));
         device.setOrgApplicationId(rs.getLong("organizationapp"));
+        if(rs.wasNull()){
+            device.setOrgApplicationId(null);
+        }
         device.setDashboard(rs.getBoolean("defaultdashboard"));
         try {
             device.setDownlink(rs.getString("downlink"));
