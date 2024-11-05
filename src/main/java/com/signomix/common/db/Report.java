@@ -1,5 +1,6 @@
 package com.signomix.common.db;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import org.jboss.logging.Logger;
 
@@ -59,5 +60,51 @@ public class Report {
         });
         result.datasets.set(datasetIndex, dataset);
         return result;
+    }
+
+    /**
+     * Transforms the result into a CSV string
+     * @param result - the result object
+     * @param datasetIndex - index of the dataset to be transformed into CSV format - in most cases 0
+     * @param lineSeparator - e.g. "\n" or "\r\n"
+     * @param fieldSeparator - e.g. "," or ";"
+     * @param includeHeader - whether to include the header row
+     * @return the CSV string
+     */
+    public String getAsCsv(ReportResult result, int datasetIndex, String lineSeparator, String fieldSeparator,
+            boolean includeHeader) {
+        StringBuilder sb = new StringBuilder();
+        // check index
+        if (datasetIndex >= result.datasets.size()) {
+            return "";
+        }
+        if (datasetIndex >= result.headers.size()) {
+            return "";
+        }
+        // write header
+        if (includeHeader) {
+            ArrayList<String> columns = result.headers.get(datasetIndex).columns;
+            sb.append("timestamp");
+            for (int i = 0; i < columns.size(); i++) {
+                sb.append(fieldSeparator);
+                sb.append(columns.get(i));
+            }
+            sb.append(lineSeparator);
+        }
+        // write data
+        Dataset dataset = result.datasets.get(datasetIndex);
+        String timestamp;
+        for (int i = 0; i < dataset.data.size(); i++) {
+            DatasetRow row = dataset.data.get(i);
+            // format timestamp (milliseconds as long value) to ISO 8601 UTC date
+            timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(row.timestamp));
+            sb.append(timestamp);
+            for (int j = 0; j < row.values.size(); j++) {
+                sb.append(fieldSeparator);
+                sb.append(row.values.get(j));
+            }
+            sb.append(lineSeparator);
+        }
+        return sb.toString();
     }
 }

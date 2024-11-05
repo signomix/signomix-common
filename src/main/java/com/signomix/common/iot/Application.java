@@ -52,10 +52,18 @@ public class Application {
     }
 
     public void setConfig(ApplicationConfig config) {
+        if(config==null){
+            this.config = new ApplicationConfig();
+            return;
+        }
         this.config = config;
     }
 
     public void setConfig(String applicationConfig) {
+        if(applicationConfig==null || applicationConfig.isEmpty()){
+            this.config = new ApplicationConfig();
+            return;
+        }
         ApplicationConfig mapping;
         try {
             mapping = new ObjectMapper().readValue(applicationConfig, ApplicationConfig.class);

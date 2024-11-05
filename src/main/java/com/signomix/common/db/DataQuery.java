@@ -54,6 +54,7 @@ public class DataQuery {
     private Boolean isInterval; // is interval
     private Boolean intervalTimestampAtEnd; // is interval timestamp at the end of interval
     private boolean intervalDeltas; // is interval deltas
+    private String format; // format to which data should be converted (possible values: csv, html, json). JSON is default
 
     public void setSource(String source) {
         this.source = source;
@@ -81,6 +82,26 @@ public class DataQuery {
 
     public Boolean isIntervalDeltas() {
         return intervalDeltas;
+    }
+
+    public void setFormat(String format) {
+        String f = format;
+        if(format==null||format.isEmpty()){
+            f="json";
+        }
+        f=f.toLowerCase();
+       if(f.equals("csv")||f.equals("html")||f.equals("json")){
+           this.format = f;
+       }else{
+              this.format = "json";
+       }
+    }
+
+    public String getFormat() {
+        if(format==null||format.isEmpty()){
+            return "json";
+        }
+        return format;
     }
 
     /**
@@ -132,6 +153,7 @@ public class DataQuery {
         isInterval = false;
         intervalTimestampAtEnd = true;
         intervalDeltas = false;
+        format = "json";
     }
 
     private static String clean(String query) {
@@ -350,6 +372,10 @@ public class DataQuery {
                 case "deltas":
                     dq.intervalDeltas = true;
                     i = i + 1;
+                    break;
+                case "format":
+                    dq.setFormat(params[i + 1]);
+                    i = i + 2;
                     break;
                 default:
                     try {
