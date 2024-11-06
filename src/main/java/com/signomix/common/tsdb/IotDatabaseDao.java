@@ -3573,6 +3573,26 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public String getDeviceTagValue(String deviceEui, String tagName) throws IotDatabaseException {
+        String query = "SELECT tag_value FROM device_tags WHERE eui=? AND tag_name=?";
+        String tagValue = null;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            pstmt.setString(2, tagName);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    tagValue = rs.getString("tag_value");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return tagValue;
+    }
+
+    @Override
     public void addDeviceTag(User user, String deviceEui, String tagName, String tagValue) throws IotDatabaseException {
         String query = "INSERT INTO device_tags (eui, tag_name, tag_value) VALUES (?, ?, ?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {

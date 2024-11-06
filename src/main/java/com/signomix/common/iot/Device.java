@@ -77,6 +77,7 @@ public class Device {
     private boolean dashboard; // if true then default dashboard is created automatically for this device
     private String path; // device location in organization tree
     private Timestamp createdAt;
+    private boolean dataProtected;
 
     public boolean isDashboard() {
         return dashboard;
@@ -122,6 +123,15 @@ public class Device {
         tags = "";
         dashboard = true;
         createdAt = new Timestamp(0);
+        dataProtected = false;
+    }
+
+    public boolean isDataProtected() {
+        return dataProtected;
+    }
+
+    public void setDataProtected(boolean dataProtected) {
+        this.dataProtected = dataProtected;
     }
 
     public Timestamp getCreatedAt() {

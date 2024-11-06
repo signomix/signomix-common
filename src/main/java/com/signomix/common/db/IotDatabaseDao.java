@@ -2679,4 +2679,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'putCommandLog'");
     }
 
+    @Override
+    public String getDeviceTagValue(String deviceEui, String tagName) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeviceTagValue'");
+    }
+
 }
