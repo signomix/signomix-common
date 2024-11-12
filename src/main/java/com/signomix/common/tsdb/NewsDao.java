@@ -1,17 +1,16 @@
 package com.signomix.common.tsdb;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Map;
-
 import com.signomix.common.db.IotDatabaseException;
 import com.signomix.common.db.NewsDaoIface;
 import com.signomix.common.hcms.Document;
 import com.signomix.common.news.NewsDefinition;
 import com.signomix.common.news.NewsEnvelope;
-
+import com.signomix.common.news.UserNewsDto;
 import io.agroal.api.AgroalDataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Map;
 
 public class NewsDao implements NewsDaoIface {
 
@@ -236,6 +235,67 @@ public class NewsDao implements NewsDaoIface {
                 PreparedStatement statement = connection.prepareStatement(query)) {
             statement.execute();
         } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+    }
+
+    @Override
+    public UserNewsDto getUserNews(String userId, String language, String typeName, Long limit, Long offset) throws IotDatabaseException {
+        String sql = "SELECT n.id, n.news_id, n.user_id, n.language, n.read, n.pinned, d.title, nd.type, nd.created_at, COUNT(*) OVER() AS total FROM user_news n "
+                + "JOIN news_documents d ON n.news_id = d.news_id AND n.language = d.language "
+                + "JOIN news_definition nd ON n.news_id = nd.id "
+                + "WHERE n.user_id = ? AND n.language = ? ";
+                if(typeName != null){
+                    sql += "AND LOWER(nd.type() = LOWER(?) ";
+                }
+                sql += "ORDER BY n.pinned ASC, nd.id DESC";
+                if(limit != null){
+                    sql += " LIMIT ?";
+                }
+                if(offset != null){
+                    sql += " OFFSET ?";
+                }
+
+        UserNewsDto result = new UserNewsDto();
+        NewsEnvelope envelope;
+        try (var connection = dataSource.getConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, userId);
+            statement.setString(2, language);
+            int idx=3;
+            if(typeName != null){
+                statement.setString(2, typeName);
+                idx++;
+            }
+            if(limit != null){
+                statement.setLong(idx, limit);
+                idx++;
+            }
+            if(offset != null){
+                statement.setLong(idx, offset);
+            }
+            var rs = statement.executeQuery();
+            while (rs.next()) {
+                envelope = new NewsEnvelope();
+                envelope.id = rs.getLong("id");
+                envelope.newsId = rs.getLong("news_id");
+                envelope.userId = rs.getString("user_id");
+                envelope.language = rs.getString("language");
+                envelope.created = rs.getTimestamp("created_at");
+                envelope.read = rs.getTimestamp("read");
+                if (rs.wasNull()) {
+                    envelope.read = null;
+                }
+                envelope.pinned = rs.getBoolean("pinned");
+                if(rs.wasNull()){
+                    envelope.pinned = false;
+                }
+                envelope.title = rs.getString("title");
+                result.news.add(envelope);
+                result.size = rs.getInt("total");
+            }
+            return result;
+        } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
     }
