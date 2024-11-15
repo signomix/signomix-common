@@ -16,5 +16,5 @@ public interface NewsDaoIface {
     public void saveNewsEnvelope(NewsEnvelope newsEnvelope) throws IotDatabaseException;
     public void saveNewsDocuments(long newsId, Map<String,Document> documents) throws IotDatabaseException;
     public UserNewsDto getUserNews(String userId, String language, String typeName, Long limit, Long offset) throws IotDatabaseException;
-
+    public Document getNewsDocument(long newsId, String documentName) throws IotDatabaseException;
 }
