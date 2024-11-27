@@ -1,5 +1,9 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.billing.Order;
+import com.signomix.common.db.BillingDaoIface;
+import com.signomix.common.db.IotDatabaseException;
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,14 +11,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.billing.Order;
-import com.signomix.common.db.BillingDaoIface;
-import com.signomix.common.db.IotDatabaseException;
-
-import io.agroal.api.AgroalDataSource;
 
 public class BillingDao implements BillingDaoIface {
 
@@ -56,7 +53,9 @@ public class BillingDao implements BillingDaoIface {
         int actualCount = getOrderCount(getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
         boolean saved = false;
         String query;
-        while (!saved) {
+        int maxTries = 3;
+        int tries = 0;
+        while (!saved && tries < maxTries) {
             order.id = buildId(actualCount, getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
             query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, "
             + "name, surname, email, address, city, zip, country, tax_no, company_name, currency, price, vat, vat_value, amount, service_name) "
@@ -95,6 +94,10 @@ public class BillingDao implements BillingDaoIface {
                 logger.error("Error creating order: " + e.getMessage());
                 actualCount++;
             }
+            tries++;
+        }
+        if(!saved){
+            return null;
         }
         return order;
     }
