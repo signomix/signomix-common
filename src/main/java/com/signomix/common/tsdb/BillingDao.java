@@ -27,6 +27,7 @@ public class BillingDao implements BillingDaoIface {
     @Override
     public void createStructure() {
         createOrderTable();
+        createPointsTable();
     }
 
     @Override
@@ -39,7 +40,7 @@ public class BillingDao implements BillingDaoIface {
             pstmt.setInt(2, year);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    count = rs.getInt(1)+1;
+                    count = rs.getInt(1) + 1;
                 }
             }
         } catch (Exception e) {
@@ -49,7 +50,7 @@ public class BillingDao implements BillingDaoIface {
     }
 
     @Override
-    public Order createOrder(Order order) throws IotDatabaseException{
+    public Order createOrder(Order order) throws IotDatabaseException {
         int actualCount = getOrderCount(getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
         boolean saved = false;
         String query;
@@ -58,7 +59,7 @@ public class BillingDao implements BillingDaoIface {
         while (!saved && tries < maxTries) {
             order.id = buildId(actualCount, getMonthNumber(order.createdAt), getYearNumber(order.createdAt));
             query = "INSERT INTO orders (id, month, year, yearly, account_type, target_type, user_number, user_id, "
-            + "name, surname, email, address, city, zip, country, tax_no, company_name, currency, price, vat, vat_value, amount, service_name) "
+                    + "name, surname, email, address, city, zip, country, tax_no, company_name, currency, price, vat, vat_value, amount, service_name) "
                     + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -96,7 +97,7 @@ public class BillingDao implements BillingDaoIface {
             }
             tries++;
         }
-        if(!saved){
+        if (!saved) {
             return null;
         }
         return order;
@@ -107,12 +108,12 @@ public class BillingDao implements BillingDaoIface {
         String query = "UPDATE orders SET first_paid_at = ?, next_payment_at = ? WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
-            if(order.firstPaidAt != null){
+            if (order.firstPaidAt != null) {
                 pstmt.setTimestamp(1, order.firstPaidAt);
             } else {
                 pstmt.setNull(1, java.sql.Types.TIMESTAMP);
             }
-            if(order.nextPaymentAt != null){
+            if (order.nextPaymentAt != null) {
                 pstmt.setTimestamp(2, order.nextPaymentAt);
             } else {
                 pstmt.setNull(2, java.sql.Types.TIMESTAMP);
@@ -126,7 +127,7 @@ public class BillingDao implements BillingDaoIface {
         }
     }
 
-    private void createOrderTable(){
+    private void createOrderTable() {
         String query = "CREATE TABLE IF NOT EXISTS orders ("
                 + "id VARCHAR(255) PRIMARY KEY,"
                 + "month INT NOT NULL,"
@@ -159,12 +160,12 @@ public class BillingDao implements BillingDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
         } catch (SQLException e) {
-            logger.error("Error creating order tabl\n" +  e.getMessage());
+            logger.error("Error creating order tabl\n" + e.getMessage());
         } catch (Exception e) {
             logger.error("Error creating order table: " + e.getMessage());
         }
 
-        //create index for month and year
+        // create index for month and year
         query = "CREATE INDEX IF NOT EXISTS idx_month_year ON orders (month, year)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -174,7 +175,7 @@ public class BillingDao implements BillingDaoIface {
         } catch (Exception e) {
             logger.error("Error creating index for month and year: " + e.getMessage());
         }
-        //create index for vat
+        // create index for vat
         query = "CREATE INDEX IF NOT EXISTS idx_vat ON orders (vat)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -184,7 +185,7 @@ public class BillingDao implements BillingDaoIface {
         } catch (Exception e) {
             logger.error("Error creating index for vat: " + e.getMessage());
         }
-        //create index for user_id
+        // create index for user_id
         query = "CREATE INDEX IF NOT EXISTS idx_user_id ON orders (user_id)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -193,13 +194,30 @@ public class BillingDao implements BillingDaoIface {
             logger.warn("Error creating index for user_id: " + e.getMessage());
         } catch (Exception e) {
             logger.error("Error creating index for user_id: " + e.getMessage());
-        }   
+        }
+    }
+
+    private void createPointsTable() {
+        String query = "CREATE TABLE IF NOT EXISTS account_points("
+                + "tstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,"
+                + "uid VARCHAR(255),"
+                + "transaction BIGINT,"
+                + "balance BIGINT,"
+                + "PRIMARY KEY (tstamp, uid)"
+                + ");";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error creating account_points table" + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error creating account_points table: " + e.getMessage());
+        }
     }
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query=
-        "COPY orders TO '/var/lib/postgresql/data/export/orders.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY orders TO '/var/lib/postgresql/data/export/orders.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();
@@ -214,7 +232,7 @@ public class BillingDao implements BillingDaoIface {
     }
 
     private String buildId(int lastOrder, int month, int year) {
-        String id = "Z/"+lastOrder + "/" + month + "/" + year+"/S";
+        String id = "Z/" + lastOrder + "/" + month + "/" + year + "/S";
         return id;
     }
 
@@ -269,6 +287,48 @@ public class BillingDao implements BillingDaoIface {
         return order;
     }
 
+    @Override
+    public void registerServicePoints(String userId, long points) throws IotDatabaseException {
+        String sql = "INSERT INTO account_points (uid, transaction, balance) " +
+                "VALUES (?,?," +
+                "COALESCE((SELECT balance FROM account_points WHERE uid = ? ORDER BY tstamp DESC LIMIT 1),0) + ?" +
+                ");";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql);) {
+            pstmt.setString(1, userId);
+            pstmt.setLong(2, points);
+            pstmt.setString(3, userId);
+            pstmt.setLong(4, points);
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error registering service points: " + e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error registering service points: " + e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
 
+    @Override
+    public long getServicePoints(String userId) throws IotDatabaseException {
+        String sql = "SELECT COALESCE( (SELECT balance FROM account_points WHERE uid = ? ORDER BY tstamp DESC LIMIT 1), 0)";
+        long points = 0;
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql);) {
+            pstmt.setString(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    points = rs.getLong(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting service points: " + e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error getting service points: " + e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return points;
+    }
 
 }
