@@ -2,8 +2,6 @@ package com.signomix.common.db;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-
 import com.signomix.common.iot.sentinel.Signal;
 
 import io.agroal.api.AgroalDataSource;
@@ -68,6 +66,30 @@ public class SignalDao implements SignalDaoIface {
     public void backupDb() throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'backupDb'");
+    }
+
+    @Override
+    public void archiveSignals(long checkpoint) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'archiveSignals'");
+    }
+
+    @Override
+    public void clearOldSignals(long checkpoint) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'clearOldSignals'");
+    }
+
+    @Override
+    public void archiveUserSignals(long checkpoint) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'archiveUserSignals'");
+    }
+
+    @Override
+    public void clearOldUserSignals(long checkpoint) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'clearOldUserSignals'");
     }
     
 }

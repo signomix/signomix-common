@@ -507,21 +507,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void removeAlerts(String userID, long checkpoint) throws IotDatabaseException {
-        String query = "delete from alerts where userid=? and createdat < ?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, userID);
-            pstmt.setLong(2, checkpoint);
-            int updated = pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void removeOutdatedAlerts(long checkpoint) throws IotDatabaseException {
+    public void removeAlerts(long checkpoint) throws IotDatabaseException {
         String query = "delete from alerts where createdat < ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, checkpoint);
@@ -753,7 +739,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
-        String query = "insert into devicedata (eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String query = "insert into devicedata (eui,userid,day,dtime,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
         java.sql.Date date = new java.sql.Date(timestamp);
         java.sql.Time time = new java.sql.Time(timestamp);
@@ -788,6 +774,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             pst.setString(30, device.getProject());
             pst.setDouble(31, device.getState());
+            pst.setBoolean(32, device.isDataProtected());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2683,6 +2670,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public String getDeviceTagValue(String deviceEui, String tagName) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDeviceTagValue'");
+    }
+
+    @Override
+    public void archiveAlerts(long checkpoint) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'archiveAlerts'");
     }
 
 }

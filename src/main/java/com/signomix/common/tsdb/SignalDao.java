@@ -1,16 +1,19 @@
 package com.signomix.common.tsdb;
 
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.SignalDaoIface;
-import com.signomix.common.iot.sentinel.Signal;
-import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.SignalDaoIface;
+import com.signomix.common.iot.sentinel.Signal;
+
+import io.agroal.api.AgroalDataSource;
 
 public class SignalDao implements SignalDaoIface {
 
@@ -95,6 +98,51 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
 
+
+        // table archive_signals
+        query  = "CREATE TABLE IF NOT EXISTS archive_signals ("
+                + "id BIGINT, "
+                + "created_at TIMESTAMPTZ NOT NULL,"
+                + "read_at TIMESTAMPTZ,"
+                + "sent_at TIMESTAMPTZ,"
+                + "delivered_at TIMESTAMPTZ,"
+                + "user_id VARCHAR(255),"
+                + "organization_id BIGINT,"
+                + "sentinel_config_id BIGINT,"
+                + "device_eui VARCHAR(255),"
+                + "level INTEGER NOT NULL,"
+                + "message_en VARCHAR(255),"
+                + "message_pl VARCHAR(255)"
+                + ");";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
+        // table archive_user_signals
+        query  = "CREATE TABLE IF NOT EXISTS archive_user_signals ("
+                + "id BIGINT, "
+                + "created_at TIMESTAMPTZ NOT NULL,"
+                + "read_at TIMESTAMPTZ,"
+                + "sent_at TIMESTAMPTZ,"
+                + "delivered_at TIMESTAMPTZ,"
+                + "user_id VARCHAR(255),"
+                + "organization_id BIGINT,"
+                + "sentinel_config_id BIGINT,"
+                + "device_eui VARCHAR(255),"
+                + "level INTEGER NOT NULL,"
+                + "message_en VARCHAR(255),"
+                + "message_pl VARCHAR(255)"
+                + ");";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+
         // hypertables
         query = "SELECT create_hypertable('signals', 'created_at',migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -103,6 +151,18 @@ public class SignalDao implements SignalDaoIface {
             logger.warn(e.getMessage());
         }
         query = "SELECT create_hypertable('user_signals', 'created_at',migrate_data => true);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+        query = "SELECT create_hypertable('archive_signals', 'created_at',migrate_data => true);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+        query = "SELECT create_hypertable('archive_user_signals', 'created_at',migrate_data => true);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
@@ -125,6 +185,31 @@ public class SignalDao implements SignalDaoIface {
         query = "CREATE INDEX IF NOT EXISTS usersignals_org_created_idx ON signals(organization_id, created_at);";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+        // retention policy
+        query = "SELECT remove_retention_policy('archive_signals');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+        query = "SELECT add_retention_policy('archive_signals', INTERVAL '1 year');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+        query = "SELECT remove_retention_policy('archive_user_signals');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+        query = "SELECT add_retention_policy('archive_user_signals', INTERVAL '1 year');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
@@ -293,6 +378,62 @@ public class SignalDao implements SignalDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return signals;
+    }
+
+    @Override
+    public void archiveSignals(long checkpoint) throws IotDatabaseException {
+        String query = "INSERT INTO archive_signals SELECT * FROM signals WHERE created_at < ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setTimestamp(1, new java.sql.Timestamp(checkpoint));
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void clearOldSignals(long checkpoint) throws IotDatabaseException {
+        String query = "DELETE FROM signals WHERE created_at < ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setTimestamp(1, new java.sql.Timestamp(checkpoint));
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void archiveUserSignals(long checkpoint) throws IotDatabaseException {
+        String query = "INSERT INTO archive_user_signals SELECT * FROM user_signals WHERE created_at < ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setTimestamp(1, new java.sql.Timestamp(checkpoint));
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void clearOldUserSignals(long checkpoint) throws IotDatabaseException {
+        String query = "DELETE FROM user_signals WHERE created_at < ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setTimestamp(1, new java.sql.Timestamp(checkpoint));
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
     }
 
 }

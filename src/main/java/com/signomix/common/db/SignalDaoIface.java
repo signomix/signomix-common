@@ -17,4 +17,8 @@ public interface SignalDaoIface {
     public void deleteSignal(long id) throws IotDatabaseException;
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException;
     public List<Signal> getOrganizationSignals(long organizationId, int limit, int offset) throws IotDatabaseException;
+    public void archiveSignals(long checkpoint) throws IotDatabaseException;
+    public void clearOldSignals(long checkpoint) throws IotDatabaseException;
+    public void archiveUserSignals(long checkpoint) throws IotDatabaseException;
+    public void clearOldUserSignals(long checkpoint) throws IotDatabaseException;
 }

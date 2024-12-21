@@ -780,11 +780,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void removeAlerts(String userID, long checkpoint) throws IotDatabaseException {
-        String query = "delete from alerts where userid=? and createdat < ?";
+    public void removeAlerts(long checkpoint) throws IotDatabaseException {
+        String query = "delete from alerts where createdat < ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setString(1, userID);
-            pstmt.setLong(2, checkpoint);
+            pstmt.setLong(1, checkpoint);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -794,10 +793,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void removeOutdatedAlerts(long checkpoint) throws IotDatabaseException {
-        String query = "delete from alerts where createdat < ?";
+    public void archiveAlerts(long checkpoint) throws IotDatabaseException {
+        String query = "INSERT INTO archive_alerts (id, name, category, type, deviceeui, userid, payload, timepoint, serviceid, uuid, calculatedtimepoint, createdat, rooteventid, cyclic) " +
+                       "SELECT id, name, category, type, deviceeui, userid, payload, timepoint, serviceid, uuid, calculatedtimepoint, to_timestamp(createdat), rooteventid, cyclic " +
+                       "FROM alerts WHERE createdat < ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, checkpoint);
+            pstmt.setLong(1, checkpoint/1000);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -1077,7 +1078,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
-        String query = "insert into devicedata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String query = "insert into devicedata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
@@ -1108,6 +1109,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             pst.setString(28, device.getProject());
             pst.setDouble(29, device.getState());
+            pst.setBoolean(30, device.isDataProtected());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1124,7 +1126,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
         int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
-        String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
         try (Connection conn = analyticDataSource.getConnection();
                 PreparedStatement pst = conn.prepareStatement(query);) {
@@ -1156,6 +1158,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             }
             pst.setString(28, device.getProject());
             pst.setDouble(29, device.getState());
+            pst.setBoolean(30, device.isDataProtected());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2158,7 +2161,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // .append("PRIMARY KEY (eui,tstamp) );");
         // virtualdevicedata
         sb.append("CREATE TABLE IF NOT EXISTS virtualdevicedata (")
-                .append("eui TEXT,tstamp TIMESTAMPTZ default current_timestamp, data TEXT);");
+                .append("eui TEXT,tstamp TIMESTAMPTZ default current_timestamp, data TEXT, protected BOOLEAN DEFAULT false);");
         // groups
         sb.append("CREATE TABLE IF NOT EXISTS groups (")
                 .append("eui varchar primary key,")
@@ -2325,6 +2328,49 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             e.printStackTrace();
             logger.warn(e.getMessage());
+        }
+
+
+        // alerts archive table
+        sb = new StringBuilder();
+        sb.append("CREATE TABLE IF NOT EXISTS archive_alerts (")
+                .append("id BIGINT primary key ,")
+                .append("name varchar,")
+                .append("category varchar,")
+                .append("type varchar,")
+                .append("deviceeui varchar,")
+                .append("userid varchar,")
+                .append("payload varchar,")
+                .append("timepoint varchar,")
+                .append("serviceid varchar,")
+                .append("uuid varchar,")
+                .append("calculatedtimepoint bigint,")
+                .append("createdat TIMESTAMPTZ NOT NULL,")
+                .append("rooteventid bigint,")
+                .append("cyclic boolean);");
+        query = sb.toString();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+        }
+
+        query = "SELECT create_hypertable('archive_alerts', 'createdat',migrate_data => true);";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+        }
+
+        query = "SELECT remove_retention_policy('archive_alerts');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
+        }
+        query = "SELECT add_retention_policy('archive_alerts', INTERVAL '1 year');";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.execute();
+        } catch (SQLException e) {
         }
 
     }
@@ -2564,7 +2610,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         device.setConfiguration(rs.getString("configuration"));
         device.setOrganizationId(rs.getLong("organization"));
         device.setOrgApplicationId(rs.getLong("organizationapp"));
-        if(rs.wasNull()){
+        if (rs.wasNull()) {
             device.setOrgApplicationId(null);
         }
         device.setDashboard(rs.getBoolean("defaultdashboard"));
@@ -2691,7 +2737,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != updatedDevice.getOrgApplicationId()) {
                 pst.setLong(28, updatedDevice.getOrgApplicationId());
             } else {
-                //pst.setLong(28, defaultOrganizationId);
+                // pst.setLong(28, defaultOrganizationId);
                 pst.setNull(28, java.sql.Types.BIGINT);
             }
             pst.setBoolean(29, updatedDevice.isDashboard());
@@ -2818,7 +2864,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             if (null != device.getOrgApplicationId()) {
                 pst.setLong(29, device.getOrgApplicationId());
             } else {
-                //pst.setLong(29, defaultApplicationId);
+                // pst.setLong(29, defaultApplicationId);
                 pst.setNull(29, java.sql.Types.BIGINT);
             }
             pst.setBoolean(30, device.isDashboard());

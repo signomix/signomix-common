@@ -1,5 +1,8 @@
 package com.signomix.common.db;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.signomix.common.Tag;
 import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
@@ -9,9 +12,8 @@ import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
+
 import io.agroal.api.AgroalDataSource;
-import java.util.ArrayList;
-import java.util.List;
 
 public interface IotDatabaseIface {
     public void commit();
@@ -102,8 +104,10 @@ public interface IotDatabaseIface {
     public List<Alert> getAlerts(String userID, int limit, int offset, boolean descending) throws IotDatabaseException;
     public void removeAlert(long alertID) throws IotDatabaseException;
     public void removeAlerts(String userID) throws IotDatabaseException;
-    public void removeAlerts(String userID, long checkpoint) throws IotDatabaseException;
-    public void removeOutdatedAlerts(long checkpoint) throws IotDatabaseException;
+    public void removeAlerts(long checkpoint) throws IotDatabaseException;
+    // public void removeSignals(long checkpoint) throws IotDatabaseException;
+    public void archiveAlerts(long checkpoint) throws IotDatabaseException;
+    
 
     public ChannelData getAverageValue(String userID, String deviceID, String channel, int scope, Double newValue) throws IotDatabaseException;
     public ChannelData getMinimalValue(String userID, String deviceID, String channel, int scope, Double newValue) throws IotDatabaseException;

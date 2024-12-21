@@ -1,16 +1,19 @@
 package com.signomix.common.tsdb;
 
-import com.signomix.common.User;
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.UserDaoIface;
-import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.User;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.UserDaoIface;
+
+import io.agroal.api.AgroalDataSource;
 
 public class UserDao implements UserDaoIface {
 
@@ -86,14 +89,16 @@ public class UserDao implements UserDaoIface {
 
     }
 
+    /**
+     * Remove users that are created before the given days and are not confirmed yet.
+     * Such users authstatus is set to IS_UNREGISTERING.
+     */
     @Override
     public void removeNotConfirmed(long days) {
         long seconds = days * 24 * 60 * 60;
-        // SELECT uid from users as u where extract(epoch
-        // from(current_timestamp-u.created)) > days*24*60*60 and confirmed=false;
-        String query = "DELETE FROM users AS u WHERE extract(epoch from(current_timestamp-u.created)) > " + seconds
-                + " AND confirmed=false";
+        String query = "UPDATE users AS u SET authstatus=? WHERE extract(epoch from(current_timestamp-u.created)) > " + seconds+ ";";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setInt(1, User.IS_UNREGISTERING);
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
