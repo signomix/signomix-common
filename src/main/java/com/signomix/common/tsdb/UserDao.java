@@ -96,9 +96,11 @@ public class UserDao implements UserDaoIface {
     @Override
     public void removeNotConfirmed(long days) {
         long seconds = days * 24 * 60 * 60;
-        String query = "UPDATE users AS u SET authstatus=? WHERE extract(epoch from(current_timestamp-u.created)) > " + seconds+ ";";
+        String query = "UPDATE users AS u SET authstatus=? WHERE authstatus=? AND extract(epoch from(current_timestamp-u.created)) > " 
+        + seconds+ ";";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setInt(1, User.IS_UNREGISTERING);
+            pst.setInt(2, User.IS_REGISTERING);
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

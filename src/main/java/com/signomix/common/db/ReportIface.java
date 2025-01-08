@@ -71,7 +71,8 @@ public interface ReportIface {
                         Integer organization,
                         Integer tenant,
                         String path,
-                        User user);
+                        User user,
+                        Boolean withHeader);
 
         /**
          * Get report result as HTML string.
@@ -88,7 +89,8 @@ public interface ReportIface {
                         AgroalDataSource oltpDs,
                         AgroalDataSource logsDs,
                         DataQuery query,
-                        User user);
+                        User user,
+                        Boolean withHeader);
 
         /**
          * Get report result as CSV string.
