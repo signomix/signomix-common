@@ -1,9 +1,5 @@
 package com.signomix.common.tsdb;
 
-import com.signomix.common.billing.Order;
-import com.signomix.common.db.BillingDaoIface;
-import com.signomix.common.db.IotDatabaseException;
-import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +7,14 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.billing.Order;
+import com.signomix.common.db.BillingDaoIface;
+import com.signomix.common.db.IotDatabaseException;
+
+import io.agroal.api.AgroalDataSource;
 
 public class BillingDao implements BillingDaoIface {
 
@@ -331,4 +334,22 @@ public class BillingDao implements BillingDaoIface {
         return points;
     }
 
+    @Override
+    public void setServicePoints(String userId, long points) throws IotDatabaseException {
+        String sql = "INSERT INTO account_points (uid, transaction, balance) " +
+                "VALUES (?,?,?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql);) {
+            pstmt.setString(1, userId);
+            pstmt.setLong(2, 0);
+            pstmt.setLong(3, points);
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error setting service points: " + e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error setting service points: " + e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
 }

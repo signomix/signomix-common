@@ -26,6 +26,8 @@ public class User {
     public static final int SUBSCRIBER = 100;
     public static final int ANY = 1000;
 
+    public static final int[] PAID_TYPES = {USER, OWNER, PRIMARY, EXTENDED, SUPERUSER, ADMIN, MANAGING_ADMIN, ORGANIZATION_ADMIN, TENANT_ADMIN};
+
     public static final int IS_REGISTERING = 0;
     public static final int IS_ACTIVE = 1;
     public static final int IS_UNREGISTERING = 2;
