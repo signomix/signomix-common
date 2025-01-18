@@ -1,16 +1,19 @@
 package com.signomix.common.tsdb;
 
-import com.signomix.common.db.ApplicationDaoIface;
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.iot.Application;
-import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.db.ApplicationDaoIface;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.iot.Application;
+
+import io.agroal.api.AgroalDataSource;
 
 public class ApplicationDao implements ApplicationDaoIface {
 
@@ -27,8 +30,8 @@ public class ApplicationDao implements ApplicationDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY application_config to '/var/lib/postgresql/data/export/application_config.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;";
+                //+ "COPY application_config to '/var/lib/postgresql/data/export/application_config.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();

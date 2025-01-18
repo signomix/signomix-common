@@ -2179,7 +2179,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         return result;
     }
 
-    @Override
+/*     @Override
     public List<Device> getInactiveDevices() throws IotDatabaseException {
         DeviceSelector selector = new DeviceSelector(true);
         String query = selector.query;
@@ -2196,7 +2196,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
-    }
+    } */
 
     class DevStamp {
         String eui;
@@ -2635,7 +2635,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<Device> getDevicesRequiringAlert() throws IotDatabaseException {
+    public List<Device> getDevicesRequiringAlert(boolean paid) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesRequiringAlert'");
     }

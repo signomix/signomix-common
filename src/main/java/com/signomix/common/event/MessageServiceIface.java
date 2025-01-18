@@ -8,6 +8,7 @@ public interface MessageServiceIface {
     public void sendEvent(EventEnvelope wrapper);
 
     public void sendNotification(IotEvent event);
+    public void sendNotification(MessageEnvelope event);
 
     public void sendData(IotEvent event);
 

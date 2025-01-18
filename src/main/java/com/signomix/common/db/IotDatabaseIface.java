@@ -54,8 +54,8 @@ public interface IotDatabaseIface {
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;
-    public List<Device> getInactiveDevices() throws IotDatabaseException;
-    public List<Device> getDevicesRequiringAlert() throws IotDatabaseException;
+    //public List<Device> getInactiveDevices() throws IotDatabaseException;
+    public List<Device> getDevicesRequiringAlert(boolean paid) throws IotDatabaseException;
     public List<Device> getGroupDevices(String groupID) throws IotDatabaseException;
 
     //tags

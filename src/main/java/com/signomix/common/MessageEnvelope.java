@@ -19,6 +19,7 @@ public class MessageEnvelope {
     public String eui;
     public String subject;
     public String message;
+    public String userIds; // user uid list separated by ";"
     public User user;
 
     public MessageEnvelope() {

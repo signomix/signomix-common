@@ -294,7 +294,7 @@ public class BillingDao implements BillingDaoIface {
     public void registerServicePoints(String userId, long points) throws IotDatabaseException {
         String sql = "INSERT INTO account_points (uid, transaction, balance) " +
                 "VALUES (?,?," +
-                "COALESCE((SELECT balance FROM account_points WHERE uid = ? ORDER BY tstamp DESC LIMIT 1),0) + ?" +
+                "COALESCE((SELECT balance FROM account_points WHERE uid = ? ORDER BY tstamp DESC LIMIT 1),0) - ?" + // actual balance minus points
                 ");";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql);) {

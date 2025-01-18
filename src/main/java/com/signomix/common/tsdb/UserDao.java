@@ -184,9 +184,15 @@ public class UserDao implements UserDaoIface {
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
                     u = buildUser(rs);
+                }else{
+                    LOG.warn("User not found: " + uid);
                 }
+            }catch(Exception e){
+                LOG.error(e.getMessage());
+                e.printStackTrace();
             }
         } catch (SQLException e) {
+            LOG.error(e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return u;
