@@ -28,7 +28,7 @@ public class Report {
         return true;
     }
 
-    public ReportResult sortResult(ReportResult result, String reportName) {
+    public ReportResult sortResult(ReportResult result, String reportName, String queryName, boolean ascending) {
         Dataset dataset = null;
         int datasetIndex = -1;
         for (int i = 0; i < result.datasets.size(); i++) {
@@ -42,9 +42,9 @@ public class Report {
             logger.error("Dataset not found: " + reportName);
             return result;
         }
-        DataQuery query = result.queries.get(reportName);
+        DataQuery query = result.queries.get(queryName);
         if (query == null) {
-            logger.warn("Query not found: " + reportName);
+            logger.warn("Query not found: " + queryName);
             return result;
         }
 
@@ -53,7 +53,12 @@ public class Report {
         dataset.data.sort((DatasetRow o1, DatasetRow o2) -> {
             long val1 = o1.timestamp;
             long val2 = o2.timestamp;
-            if (query.getSortOrder().equals("DESC")) {
+            /* if (query.getSortOrder().equals("DESC")) {
+                return Long.compare(val2, val1);
+            } else {
+                return Long.compare(val1, val2);
+            } */
+            if (!ascending) {
                 return Long.compare(val2, val1);
             } else {
                 return Long.compare(val1, val2);

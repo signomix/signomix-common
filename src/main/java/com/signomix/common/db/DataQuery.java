@@ -4,14 +4,16 @@
  */
 package com.signomix.common.db;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.signomix.common.DateTool;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.signomix.common.DateTool;
 
 /**
  *
@@ -55,7 +57,7 @@ public class DataQuery {
     private Boolean intervalTimestampAtEnd; // is interval timestamp at the end of interval
     private boolean intervalDeltas; // is interval deltas
     private String format; // format to which data should be converted (possible values: csv, html, json). JSON is default
-
+    private Boolean forceAscendingSorting;
     public void setSource(String source) {
         this.source = source;
     }
@@ -154,6 +156,7 @@ public class DataQuery {
         intervalTimestampAtEnd = true;
         intervalDeltas = false;
         format = "json";
+        forceAscendingSorting = false;
     }
 
     private static String clean(String query) {
@@ -190,7 +193,8 @@ public class DataQuery {
                 case "using":
                     i = i + 1;
                     break;
-                case "last":
+                case "limit":
+                case "last": // deprecated: last is alias for limit
                     if (params[i + 1].equals("*") || params[i + 1].equals("0")) {
                         dq.setLimit(Integer.MAX_VALUE);
                     } else {
@@ -377,6 +381,10 @@ public class DataQuery {
                     dq.setFormat(params[i + 1]);
                     i = i + 2;
                     break;
+                case "postascending":
+                    dq.forceAscendingSorting = true;
+                    i = i + 1;
+                    break;
                 default:
                     try {
                         dq.putParameter(params[i], params[i + 1]);
@@ -430,6 +438,9 @@ public class DataQuery {
      * }
      */
 
+    public Boolean isSortingForced() {
+        return forceAscendingSorting;
+    }
     public Boolean isInterval() {
         return isInterval;
     }
