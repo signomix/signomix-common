@@ -1,6 +1,7 @@
 package com.signomix.common.db;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A dataset is a list of rows where each row is a list of numbers.

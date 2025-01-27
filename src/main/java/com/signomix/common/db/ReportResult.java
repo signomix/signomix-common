@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ReportResult {
     public List<Dataset> datasets;
     public List<DatasetHeader> headers;
+    /** Map of configuration parameters (as map) of report devices */
+    public HashMap<String, HashMap<String,String>> configs;
     public String title = null;
     public String description = null;
     public Long id = null;
@@ -46,6 +48,7 @@ public class ReportResult {
         datasets = new ArrayList<Dataset>();
         headers = new ArrayList<DatasetHeader>();
         queries = new HashMap<String, DataQuery>();
+        configs = new HashMap<String, HashMap<String,String>>();
     }
 
     public ReportResult(DataQuery query) {
