@@ -977,7 +977,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY analyticdata to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;"
+                //+ "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commands to '/var/lib/postgresql/data/export/commands.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commandslog to '/var/lib/postgresql/data/export/commandslog.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboards to '/var/lib/postgresql/data/export/dashboards.csv' DELIMITER ';' CSV HEADER;"
@@ -1982,9 +1982,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public void createStructure() throws IotDatabaseException {
         logger.debug("createStructure()");
         String query;
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb;
         // applications
-        sb.append("CREATE TABLE IF NOT EXISTS applications (")
+        /* sb = new StringBuilder();
+            sb.append("CREATE TABLE IF NOT EXISTS applications (")
                 .append("id BIGSERIAL primary key,")
                 .append("organization bigint default " + defaultOrganizationId + ",")
                 .append("version bigint default 0,")
@@ -2005,7 +2006,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.executeUpdate();
         } catch (SQLException e) {
 
-        }
+        } */
         sb = new StringBuilder();
         // devicetemplates
         sb.append("CREATE TABLE IF NOT EXISTS devicetemplates (")

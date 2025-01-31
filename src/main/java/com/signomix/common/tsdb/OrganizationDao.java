@@ -318,7 +318,7 @@ public class OrganizationDao implements OrganizationDaoIface {
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     Organization org = new Organization(
-                            rs.getLong("id"),
+                            rs.getInt("id"),
                             rs.getString("code"),
                             rs.getString("name"),
                             rs.getString("description"),
@@ -341,7 +341,7 @@ public class OrganizationDao implements OrganizationDaoIface {
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
                     org = new Organization(
-                            rs.getLong("id"),
+                            rs.getInt("id"),
                             rs.getString("code"),
                             rs.getString("name"),
                             rs.getString("description"),
@@ -364,7 +364,7 @@ public class OrganizationDao implements OrganizationDaoIface {
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
                     org = new Organization(
-                            rs.getLong("id"),
+                            rs.getInt("id"),
                             rs.getString("code"),
                             rs.getString("name"),
                             rs.getString("description"),

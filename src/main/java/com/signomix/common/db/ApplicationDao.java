@@ -103,7 +103,7 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public void removeApplication(long id) throws IotDatabaseException {
+    public void removeApplication(int id) throws IotDatabaseException {
         String query = "DELETE FROM applications WHERE id=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, id);
@@ -114,14 +114,14 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public Application getApplication(long id) throws IotDatabaseException {
+    public Application getApplication(int id) throws IotDatabaseException {
         Application app = null;
         String query = "SELECT id,organization,version,name,configuration FROM applications WHERE id=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, id);
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
-                app = new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5));
+                app = new Application(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5));
             }
         } catch (SQLException e) {
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
@@ -130,7 +130,7 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public Application getApplication(long organizationId, String name) throws IotDatabaseException {
+    public Application getApplication(int organizationId, String name) throws IotDatabaseException {
         throw new UnsupportedOperationException("Unimplemented method 'getApplication'");
     }
 
@@ -145,7 +145,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 result.add(
-                        new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
+                        new Application(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5)));
             }
         } catch (SQLException e) {
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
@@ -154,18 +154,18 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public List<Application> getApplications(long organizationId, int limit, int offset) throws IotDatabaseException {
+    public List<Application> getApplications(int organizationId, int limit, int offset) throws IotDatabaseException {
         ArrayList<Application> result = new ArrayList<>();
         Application app = null;
         String query = "SELECT id,organization,version,name,configuration FROM applications WHERE organization=? LIMIT ? OFFSET ?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setLong(1, organizationId);
+            pst.setInt(1, organizationId);
             pst.setInt(2, limit);
             pst.setInt(3, offset);
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 result.add(
-                        new Application(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getString(4), rs.getString(5)));
+                        new Application(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5)));
             }
         } catch (SQLException e) {
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());

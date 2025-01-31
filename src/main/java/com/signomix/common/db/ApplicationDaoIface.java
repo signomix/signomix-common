@@ -13,11 +13,11 @@ public interface ApplicationDaoIface {
     public void createStructure() throws IotDatabaseException;
     public Application addApplication(Application application) throws IotDatabaseException;
     public void updateApplication(Application application) throws IotDatabaseException;
-    public void removeApplication(long id) throws IotDatabaseException;
-    public Application getApplication(long id) throws IotDatabaseException;
-    public Application getApplication(long organizationId, String name) throws IotDatabaseException;
+    public void removeApplication(int id) throws IotDatabaseException;
+    public Application getApplication(int id) throws IotDatabaseException;
+    public Application getApplication(int organizationId, String name) throws IotDatabaseException;
     public List<Application> getApplications(int limit, int offset) throws IotDatabaseException;
-    public List<Application> getApplications(long organizationId, int limit, int offset) throws IotDatabaseException;
+    public List<Application> getApplications(int organizationId, int limit, int offset) throws IotDatabaseException;
     //public ApplicationConfig getApplicationConfig(long applicationId) throws IotDatabaseException;
     //public void setApplicationConfig(long applicationId, ApplicationConfig config) throws IotDatabaseException;
 }

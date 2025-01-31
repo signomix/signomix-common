@@ -8,9 +8,9 @@ public class Application {
 
     private Logger LOG = Logger.getLogger(Application.class);
 
-    public Long id;
-    public Long organization;
-    public Long version;
+    public Integer id;
+    public Integer organization;
+    public Integer version;
     public String name;
     public String description;
     public ApplicationConfig config;
@@ -18,9 +18,9 @@ public class Application {
     public String code;
 
     public Application() {
-        this.id = 0L;
-        this.organization = 0L;
-        this.version = 0L;
+        this.id = 0;
+        this.organization = 0;
+        this.version = 0;
         this.name = "";
         this.description = "";
         this.config = new ApplicationConfig();
@@ -28,7 +28,7 @@ public class Application {
         this.code = "";
     }
 
-    public Application(Long id, Long organization, Long version, String name, String description) {
+    public Application(Integer id, Integer organization, Integer version, String name, String description) {
         this.id = id;
         this.organization = organization;
         this.version = version;
@@ -39,7 +39,7 @@ public class Application {
         this.code = "";
     }
 
-    public Application(Long id, Long organization, Long version, String name, String description,
+    public Application(Integer id, Integer organization, Integer version, String name, String description,
             ApplicationConfig config) {
         this.id = id;
         this.organization = organization;
