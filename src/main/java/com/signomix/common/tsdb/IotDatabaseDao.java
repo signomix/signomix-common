@@ -160,7 +160,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     + "ORDER BY eui,tstamp DESC;";
             List<String> groupChannels = getGroupChannels(groupEUI);
             if (requestChannels.size() == 0) {
-                logger.debug("empty channelNames");
+                logger.warn("empty channelNames");
                 requestChannels = groupChannels;
             }
 
