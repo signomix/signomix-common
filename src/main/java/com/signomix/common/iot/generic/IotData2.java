@@ -36,6 +36,8 @@ public class IotData2 implements IotDataIface {
     public String payload = null;
     public String hexPayload = null;
     public Timestamp timestampUTC;
+    public Long port = null;
+    public Long counter = null;
 
     public IotData2() {
     }

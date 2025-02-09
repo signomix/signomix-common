@@ -55,6 +55,7 @@ public class Decoder {
         data.timestampStr1=(String)map.get("received_at");
         Map uplinkMessage=(Map)map.get("uplink_message");
         data.fPort=(Long)uplinkMessage.get("f_port");
+        data.fCounter=(Long)uplinkMessage.get("f_cnt");
         data.frmPayload=(String)uplinkMessage.get("frm_payload");
         data.decodedPayload=(Map)uplinkMessage.get("decoded_payload");
         data.rxMetadata=(Object[])uplinkMessage.get("rx_metadata");

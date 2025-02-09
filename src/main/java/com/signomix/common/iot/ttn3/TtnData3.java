@@ -20,6 +20,7 @@ public class TtnData3 extends TtnData implements IotDataIface {
     public String deviceEui;
     public String deviceId;
     public Long fPort;
+    public Long fCounter;
     public String frmPayload;
     public Map decodedPayload;
     public Double latitude = null;
@@ -121,6 +122,14 @@ public class TtnData3 extends TtnData implements IotDataIface {
 
     public long getFrameCounter() {
         return 0;
+    }
+
+    public long getPort() {
+        if (null == fPort) {
+            return 0;
+        } else {
+            return fPort;
+        }
     }
 
     public HashMap getPayloadFields() {
