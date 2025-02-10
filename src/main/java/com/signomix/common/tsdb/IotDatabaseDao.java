@@ -3200,9 +3200,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void clearDeviceData(String deviceEUI) throws IotDatabaseException {
-        String query = "DELETE FROM devicedata WHERE eui=?";
+        String query = "DELETE FROM devicedata WHERE eui=?; DELETE FROM analyticdata WHERE eui=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEUI);
+            pstmt.setString(2, deviceEUI);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -3650,6 +3651,28 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throws IotDatabaseException {
         ArrayList<Device> list = new ArrayList<>();
         String query = "SELECT * FROM devices WHERE groups LIKE ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, "%," + groupID + ",%");
+            try (ResultSet rs = pstmt.executeQuery();) {
+
+                while (rs.next()) {
+                    Device device = buildDevice(rs);
+                    list.add(device);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return list;
+    }
+
+    @Override
+    public List<Device> getGroupVirtualDevices(String groupID)
+            throws IotDatabaseException {
+        ArrayList<Device> list = new ArrayList<>();
+        String query = "SELECT * FROM devices WHERE groups LIKE ? and type='VIRTUAL'";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, "%," + groupID + ",%");
             try (ResultSet rs = pstmt.executeQuery();) {

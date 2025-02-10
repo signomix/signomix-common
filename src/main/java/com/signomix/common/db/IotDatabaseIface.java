@@ -57,6 +57,7 @@ public interface IotDatabaseIface {
     //public List<Device> getInactiveDevices() throws IotDatabaseException;
     public List<Device> getDevicesRequiringAlert(boolean paid) throws IotDatabaseException;
     public List<Device> getGroupDevices(String groupID) throws IotDatabaseException;
+    public List<Device> getGroupVirtualDevices(String groupID) throws IotDatabaseException;
 
     //tags
     public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException;

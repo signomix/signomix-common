@@ -2635,6 +2635,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public List<Device> getGroupVirtualDevices(String groupID) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getGroupDevices'");
+    }
+
+    @Override
     public List<Device> getDevicesRequiringAlert(boolean paid) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevicesRequiringAlert'");
