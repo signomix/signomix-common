@@ -136,6 +136,7 @@ public class TtnData3 extends TtnData implements IotDataIface {
         return (HashMap) decodedPayload;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void normalize() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSz");
