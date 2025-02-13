@@ -195,6 +195,9 @@ public class DeviceGroup {
         if (channelsDeclaration != null) {
             String[] channelArray = channelsDeclaration.split(",");
             for (String tmp : channelArray) {
+                if(tmp.isEmpty()){
+                    continue;
+                }
                 Channel c = new Channel();
                 c.setName(tmp.trim().toLowerCase());
                 result.put(c.getName(), c);
