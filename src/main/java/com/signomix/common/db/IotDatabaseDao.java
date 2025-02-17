@@ -274,61 +274,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
-    /*
-     * @Override
-     * public long getMaxCommandId() throws IotDatabaseException {
-     * String query =
-     * "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog"
-     * ;
-     * long result = 0;
-     * long v1 = 0;
-     * long v2 = 0;
-     * try (Connection conn = dataSource.getConnection(); PreparedStatement pst =
-     * conn.prepareStatement(query);) {
-     * ResultSet rs = pst.executeQuery();
-     * if (rs.next()) {
-     * v1 = rs.getLong(1);
-     * v1 = rs.getLong(2);
-     * }
-     * if (v1 > v2) {
-     * result = v1;
-     * } else {
-     * result = v2;
-     * }
-     * } catch (SQLException e) {
-     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
-     * }
-     * return result;
-     * }
-     * 
-     * @Override
-     * public long getMaxCommandId(String deviceEui) throws IotDatabaseException {
-     * String query =
-     * "SELECT  max(commands.id), max(commandslog.id) FROM commands CROSS JOIN commandslog "
-     * + "WHERE commands.origin=commandslog.origin AND commands.origin like %@" +
-     * deviceEui;
-     * long result = 0;
-     * long v1 = 0;
-     * long v2 = 0;
-     * try (Connection conn = dataSource.getConnection(); PreparedStatement pst =
-     * conn.prepareStatement(query);) {
-     * ResultSet rs = pst.executeQuery();
-     * if (rs.next()) {
-     * v1 = rs.getLong(1);
-     * v1 = rs.getLong(2);
-     * }
-     * if (v1 > v2) {
-     * result = v1;
-     * } else {
-     * result = v2;
-     * }
-     * } catch (SQLException e) {
-     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION);
-     * }
-     * return result;
-     * }
-     */
-
     @Override
     public void removeCommand(long id) throws IotDatabaseException {
         String query = "delete from commands where id=?";
@@ -372,9 +317,6 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public void putCommandLog(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
         String query = "insert into commandslog (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
         String command = (String) commandEvent.getPayload();
-        if (command.startsWith("#") || command.startsWith("&")) {
-            command = command.substring(1);
-        }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, commandEvent.getId());
             pst.setString(2, commandEvent.getCategory());
@@ -703,27 +645,42 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
         String query = "insert into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
-        String query2 = "merge into commands (id,category,type,origin,payload,createdat) key (id) values (?,?,?,?,?,?)";
+        String query2 = "update commands set category=?,type=?,origin=?,payload=?,createdat where id=?";
         String command = (String) commandEvent.getPayload();
         boolean overwriteMode = false;
+        // payload format is: ModeCommand[@Port]
+        // where:
+        // Mode is one of: & - add, # - overwrite last command
+        // Port is optional (integer)
+        // Example: #01020304AF@20
         if (command.startsWith("&")) {
             overwriteMode = false;
         } else if (command.startsWith("#")) {
             query = query2;
             overwriteMode = true;
         }
+
         command = command.substring(1);
         String origin = commandEvent.getOrigin();
         if (null == origin || origin.isEmpty()) {
             origin = deviceEUI;
         }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            pst.setLong(1, commandEvent.getId());
-            pst.setString(2, commandEvent.getCategory());
-            pst.setString(3, commandEvent.getType());
-            pst.setString(4, origin);
-            pst.setString(5, command);
-            pst.setLong(6, commandEvent.getCreatedAt());
+            if (overwriteMode) {
+                pst.setString(1, commandEvent.getCategory());
+                pst.setString(2, commandEvent.getType());
+                pst.setString(3, origin);
+                pst.setString(4, command);
+                pst.setLong(5, commandEvent.getCreatedAt());
+                pst.setLong(7, commandEvent.getId());
+            } else {
+                pst.setLong(1, commandEvent.getId());
+                pst.setString(2, commandEvent.getCategory());
+                pst.setString(3, commandEvent.getType());
+                pst.setString(4, origin);
+                pst.setString(5, command);
+                pst.setLong(6, commandEvent.getCreatedAt());
+            }
             pst.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -2179,24 +2136,28 @@ public class IotDatabaseDao implements IotDatabaseIface {
         return result;
     }
 
-/*     @Override
-    public List<Device> getInactiveDevices() throws IotDatabaseException {
-        DeviceSelector selector = new DeviceSelector(true);
-        String query = selector.query;
-        Device device;
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            ResultSet rs = pstmt.executeQuery();
-            ArrayList<Device> list = new ArrayList<>();
-            while (rs.next()) {
-                device = buildDevice(rs);
-                device = getDeviceStatusData(device);
-                list.add(device);
-            }
-            return list;
-        } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
-        }
-    } */
+    /*
+     * @Override
+     * public List<Device> getInactiveDevices() throws IotDatabaseException {
+     * DeviceSelector selector = new DeviceSelector(true);
+     * String query = selector.query;
+     * Device device;
+     * try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt =
+     * conn.prepareStatement(query);) {
+     * ResultSet rs = pstmt.executeQuery();
+     * ArrayList<Device> list = new ArrayList<>();
+     * while (rs.next()) {
+     * device = buildDevice(rs);
+     * device = getDeviceStatusData(device);
+     * list.add(device);
+     * }
+     * return list;
+     * } catch (SQLException e) {
+     * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+     * e.getMessage());
+     * }
+     * }
+     */
 
     class DevStamp {
         String eui;
@@ -2682,6 +2643,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public void archiveAlerts(long checkpoint) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'archiveAlerts'");
+    }
+
+    @Override
+    public List<IotEvent> getCommands() throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCommands'");
     }
 
 }

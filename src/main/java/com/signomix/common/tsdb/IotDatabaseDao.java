@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -429,6 +430,36 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 // e.getStackTrace()[i].getLineNumber());
             }
             return null;
+        }
+        return result;
+    }
+
+    @Override
+    public List<IotEvent> getCommands() throws IotDatabaseException {
+        String query = "select id,category,type,origin,payload,createdat from commands order by createdat";
+        List<IotEvent> result = new ArrayList<>();
+        Map<String, IotEvent> commands = new HashMap<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            try (ResultSet rs = pst.executeQuery();) {
+                while (rs.next()) {
+                    IotEvent event = new IotEvent();
+                    event.setId(rs.getLong(1));
+                    event.setCategory(rs.getString(2));
+                    event.setType(rs.getString(3));
+                    event.setOrigin(rs.getString(4));
+                    event.setPayload(rs.getString(5));
+                    event.setCreatedAt(rs.getLong(6));
+                    // only first command for each device should be added
+                    if(!commands.containsKey(event.getOrigin())){
+                        commands.put(event.getOrigin(), event);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+        for (Map.Entry<String, IotEvent> entry : commands.entrySet()) {
+            result.add(entry.getValue());
         }
         return result;
     }
