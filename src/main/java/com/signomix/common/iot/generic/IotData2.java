@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import com.signomix.common.DateTool;
 import com.signomix.common.db.IotDataIface;
 import com.signomix.common.iot.ChannelData;
@@ -39,7 +41,10 @@ public class IotData2 implements IotDataIface {
     public Long port = null;
     public Long counter = null;
 
-    public IotData2() {
+    private Logger logger = Logger.getLogger(IotData2.class.getName());
+
+    public IotData2(long systemTimestamp) {
+        this.timestampUTC = new Timestamp(systemTimestamp);
     }
 
     @Override
@@ -105,13 +110,13 @@ public class IotData2 implements IotDataIface {
         this.applicationID = applicationID;
     }
 
-    public void setTimestampUTC() {
+    public void setTimestampUTC(long systemTimestamp) {
         // timestamp
         try {
             timestampUTC = DateTool.parseTimestamp(timestamp, time, true);
         } catch (Exception e) {
             e.printStackTrace();
-            timestampUTC = new Timestamp(System.currentTimeMillis());
+            timestampUTC = new Timestamp(systemTimestamp);
         }
     }
 
@@ -131,6 +136,7 @@ public class IotData2 implements IotDataIface {
         for (int i = 0; i < payload_fields.size(); i++) {
             tempMap = new HashMap<>();
             tempMap.put("name", ((String) payload_fields.get(i).get("name")).toLowerCase());
+            tempMap.put("stringValue", ""+payload_fields.get(i).get("value"));
             try {
                 tempMap.put("value", (Double) payload_fields.get(i).get("value"));
             } catch (ClassCastException e) {
@@ -204,9 +210,10 @@ public class IotData2 implements IotDataIface {
         this.dataList = dataList;
     }
 
-    public void prepareIotValues() {
+    public void prepareIotValues(long timestamp) {
         for (int i = 0; i < this.payload_fields.size(); i++) {
             ChannelData mval = new ChannelData();
+            mval.setTimestamp(timestamp);
             mval.setDeviceEUI(this.getDeviceEUI());
             mval.setName((String) this.payload_fields.get(i).get("name"));
             try {
@@ -214,20 +221,23 @@ public class IotData2 implements IotDataIface {
             } catch (ClassCastException e) {
                 mval.setValue((String) this.payload_fields.get(i).get("value"));
             }
-            mval.setStringValue("" + this.payload_fields.get(i).get("value"));
+            mval.setStringValue("" + this.payload_fields.get(i).get("stringValue"));
             if (this.getTimeField() != null) {
                 mval.setTimestamp(this.getTimeField().toEpochMilli());
             } else {
                 try {
-                    mval.setTimestamp(this.getTimestamp());
+                    //mval.setTimestamp(this.getTimestamp());
+                    mval.setTimestamp(timestamp);
+                    logger.info("TIMESTAMP from clock: " + mval.getName());
                 } catch (Exception e) {
-                    mval.setTimestamp(System.currentTimeMillis());
+                    mval.setTimestamp(timestamp);
                 }
             }
             if (mval.getTimestamp() == 0) {
-                mval.setTimestamp(System.currentTimeMillis());
+                mval.setTimestamp(timestamp);
+                logger.info("TIMESTAMP from clock: " + mval.getName());
             }
-            // System.out.println("TIMESTAMP:"+mval.getTimestamp());
+            logger.info("TIMESTAMP : "+mval.getName()+" "+mval.getTimestamp());
             this.dataList.add(mval);
         }
     }
