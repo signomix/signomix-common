@@ -1166,13 +1166,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return;
         }
         ObjectMapper mapper = new ObjectMapper();
-        try {
+/*         try {
             String json = mapper.writeValueAsString(values);
-            logger.info("Values to save: " + json);
+            logger.debug("Values to save: " + json);
         } catch (JsonProcessingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
+        } */
         int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
         String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected,textvalues) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -1209,7 +1209,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setBoolean(30, device.isDataProtected());
             try {
                 String json = mapper.writeValueAsString(stringValues);
-                logger.info("String values: " + json);
+                logger.debug("String values: " + json);
                 // set value of JSONB column
                 pst.setObject(31, json, Types.OTHER);
             } catch (JsonProcessingException e) {
