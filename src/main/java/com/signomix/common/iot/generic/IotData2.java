@@ -228,16 +228,16 @@ public class IotData2 implements IotDataIface {
                 try {
                     //mval.setTimestamp(this.getTimestamp());
                     mval.setTimestamp(timestamp);
-                    logger.info("TIMESTAMP from clock: " + mval.getName());
+                    //logger.info("TIMESTAMP from clock: " + mval.getName());
                 } catch (Exception e) {
                     mval.setTimestamp(timestamp);
                 }
             }
             if (mval.getTimestamp() == 0) {
                 mval.setTimestamp(timestamp);
-                logger.info("TIMESTAMP from clock: " + mval.getName());
+                //logger.info("TIMESTAMP from clock: " + mval.getName());
             }
-            logger.info("TIMESTAMP : "+mval.getName()+" "+mval.getTimestamp());
+            //logger.info("TIMESTAMP : "+mval.getName()+" "+mval.getTimestamp());
             this.dataList.add(mval);
         }
     }
