@@ -2646,7 +2646,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<IotEvent> getCommands() throws IotDatabaseException {
+    public List<IotEvent> getCommands(boolean processAll) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getCommands'");
     }

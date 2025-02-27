@@ -436,7 +436,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<IotEvent> getCommands() throws IotDatabaseException {
+    public List<IotEvent> getCommands(boolean processAll) throws IotDatabaseException {
         String query = "select id,category,type,origin,payload,createdat from commands order by createdat";
         List<IotEvent> result = new ArrayList<>();
         Map<String, IotEvent> commands = new HashMap<>();
@@ -450,17 +450,19 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     event.setOrigin(rs.getString(4));
                     event.setPayload(rs.getString(5));
                     event.setCreatedAt(rs.getLong(6));
-                    // only first command for each device should be added
-                    if (!commands.containsKey(event.getOrigin())) {
-                        commands.put(event.getOrigin(), event);
+                    if (processAll) {
+                        result.add(event);
+                    } else {
+                        // only first command for each device should be added
+                        if (!commands.containsKey(event.getOrigin())) {
+                            commands.put(event.getOrigin(), event);
+                            result.add(event);
+                        }
                     }
                 }
             }
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
-        }
-        for (Map.Entry<String, IotEvent> entry : commands.entrySet()) {
-            result.add(entry.getValue());
         }
         return result;
     }
@@ -1166,13 +1168,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
             return;
         }
         ObjectMapper mapper = new ObjectMapper();
-/*         try {
-            String json = mapper.writeValueAsString(values);
-            logger.debug("Values to save: " + json);
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } */
+        /*
+         * try {
+         * String json = mapper.writeValueAsString(values);
+         * logger.debug("Values to save: " + json);
+         * } catch (JsonProcessingException e) {
+         * // TODO Auto-generated catch block
+         * e.printStackTrace();
+         * }
+         */
         int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
         String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected,textvalues) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
