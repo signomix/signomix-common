@@ -98,7 +98,7 @@ public class DeviceGroup {
      * @param team the team to set
      */
     public void setTeam(String team) {
-        this.team = team;
+        this.team = team==null?"":team;
         if (!this.team.startsWith(",")) {
             this.team = "," + this.team;
         }
@@ -182,7 +182,7 @@ public class DeviceGroup {
     }
 
     public void setChannels(String channels) {
-        this.channels = parseChannels(channels.toLowerCase());
+        this.channels = parseChannels(channels);
     }
 
     public void setChannelsAsString(String channels) {
@@ -193,7 +193,7 @@ public class DeviceGroup {
     private LinkedHashMap parseChannels(String channelsDeclaration) {
         LinkedHashMap result = new LinkedHashMap();
         if (channelsDeclaration != null) {
-            String[] channelArray = channelsDeclaration.split(",");
+            String[] channelArray = channelsDeclaration.toLowerCase().split(",");
             for (String tmp : channelArray) {
                 if(tmp.isEmpty()){
                     continue;

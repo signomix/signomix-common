@@ -1,4 +1,5 @@
 target/
+target_test-classes/
 attic/
 doc/dev0.json
 doc/dev1.json
