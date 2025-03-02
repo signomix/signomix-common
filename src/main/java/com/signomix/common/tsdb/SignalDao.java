@@ -304,6 +304,20 @@ public class SignalDao implements SignalDaoIface {
     }
 
     @Override
+    public void deleteSignals(String userId) throws IotDatabaseException {
+        String query = "DELETE FROM user_signals WHERE user_id=?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, userId);
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException {
         String query = "SELECT * FROM user_signals WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         logger.debug(query);

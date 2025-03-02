@@ -90,14 +90,15 @@ public class UserDao implements UserDaoIface {
     }
 
     /**
-     * Remove users that are created before the given days and are not confirmed yet.
+     * Remove users that are created before the given days and are not confirmed
+     * yet.
      * Such users authstatus is set to IS_UNREGISTERING.
      */
     @Override
     public void removeNotConfirmed(long days) {
         long seconds = days * 24 * 60 * 60;
-        String query = "UPDATE users AS u SET authstatus=? WHERE authstatus=? AND extract(epoch from(current_timestamp-u.created)) > " 
-        + seconds+ ";";
+        String query = "UPDATE users AS u SET authstatus=? WHERE authstatus=? AND extract(epoch from(current_timestamp-u.created)) > "
+                + seconds + ";";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setInt(1, User.IS_UNREGISTERING);
             pst.setInt(2, User.IS_REGISTERING);
@@ -184,10 +185,10 @@ public class UserDao implements UserDaoIface {
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
                     u = buildUser(rs);
-                }else{
+                } else {
                     LOG.warn("User not found: " + uid);
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 LOG.error(e.getMessage());
                 e.printStackTrace();
             }
@@ -488,6 +489,7 @@ public class UserDao implements UserDaoIface {
 
         String wherePart;
         int numberOfSearchParams = 0;
+        boolean searchByType = false;
         if (searchField == null) {
             searchField = "";
         }
@@ -514,6 +516,11 @@ public class UserDao implements UserDaoIface {
                 wherePart = " WHERE role LIKE ?";
                 numberOfSearchParams = 1;
                 break;
+            case "type":
+                wherePart = " WHERE type=?";
+                numberOfSearchParams = 1;
+                searchByType = true;
+                break;
             default:
                 wherePart = "";
         }
@@ -531,9 +538,13 @@ public class UserDao implements UserDaoIface {
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             if (!wherePart.isEmpty()) {
-                pstmt.setString(1, "%" + searchValue + "%");
-                if (numberOfSearchParams > 1) {
-                    pstmt.setString(2, "%" + searchValue + "%");
+                if (searchByType) {
+                    pstmt.setInt(1, Integer.parseInt(searchValue));
+                } else {
+                    pstmt.setString(1, "%" + searchValue + "%");
+                    if (numberOfSearchParams > 1) {
+                        pstmt.setString(2, "%" + searchValue + "%");
+                    }
                 }
             }
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -542,6 +553,9 @@ public class UserDao implements UserDaoIface {
                 }
             }
         } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        } catch(NumberFormatException e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }

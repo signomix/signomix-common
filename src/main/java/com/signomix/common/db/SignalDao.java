@@ -51,6 +51,12 @@ public class SignalDao implements SignalDaoIface {
     }
 
     @Override
+    public void deleteSignals(String userId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteSignals'");
+    }
+
+    @Override
     public List<Signal> getUserSignals(String userId, int limit, int offset) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getUserSignals'");
