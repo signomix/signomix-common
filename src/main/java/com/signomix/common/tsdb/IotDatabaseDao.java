@@ -436,7 +436,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<IotEvent> getCommands(boolean processAll) throws IotDatabaseException {
+    public List<IotEvent> getCommands(boolean processAll, boolean paidOnly) throws IotDatabaseException {
         String query = "select id,category,type,origin,payload,createdat from commands order by createdat";
         List<IotEvent> result = new ArrayList<>();
         Map<String, IotEvent> commands = new HashMap<>();
