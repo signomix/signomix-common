@@ -9,6 +9,6 @@ public class Tenant {
     public String root;
     public Timestamp createdAt;
     public Timestamp updatedAt;
-    public String menuDefinition;
+    public String configuration;
     
 }

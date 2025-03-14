@@ -87,7 +87,7 @@ public interface IotDatabaseIface {
     public ChannelData getLastValue(String userID, String deviceID, String channel, boolean skipNull) throws IotDatabaseException;
     public List<List> getLastValues(String userID, String deviceEUI) throws IotDatabaseException;
     
-    List<IotEvent> getCommands(boolean all, boolean paidOnly) throws IotDatabaseException;
+    List<IotEvent> getCommands(String deviceEui, boolean allWaiting, boolean paidOnly) throws IotDatabaseException;
     public IotEvent getFirstCommand(String deviceEUI) throws IotDatabaseException;
     public void removeCommand(long id) throws IotDatabaseException;
     public void putCommandLog(String deviceEUI, IotEvent command) throws IotDatabaseException;

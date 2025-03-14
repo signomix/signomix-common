@@ -436,11 +436,19 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<IotEvent> getCommands(boolean processAll, boolean paidOnly) throws IotDatabaseException {
-        String query = "select id,category,type,origin,payload,createdat from commands order by createdat";
+    public List<IotEvent> getCommands(String deviceEui, boolean processAll, boolean paidOnly) throws IotDatabaseException {
+        String query;
+        if(null==deviceEui){
+            query = "select id,category,type,origin,payload,createdat from commands order by createdat";
+        }else{
+            query = "select id,category,type,origin,payload,createdat from commands where origin=? order by createdat";
+        }
         List<IotEvent> result = new ArrayList<>();
         Map<String, IotEvent> commands = new HashMap<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            if(null!=deviceEui){
+                pst.setString(1, deviceEui);
+            }   
             try (ResultSet rs = pst.executeQuery();) {
                 while (rs.next()) {
                     IotEvent event = new IotEvent();
