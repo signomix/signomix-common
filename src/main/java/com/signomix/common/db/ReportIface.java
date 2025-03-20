@@ -132,6 +132,50 @@ public interface ReportIface {
                         DataQuery query,
                         User user);
 
+
+        /**
+         * Get report result as CSV string.
+         * 
+         * @param olapDs
+         * @param oltpDs
+         * @param logsDs
+         * @param query
+         * @param organization
+         * @param tenant
+         * @param path
+         * @param user
+         * @return
+         */
+        public String getReportFormat(
+                        AgroalDataSource olapDs,
+                        AgroalDataSource oltpDs,
+                        AgroalDataSource logsDs,
+                        DataQuery query,
+                        Integer organization,
+                        Integer tenant,
+                        String path,
+                        User user,
+                        String format);
+
+        /**
+         * Get report result as CSV string.
+         * 
+         * @param olapDs
+         * @param oltpDs
+         * @param logsDs
+         * @param query
+         * @param user
+         * @return
+         */
+        public String getReportFormat(
+                        AgroalDataSource olapDs,
+                        AgroalDataSource oltpDs,
+                        AgroalDataSource logsDs,
+                        DataQuery query,
+                        User user,
+                        String format);
+
+        
         /**
          * Set report options.
          * @param options

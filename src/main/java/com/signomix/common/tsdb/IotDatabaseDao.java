@@ -436,19 +436,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<IotEvent> getCommands(String deviceEui, boolean processAll, boolean paidOnly) throws IotDatabaseException {
+    public List<IotEvent> getCommands(String deviceEui, boolean processAll, boolean paidOnly)
+            throws IotDatabaseException {
         String query;
-        if(null==deviceEui){
+        if (null == deviceEui) {
             query = "select id,category,type,origin,payload,createdat from commands order by createdat";
-        }else{
+        } else {
             query = "select id,category,type,origin,payload,createdat from commands where origin=? order by createdat";
         }
         List<IotEvent> result = new ArrayList<>();
         Map<String, IotEvent> commands = new HashMap<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
-            if(null!=deviceEui){
+            if (null != deviceEui) {
                 pst.setString(1, deviceEui);
-            }   
+            }
             try (ResultSet rs = pst.executeQuery();) {
                 while (rs.next()) {
                     IotEvent event = new IotEvent();
@@ -2566,7 +2567,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         boolean additionalSearch = false;
         // actual implementation doesn't support path
         // only organization tenants can have devices with path
-        String searchCondition = "AND path IS NULL OR path = ''";
+        String searchCondition = "AND (path IS NULL OR path = '') ";
         String[] searchParts;
         if (null == searchString || searchString.isEmpty()) {
             searchParts = new String[0];
@@ -2577,16 +2578,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     searchCondition += "AND eui LIKE ? ";
                 } else if (searchParts[0].equals("name")) {
                     searchCondition += "AND name LIKE ? ";
-                } /*
-                   * else if (searchParts[0].equals("path")) {
-                   * pathSearch = true;
-                   * if (searchParts[1].equals("-")) {
-                   * searchCondition = "AND path is NULL";
-                   * } else {
-                   * searchCondition = "AND path ~ ? ";
-                   * }
-                   * }
-                   */
+                } else if (searchParts[0].equals("path")) {
+                    pathSearch = true;
+                    if (searchParts[1].equals("-")) {
+                        searchCondition = "AND path is NULL";
+                    } else {
+                        searchCondition = "AND path ~ ? ";
+                    }
+                }
+
             }
         }
         String query = "SELECT * FROM devices WHERE organization=? " + searchCondition + " LIMIT ? OFFSET ?";
