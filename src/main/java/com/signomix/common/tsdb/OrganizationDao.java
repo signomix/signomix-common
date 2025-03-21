@@ -65,7 +65,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
-            LOG.warn("Error inserting default organization "+ e2.getMessage());
+            LOG.warn("Error inserting default organization " + e2.getMessage());
             // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
             // e2.getMessage(), e2);
         }
@@ -327,9 +327,8 @@ public class OrganizationDao implements OrganizationDaoIface {
                             rs.getString("code"),
                             rs.getString("name"),
                             rs.getString("description"),
-                            rs.getInt("tenants"),
                             rs.getString("configuration"));
-                            
+                    org.setNumberOfTenants(rs.getInt("tenants"));
                     orgs.add(org);
                 }
             }
@@ -352,8 +351,8 @@ public class OrganizationDao implements OrganizationDaoIface {
                             rs.getString("code"),
                             rs.getString("name"),
                             rs.getString("description"),
-                            rs.getInt("tenants"),
                             rs.getString("configuration"));
+                    org.setNumberOfTenants(rs.getInt("tenants"));
                 }
             }
         } catch (SQLException e) {
@@ -376,8 +375,8 @@ public class OrganizationDao implements OrganizationDaoIface {
                             rs.getString("code"),
                             rs.getString("name"),
                             rs.getString("description"),
-                            rs.getInt("tenants"),
                             rs.getString("configuration"));
+                    org.setNumberOfTenants(rs.getInt("tenants"));
                 }
             }
         } catch (SQLException e) {
