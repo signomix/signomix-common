@@ -27,6 +27,9 @@ public class SentinelConfig {
     public String administrators;
     public int timeShift;
     public double hysteresis;
+    public boolean useScript;
+    public String script;
+    public String scriptLanguage;
 
 /*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();

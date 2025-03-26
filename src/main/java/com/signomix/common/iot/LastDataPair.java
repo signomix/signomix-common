@@ -10,4 +10,8 @@ public class LastDataPair {
         this.value = value;
         this.delta = delta;
     }
+
+    public String toString() {
+        return eui + " " + value + " " + delta;
+    }
 }
