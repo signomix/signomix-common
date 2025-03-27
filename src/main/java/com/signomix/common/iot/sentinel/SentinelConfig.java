@@ -30,6 +30,7 @@ public class SentinelConfig {
     public boolean useScript;
     public String script;
     public String scriptLanguage;
+    public boolean checkOthers = false;
 
 /*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();

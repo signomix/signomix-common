@@ -435,6 +435,52 @@ public class SentinelDao implements SentinelDaoIface {
         return devices;
     }
 
+
+    /**
+     * Returns map of devices and their channels for given sentinel config and device
+     * eui.
+     * Example result: { "eui1": { "temperature": "d1", "humidity": "d2" }, "eui2":
+     * { "temperature": "d14", "humidity": "d1" } }
+     * 
+     * @param configId  sentinel config id
+     * @param deviceEui device eui
+     */
+    @Override
+    public Map<String, Map<String, String>> getDeviceChannelsByConfigAndEui(long configId, String deviceEui)
+            throws IotDatabaseException {
+        HashMap<String, Map<String, String>> devices = new HashMap<>();
+        String query = "SELECT eui,channels FROM sentinel_devices WHERE sentinel_id=? AND eui=?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, configId);
+            pstmt.setString(2, deviceEui);
+            try (java.sql.ResultSet rs = pstmt.executeQuery();) {
+                HashMap<String, String> channels = new HashMap<>();
+
+                String channelsStr;
+                while (rs.next()) {
+                    channelsStr = rs.getString("channels");
+                    String[] ch = channelsStr.split(";");
+                    channels = new HashMap<>();
+                    for (int i = 0; i < ch.length; i++) {
+                        if (ch[i].isEmpty()) {
+                            continue;
+                        }
+                        String[] ch2 = ch[i].split(":"); // exaple: temperature:d1
+                        channels.put(ch2[0], ch2[1]); // exaple: temperature:d1
+                    }
+                    devices.put(rs.getString("eui"), channels);
+                }
+
+            } catch (Exception e) {
+                throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        return devices;
+    }
+
     /**
      * Returns last values for all devices related to given sentinel config.
      * Result is list of lists. Each list contains: deviceEui, timestamp, d1, d2,

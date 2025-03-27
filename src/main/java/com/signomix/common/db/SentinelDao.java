@@ -172,5 +172,11 @@ public class SentinelDao implements SentinelDaoIface {
         throw new UnsupportedOperationException("Unimplemented method 'getLastValuesOfDevices'");
     }
 
+    @Override
+    public Map<String, Map<String, String>> getDeviceChannelsByConfigAndEui(long configId, String eui) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeviceChannelsByEui'");
+    }
+
 
 }
