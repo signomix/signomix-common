@@ -5,6 +5,8 @@ import java.util.HashMap;
 
 import org.jboss.logging.Logger;
 
+import com.signomix.common.User;
+
 public class Report {
     private static final Logger logger = Logger.getLogger(Report.class);
 
@@ -26,6 +28,38 @@ public class Report {
 
     public boolean isAuthorized() {
         return true;
+    }
+
+    public String getTimestampCondition(User user) {
+        String dataTimestampCondition = "";
+
+        //at the moment, the timestamp condition is not set for any user type
+        return dataTimestampCondition;
+
+        /* 
+        // for users from organizations other than default (1) the timestamp condition is
+        // not set (it means data retention policy is not applied automatically)
+        if(user.organization.longValue() != 1) {
+            return dataTimestampCondition;
+        }
+        switch (user.type) {
+            case User.DEMO:
+                dataTimestampCondition = " AND tstamp >= NOW() - INTERVAL 1 DAY ";
+                break;
+            case User.FREE:
+                dataTimestampCondition = " AND tstamp >= NOW() - INTERVAL 7 DAY ";
+                break;
+            case User.USER:
+                dataTimestampCondition = " AND tstamp >= NOW() - INTERVAL 30 DAY ";
+                break;
+            case User.PRIMARY:
+                dataTimestampCondition = " AND tstamp >= NOW() - INTERVAL 1 YEAR ";
+                break;
+            default:
+                // for other user types timestamp condition is not set (e.g. admin
+                dataTimestampCondition = "";
+        }
+        return dataTimestampCondition; */
     }
 
     public ReportResult sortResult(ReportResult result, String reportName, String queryName, boolean ascending) {
