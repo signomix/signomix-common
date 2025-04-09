@@ -2146,7 +2146,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("token varchar,")
                 .append("shared boolean,")
                 .append("organization bigint default " + defaultOrganizationId + ",")
-                .append("administrators varchar);");
+                .append("administrators varchar,")
+                .append("created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);");
         // alerts
         sb.append("CREATE TABLE IF NOT EXISTS alerts (")
                 .append("id BIGSERIAL primary key ,")
