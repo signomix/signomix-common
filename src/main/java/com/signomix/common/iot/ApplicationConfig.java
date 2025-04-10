@@ -27,5 +27,8 @@ public class ApplicationConfig extends HashMap<String, String> {
             return "";
         }
     }
+    public HashMap<String,Object> getAsMap(){
+        return new HashMap<>(this);
+    }
 }
 
