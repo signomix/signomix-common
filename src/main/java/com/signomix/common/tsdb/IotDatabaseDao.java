@@ -35,6 +35,7 @@ import com.signomix.common.db.IotDatabaseIface;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
+import com.signomix.common.iot.CommandDto;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
@@ -4178,6 +4179,48 @@ public class IotDatabaseDao implements IotDatabaseIface {
             // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
             // e.getMessage());
         }
+    }
+
+    @Override
+    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent) throws IotDatabaseException {
+        String query;
+        if(sent){
+            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commandslog WHERE origin=?";
+        } else{
+            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commands WHERE origin=?";
+        }
+        ArrayList<CommandDto> list = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEui);
+            try (ResultSet rs = pstmt.executeQuery();) {
+
+                while (rs.next()) {
+                    CommandDto command = new CommandDto();
+                    command.id = rs.getLong("id");
+                    command.category = rs.getString("category");
+                    command.type = rs.getString("type");
+                    command.origin = rs.getString("origin");
+                    command.payload = rs.getString("payload");
+                    command.port = rs.getInt("port");
+                    command.createdAt = rs.getLong("createdat");
+                    command.sentAt = rs.getLong("sentat");
+                    if(rs.wasNull()){
+                        command.sentAt = null;
+                    }
+                    list.add(command);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return list;
+    }
+
+    @Override
+    public List<CommandDto> getAllCommands(String user, Long organizationId, boolean sent) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAllCommands'");
     }
 
 }

@@ -29,6 +29,7 @@ import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
+import com.signomix.common.iot.CommandDto;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
@@ -2649,6 +2650,18 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<IotEvent> getCommands(String deviceEui, boolean processAll, boolean paidOnly) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getCommands'");
+    }
+
+    @Override
+    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeviceCommands'");
+    }
+
+    @Override
+    public List<CommandDto> getAllCommands(String user, Long organizationId, boolean sent) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAllCommands'");
     }
 
 }

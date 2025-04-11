@@ -8,6 +8,7 @@ import com.signomix.common.User;
 import com.signomix.common.event.IotEvent;
 import com.signomix.common.iot.Alert;
 import com.signomix.common.iot.ChannelData;
+import com.signomix.common.iot.CommandDto;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
 import com.signomix.common.iot.DeviceTemplate;
@@ -97,6 +98,8 @@ public interface IotDatabaseIface {
     //public long getMaxCommandId() throws IotDatabaseException;
     //public long getMaxCommandId(String deviceEui) throws IotDatabaseException;
     public int getChannelIndex(String deviceEUI, String channel) throws IotDatabaseException;
+    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent) throws IotDatabaseException;
+    public List<CommandDto> getAllCommands(String user, Long organizationId, boolean sent) throws IotDatabaseException;
     
     //notifications
     public void addAlert(IotEvent alert) throws IotDatabaseException;
