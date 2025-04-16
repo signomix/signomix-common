@@ -48,6 +48,7 @@ public class DataQuery {
     private String sortBy;
     private HashMap<String, String> parameters;
     private boolean notNull;
+    private boolean skipNull;
     private Integer intervalValue;
     private String intervalName;
     private boolean firstInInterval;
@@ -80,6 +81,14 @@ public class DataQuery {
 
     public boolean isNotNull() {
         return notNull;
+    }
+
+    public void setSkipNull(boolean skipNull) {
+        this.skipNull = skipNull;
+    }
+
+    public boolean isSkipNull() {
+        return skipNull;
     }
 
     public Boolean isIntervalDeltas() {
@@ -147,6 +156,7 @@ public class DataQuery {
         sortOrder = "DESC";
         sortBy = "timestamp";
         notNull = false;
+        skipNull = false;
         intervalValue = null;
         intervalName = null;
         firstInInterval = false;
@@ -339,6 +349,10 @@ public class DataQuery {
                     break;
                 case "notnull":
                     dq.setNotNull(true);
+                    i = i + 1;
+                    break;
+                case "skipnull":
+                    dq.setSkipNull(true);
                     i = i + 1;
                     break;
                 case "interval":
