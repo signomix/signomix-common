@@ -90,14 +90,15 @@ public class DashboardDao implements DashboardIface {
     @Override
     public void removeDashboard(String dashboardId) throws IotDatabaseException {
         String query = "DELETE FROM dashboards WHERE id=?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+        throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "Temporarily not allowed");
+        /* try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboardId);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
+        } */
     }
 
     @Override
