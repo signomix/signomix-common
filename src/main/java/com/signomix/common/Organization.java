@@ -8,7 +8,8 @@ public class Organization {
     public String name;
     public String description;
     public String configuration;
-    private Integer numberOfTenants;
+    private Integer numberOfTenants = 0;
+    public Boolean locked = false;
 
     public Organization() {
         this.id = 0;
@@ -16,6 +17,8 @@ public class Organization {
         this.code = "";
         this.description = "";
         this.configuration = "";
+        this.numberOfTenants = 0;
+        this.locked = false;
     }
 
     public Organization(Integer id, String code, String name, String description, String configuration) {
@@ -25,6 +28,16 @@ public class Organization {
         this.description = description;
         this.configuration = configuration;
     }
+
+    public Organization(Integer id, String code, String name, String description, String configuration, Boolean locked) {
+        this.id = id;
+        this.name = name;
+        this.code = code;
+        this.description = description;
+        this.configuration = configuration;
+        this.locked = locked;
+    }
+
 
 
     public Integer getNumberOfTenants() {

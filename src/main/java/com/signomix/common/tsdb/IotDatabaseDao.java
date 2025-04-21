@@ -2803,26 +2803,24 @@ public class IotDatabaseDao implements IotDatabaseIface {
 
     @Override
     public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException {
-        throw new IotDatabaseException(IotDatabaseException.UNKNOWN, "Temporarily not allowed");
-        /*
-         * // logger.debug("deleteDevice: " + deviceEUI + " for user: " + user.uid);
-         * Device device = getDevice(user, deviceEUI, false, false);
-         * if (!device.isWritable()) {
-         * throw new IotDatabaseException(IotDatabaseException.CONFLICT,
-         * "User is not allowed to update device");
-         * }
-         * String query = "DELETE FROM devices WHERE eui=?;";
-         * try (Connection conn = dataSource.getConnection(); PreparedStatement pst =
-         * conn.prepareStatement(query);) {
-         * pst.setString(1, deviceEUI);
-         * pst.executeUpdate();
-         * } catch (SQLException e) {
-         * e.printStackTrace();
-         * logger.error(e.getMessage());
-         * throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
-         * e.getMessage());
-         * }
-         */
+
+        // logger.debug("deleteDevice: " + deviceEUI + " for user: " + user.uid);
+        Device device = getDevice(user, deviceEUI, false, false);
+        if (!device.isWritable()) {
+            throw new IotDatabaseException(IotDatabaseException.CONFLICT,
+                    "User is not allowed to update device");
+        }
+        String query = "DELETE FROM devices WHERE eui=?;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }
+
     }
 
     @Override
