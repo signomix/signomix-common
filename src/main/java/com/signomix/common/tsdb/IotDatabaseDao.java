@@ -2312,7 +2312,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("type varchar,")
                 .append("origin varchar,")
                 .append("payload varchar,")
-                .append("createdat bigint);");
+                .append("createdat bigint,")
+                .append("port int,")
+                .append("sentat bigint);");
         sb.append("CREATE INDEX IF NOT EXISTS idxcommands on commands(id,origin);");
         // commandslog
         sb.append("CREATE TABLE IF NOT EXISTS commandslog (")
@@ -2321,7 +2323,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("type varchar,")
                 .append("origin varchar,")
                 .append("payload varchar,")
-                .append("createdat bigint);");
+                .append("createdat bigint,")
+                .append("port int,")
+                .append("sentat bigint);");
         sb.append("CREATE INDEX IF NOT EXISTS idxcommandslog on commandslog(id,origin);");
         query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
