@@ -49,9 +49,11 @@ public interface IotDatabaseIface {
     public List<Device> getDevicesByPath(String userID, long organizationID, int tenantId, String path, String search, Integer limit, Integer offset) throws IotDatabaseException;
     public Device getDevice(User user, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
     public Device getDevice(String eui, boolean withStatus) throws IotDatabaseException;
+    public Device getDevice(String eui, boolean withStatus, boolean withTags) throws IotDatabaseException;
     //public Device getDevice(String userID, String deviceEUI, boolean withShared, boolean withStatus) throws IotDatabaseException;
     //public Device getDevice(User user, boolean withStatus) throws IotDatabaseException;
     public void deleteDevice(User user, String deviceEUI) throws IotDatabaseException;
+    public void updateDevice(Device device) throws IotDatabaseException;
     public void updateDevice(User user, Device device) throws IotDatabaseException;
     public void changeDeviceEui(String eui, String newEui) throws IotDatabaseException;
     public void createDevice(User user, Device device) throws IotDatabaseException;

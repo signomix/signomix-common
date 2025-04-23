@@ -1307,6 +1307,22 @@ public class IotDatabaseDao implements IotDatabaseIface {
      * }
      */
 
+    @CacheResult(cacheName = "device-cache2")
+    @Override
+    public Device getDevice(String deviceEUI, boolean withStatus, boolean withTags) throws IotDatabaseException {
+        Device device = getDevice(deviceEUI, withStatus);
+        if (withTags) {
+            try {
+                List<Tag> tags = getDeviceTags(deviceEUI);
+                logger.info("Found tags: " + tags.size());
+                device.setTags(tags);
+            } catch (IotDatabaseException e) {
+                logger.error("Error getting device tags: " + e.getMessage());
+            }
+        }
+        return device;
+    }
+
     @CacheResult(cacheName = "device-cache")
     @Override
     public Device getDevice(String deviceEUI, boolean withStatus) throws IotDatabaseException {
@@ -2824,6 +2840,89 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
         }
+        removeAllDeviceTags(user, deviceEUI);
+
+    }
+
+    @Override
+    public void updateDevice(Device updatedDevice) throws IotDatabaseException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("updatedDevice: " + updatedDevice.getEUI() + " with path: " + updatedDevice.getPath());
+        }
+        Device device = getDevice(updatedDevice.getEUI(), true, false);
+        String query = "UPDATE devices SET name=?, userid=?, type=?, team=?, channels=?, code=?, "
+                + "decoder=?, devicekey=?, description=?, tinterval=?, template=?, pattern=?, "
+                + "commandscript=?, appid=?, groups=?, appeui=?, devid=?, active=?, project=?, "
+                + "latitude=?, longitude=?, altitude=?, retention=?, administrators=?, "
+                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=?, path=? "
+                + "WHERE eui=?;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, updatedDevice.getName());
+            pst.setString(2, updatedDevice.getUserID());
+            pst.setString(3, updatedDevice.getType());
+            pst.setString(4, updatedDevice.getTeam());
+            pst.setString(5, updatedDevice.getChannelsAsString());
+            pst.setString(6, updatedDevice.getCode());
+            pst.setString(7, updatedDevice.getEncoder());
+            pst.setString(8, updatedDevice.getKey());
+            pst.setString(9, updatedDevice.getDescription());
+            pst.setLong(10, updatedDevice.getTransmissionInterval());
+            pst.setString(11, updatedDevice.getTemplate());
+            pst.setString(12, updatedDevice.getPattern());
+            pst.setString(13, updatedDevice.getCommandScript());
+            pst.setString(14, updatedDevice.getApplicationID());
+            pst.setString(15, updatedDevice.getGroups());
+            pst.setString(16, updatedDevice.getApplicationEUI());
+            pst.setString(17, updatedDevice.getDeviceID());
+            pst.setBoolean(18, updatedDevice.isActive());
+            pst.setString(19, updatedDevice.getProject());
+            if (null != updatedDevice.getLatitude()) {
+                pst.setDouble(20, updatedDevice.getLatitude());
+            } else {
+                pst.setNull(20, java.sql.Types.DOUBLE);
+            }
+            if (null != updatedDevice.getLongitude()) {
+                pst.setDouble(21, updatedDevice.getLongitude());
+            } else {
+                pst.setNull(21, java.sql.Types.DOUBLE);
+            }
+            if (null != updatedDevice.getAltitude()) {
+                pst.setDouble(22, updatedDevice.getAltitude());
+            } else {
+                pst.setNull(22, java.sql.Types.DOUBLE);
+            }
+            pst.setLong(23, updatedDevice.getRetentionTime());
+            pst.setString(24, updatedDevice.getAdministrators());
+            pst.setBoolean(25, updatedDevice.isCheckFrames());
+            pst.setString(26, updatedDevice.getConfiguration());
+            if (null != updatedDevice.getOrganizationId()) {
+                pst.setLong(27, updatedDevice.getOrganizationId());
+            } else {
+                pst.setLong(27, defaultOrganizationId);
+            }
+            if (null != updatedDevice.getOrgApplicationId()) {
+                pst.setLong(28, updatedDevice.getOrgApplicationId());
+            } else {
+                // pst.setLong(28, defaultOrganizationId);
+                pst.setNull(28, java.sql.Types.BIGINT);
+            }
+            pst.setBoolean(29, updatedDevice.isDashboard());
+            if (null == updatedDevice.getPath() || updatedDevice.getPath().isEmpty()) {
+                pst.setNull(30, java.sql.Types.OTHER);
+            } else {
+                pst.setObject(30, updatedDevice.getPath(), java.sql.Types.OTHER);
+            }
+            pst.setString(31, updatedDevice.getEUI());
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        removeAllDeviceTags(null,updatedDevice.getEUI());
+        for (Tag tag : updatedDevice.getTagsAsList()) {
+            updateDeviceTag(null,updatedDevice.getEUI(), tag.name, tag.value);
+        }
 
     }
 
@@ -2905,6 +3004,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
             logger.error(e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+        removeAllDeviceTags(user, updatedDevice.getEUI());
+        for (Tag tag : updatedDevice.getTagsAsList()) {
+            updateDeviceTag(user, updatedDevice.getEUI(), tag.name, tag.value);
+        }
+
     }
 
     @Override

@@ -1926,6 +1926,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public void updateDevice(Device updatedDevice) throws IotDatabaseException {
+        throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                "not implemented");
+    }
+
+    @Override
     public void updateDevice(User user, Device updatedDevice) throws IotDatabaseException {
         Device device = getDevice(user, updatedDevice.getEUI(), true, false);
         if (!device.isWritable()) {
@@ -2662,6 +2668,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<CommandDto> getAllCommands(String user, Long organizationId, boolean sent) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getAllCommands'");
+    }
+
+    @Override
+    public Device getDevice(String eui, boolean withStatus, boolean withTags) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDevice'");
     }
 
 }

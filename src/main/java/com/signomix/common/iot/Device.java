@@ -4,14 +4,19 @@
  */
 package com.signomix.common.iot;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.signomix.common.Tag;
 
 /**
  * Description
@@ -752,6 +757,15 @@ public class Device {
         this.configuration = configuration;
     }
 
+    public void setConfiguration(HashMap<String, Object> configuration) {
+        try {
+            this.configuration = new ObjectMapper().writeValueAsString(configuration);
+        } catch (IOException ex) {
+            LOG.warn(ex.getMessage());
+            this.configuration = null;
+        }
+    }
+
     public HashMap<String, Object> getConfigurationMap() {
         if (null == configuration || configuration.trim().isEmpty()) {
             System.out.println("EMPTY CONFIG");
@@ -778,6 +792,34 @@ public class Device {
 
     public String getTags() {
         return tags;
+    }
+
+    public void setTags(List<Tag> tags) {
+        StringBuilder sb = new StringBuilder();
+        for (Tag tag : tags) {
+            sb.append(tag.name).append(":").append(tag.value).append(";");
+        }
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        this.tags = sb.toString();
+    }
+
+    public List<Tag> getTagsAsList() {
+        ArrayList<Tag> result = new ArrayList<>();
+        if (tags != null && !tags.isEmpty()) {
+            String[] tagArray = tags.split(";");
+            for (String tag : tagArray) {
+                String[] kv = tag.split(":");
+                if (kv.length == 2) {
+                    Tag t = new Tag();
+                    t.name = kv[0];
+                    t.value = kv[1];
+                    result.add(t);
+                }
+            }
+        }
+        return result;
     }
 
     /*
