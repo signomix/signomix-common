@@ -12,7 +12,7 @@ public class SentinelConfig {
     public boolean active;
     public String userId;
     public Long organizationId;
-    public int type;
+    public int type;    // target type: device, group, tag
     public String deviceEui;
     public String groupEui;
     public String tagName;
@@ -31,6 +31,9 @@ public class SentinelConfig {
     public String script;
     public String scriptLanguage;
     public boolean checkOthers = false;
+
+    public Integer eventType = 0; // 0: data event, 1: command event, null: data event
+    public Integer reactionType = 0; // 0: send alert, 1: send command, 2: send alert and command, null: send alert
 
 /*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();
