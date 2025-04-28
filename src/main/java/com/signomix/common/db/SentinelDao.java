@@ -74,20 +74,20 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public List<SentinelConfig> getConfigs(String userId, int limit, int offset) throws IotDatabaseException {
+    public List<SentinelConfig> getConfigs(String userId, int limit, int offset, int type) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigs'");
     }
 
     @Override
-    public List<SentinelConfig> getOrganizationConfigs(long organizationId, int limit, int offset)
+    public List<SentinelConfig> getOrganizationConfigs(long organizationId, int limit, int offset, int type)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getOrganizationConfigs'");
     }
 
     @Override
-    public List<SentinelConfig> getConfigsByDevice(String deviceEui, int limit, int offset)
+    public List<SentinelConfig> getConfigsByDevice(String deviceEui, int limit, int offset, int type)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigsByDevice'");
@@ -136,14 +136,14 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset)
+    public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offse, int type)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigsByTag'");
     }
 
     @Override
-    public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset) throws IotDatabaseException {
+    public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset, int type) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getConfigsByGroup'");
     }
