@@ -23,6 +23,7 @@ public interface IotDatabaseIface {
     public void setDatasource(AgroalDataSource ds);
     public void setAnalyticDatasource(AgroalDataSource ds);
     public void setQueryResultsLimit(int limit);
+    public long getNextId(String tableName, String columnName) throws IotDatabaseException;
 
     public List<List> getValues2(String userID, String deviceEUI, String dataQuery) throws IotDatabaseException;
 
@@ -96,7 +97,7 @@ public interface IotDatabaseIface {
     public void putCommandLog(String deviceEUI, IotEvent command) throws IotDatabaseException;
     public void putCommandLog(long id, String deviceEUI, String type, String payload, long createdAt) throws IotDatabaseException;
     public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException; 
-    public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt) throws IotDatabaseException;
+    public long putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt) throws IotDatabaseException;
     //public long getMaxCommandId() throws IotDatabaseException;
     //public long getMaxCommandId(String deviceEui) throws IotDatabaseException;
     public int getChannelIndex(String deviceEUI, String channel) throws IotDatabaseException;

@@ -77,6 +77,22 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
+    public long getNextId(String tableName, String columnName) throws IotDatabaseException {
+        String query="SELECT nextval(pg_get_serial_sequence('"+tableName+"', '"+columnName+"'))";
+        long result = 0;
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            try (ResultSet rs = pst.executeQuery();) {
+                if (rs.next()) {
+                    result = rs.getLong(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+        return result;
+    }
+
+    @Override
     public ChannelData getLastValue(String userID, String deviceEUI, String channel, boolean skipNull)
             throws IotDatabaseException {
         int channelIndex = getChannelIndex(deviceEUI, channel);
@@ -1071,7 +1087,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt)
+    public long putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt)
             throws IotDatabaseException {
         String query = "insert into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
         String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
@@ -1105,6 +1121,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 pst.setLong(5, createdAt);
             }
             pst.executeUpdate();
+            long id = 0;
+            if (!overwrite) {
+                try (ResultSet generatedKeys = pst.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        id = generatedKeys.getLong(1);
+                    }
+                }
+            }
+            return id;
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
@@ -2919,9 +2944,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             logger.error(e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
-        removeAllDeviceTags(null,updatedDevice.getEUI());
+        removeAllDeviceTags(null, updatedDevice.getEUI());
         for (Tag tag : updatedDevice.getTagsAsList()) {
-            updateDeviceTag(null,updatedDevice.getEUI(), tag.name, tag.value);
+            updateDeviceTag(null, updatedDevice.getEUI(), tag.name, tag.value);
         }
 
     }

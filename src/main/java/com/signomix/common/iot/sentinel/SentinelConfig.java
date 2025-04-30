@@ -7,6 +7,13 @@ public class SentinelConfig {
     public static final int TYPE_GROUP = 1;
     public static final int TYPE_TAG = 2;
 
+    public static final int EVENT_TYPE_DATA = 0;
+    public static final int EVENT_TYPE_COMMAND = 1;
+    public static final int EVENT_TYPE_ANY = 2;
+    public static final int REACTION_TYPE_ALERT = 0;
+    //public static final int REACTION_TYPE_COMMAND = 1;
+    //public static final int REACTION_TYPE_ALERT_AND_COMMAND = 2;
+
     public Long id;
     public String name;
     public boolean active;
@@ -33,7 +40,7 @@ public class SentinelConfig {
     public boolean checkOthers = false;
 
     public Integer eventType = 0; // 0: data event, 1: command event, null: data event
-    public Integer reactionType = 0; // 0: send alert, 1: send command, 2: send alert and command, null: send alert
+    //public Integer reactionType = 0; // 0: send alert, 1: send command, 2: send alert and command, null: send alert
 
 /*     public SentinelConfig() {
         conditions=new java.util.ArrayList<>();

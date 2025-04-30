@@ -2621,7 +2621,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt)
+    public long putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'putDeviceCommand'");
@@ -2674,6 +2674,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public Device getDevice(String eui, boolean withStatus, boolean withTags) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDevice'");
+    }
+
+    @Override
+    public long getNextId(String tableName, String columnName) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getNextId'");
     }
 
 }

@@ -75,8 +75,7 @@ public class SentinelDao implements SentinelDaoIface {
                 + "hysteresis REAL NOT NULL DEFAULT 0.0,"
                 + "use_script BOOLEAN NOT NULL DEFAULT FALSE,"
                 + "script TEXT NOT NULL DEFAULT '',"
-                + "config_type INTEGER NOT NULL DEFAULT 0,"
-                + "response_type INTEGER NOT NULL DEFAULT 0"
+                + "config_type INTEGER NOT NULL DEFAULT 0"
                 + ");"
                 + "CREATE TABLE IF NOT EXISTS sentinel_events ("
                 + "id BIGSERIAL,"
@@ -113,8 +112,8 @@ public class SentinelDao implements SentinelDaoIface {
 
     @Override
     public long addConfig(SentinelConfig config) throws IotDatabaseException {
-        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators, time_shift, hysteresis, use_script, script, config_type, response_type) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?,?,?,?,?,?,?)";
+        String query = "INSERT INTO sentinels (name, active, user_id, organization_id, type, device_eui, group_eui, tag_name, tag_value, alert_level, alert_message, every_time,alert_ok, condition_ok_message, conditions, team, administrators, time_shift, hysteresis, use_script, script, config_type) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::json,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);) {
             pstmt.setString(1, config.name);
@@ -139,7 +138,6 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setBoolean(20, config.useScript);
             pstmt.setString(21, config.script);
             pstmt.setInt(22, config.type);
-            pstmt.setInt(23, config.reactionType);
             pstmt.execute();
             ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
@@ -158,7 +156,7 @@ public class SentinelDao implements SentinelDaoIface {
     public void updateConfig(SentinelConfig config) throws IotDatabaseException {
         String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, "
         +"tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, "
-        +"every_time=?, time_shift=?, hysteresis=?, use_script=?, script=?, config_type=?, response_type=? WHERE id=?";
+        +"every_time=?, time_shift=?, hysteresis=?, use_script=?, script=?, config_type=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, config.name);
@@ -183,8 +181,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setBoolean(20, config.useScript);
             pstmt.setString(21, config.script);
             pstmt.setInt(22, config.type);
-            pstmt.setInt(23, config.reactionType);
-            pstmt.setLong(24, config.id);
+            pstmt.setLong(23, config.id);
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -240,7 +237,6 @@ public class SentinelDao implements SentinelDaoIface {
                     config.useScript = rs.getBoolean("use_script");
                     config.script = rs.getString("script");
                     config.eventType = rs.getInt("config_type");
-                    config.reactionType = rs.getInt("response_type");
                 }
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -255,7 +251,7 @@ public class SentinelDao implements SentinelDaoIface {
     public List<SentinelConfig> getConfigs(String userId, int limit, int offset, int type) throws IotDatabaseException {
         java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         String query = "SELECT * FROM sentinels WHERE (user_id=? OR team LIKE ? OR administrators LIKE ?) ";
-        if (type != 0) {
+        if (type != SentinelConfig.EVENT_TYPE_ANY) {
             query += " AND config_type=?";
         }
         query += " ORDER BY id DESC LIMIT ? OFFSET ?";
@@ -266,7 +262,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setString(3, "%," + userId + ",%");
             pstmt.setInt(4, limit);
             pstmt.setInt(5, offset);
-            if (type != 0) {
+            if (type != SentinelConfig.EVENT_TYPE_ANY) {
                 pstmt.setInt(6, type);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
@@ -296,7 +292,6 @@ public class SentinelDao implements SentinelDaoIface {
                     config.useScript = rs.getBoolean("use_script");
                     config.script = rs.getString("script");
                     config.eventType = rs.getInt("config_type");
-                    config.reactionType = rs.getInt("response_type");
                     configs.add(config);
                 }
 
@@ -316,7 +311,7 @@ public class SentinelDao implements SentinelDaoIface {
             throws IotDatabaseException {
         java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         String query = "SELECT * FROM sentinels WHERE organization_id=? ";
-        if (type != 0) {
+        if (type != SentinelConfig.EVENT_TYPE_ANY) {
             query += " AND config_type=?";
         }
         query += " ORDER BY id DESC LIMIT ? OFFSET ?";
@@ -325,7 +320,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setLong(1, organizationId);
             pstmt.setInt(2, limit);
             pstmt.setInt(3, offset);
-            if (type != 0) {
+            if (type != SentinelConfig.EVENT_TYPE_ANY) {
                 pstmt.setInt(4, type);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
@@ -355,7 +350,6 @@ public class SentinelDao implements SentinelDaoIface {
                     config.useScript = rs.getBoolean("use_script");
                     config.script = rs.getString("script");
                     config.eventType = rs.getInt("config_type");
-                    config.reactionType = rs.getInt("response_type");
                     configs.add(config);
                 }
 
@@ -373,20 +367,26 @@ public class SentinelDao implements SentinelDaoIface {
             throws IotDatabaseException {
         java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         String query = "SELECT * FROM sentinels WHERE device_eui=? ";
-        if (type != 0) {
+        if (type != SentinelConfig.EVENT_TYPE_ANY) {
             query += " AND config_type=?";
         }
         query += " ORDER BY id DESC LIMIT ? OFFSET ?";
+        logger.info("query: "+query);
+        logger.info("deviceEui: "+deviceEui);
+        logger.info("type: "+type);
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
-            if (type != 0) {
-                pstmt.setInt(4, type);
+            
+            if (type != SentinelConfig.EVENT_TYPE_ANY) {
+                pstmt.setInt(2, type);
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }else{
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -412,7 +412,6 @@ public class SentinelDao implements SentinelDaoIface {
                     config.useScript = rs.getBoolean("use_script");
                     config.script = rs.getString("script");
                     config.eventType = rs.getInt("config_type");
-                    config.reactionType = rs.getInt("response_type");
                     configs.add(config);
                 }
 
@@ -846,7 +845,7 @@ public class SentinelDao implements SentinelDaoIface {
     public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset, int type)
             throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE (tag_name=? AND tag_value=?)";
-        if(type != 0) {
+        if(type != SentinelConfig.EVENT_TYPE_ANY) {
             query += " AND config_type=?";
         }
         query += " ORDER BY id DESC LIMIT ? OFFSET ?";
@@ -857,7 +856,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setString(2, tagValue);
             pstmt.setInt(3, limit);
             pstmt.setInt(4, offset);
-            if(type != 0) {
+            if(type != SentinelConfig.EVENT_TYPE_ANY) {
                 pstmt.setInt(5, type);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
@@ -887,7 +886,6 @@ public class SentinelDao implements SentinelDaoIface {
                     config.useScript = rs.getBoolean("use_script");
                     config.script = rs.getString("script");
                     config.eventType = rs.getInt("config_type");
-                    config.reactionType = rs.getInt("response_type");
                     configs.add(config);
                 }
                 
@@ -903,18 +901,22 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset, int type) throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE group_eui=? ";
-        if(type != 0) {
-            query += " AND config_type=?";
+        if(type != SentinelConfig.EVENT_TYPE_ANY) {
+            query += " AND config_type=? ";
         }
         query += "ORDER BY id DESC LIMIT ? OFFSET ?";
         java.util.ArrayList<SentinelConfig> configs = new java.util.ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, groupName);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
-            if(type != 0) {
-                pstmt.setInt(4, type);
+            
+            if(type != SentinelConfig.EVENT_TYPE_ANY) {
+                pstmt.setInt(2, type);
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }else{
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 
@@ -943,14 +945,14 @@ public class SentinelDao implements SentinelDaoIface {
                     config.useScript = rs.getBoolean("use_script");
                     config.script = rs.getString("script");
                     config.eventType = rs.getInt("config_type");
-                    config.reactionType = rs.getInt("response_type");
                     configs.add(config);
                 }
-                
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return configs;
