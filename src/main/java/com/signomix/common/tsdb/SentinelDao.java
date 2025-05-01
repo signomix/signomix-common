@@ -137,7 +137,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setDouble(19, config.hysteresis);
             pstmt.setBoolean(20, config.useScript);
             pstmt.setString(21, config.script);
-            pstmt.setInt(22, config.type);
+            pstmt.setInt(22, config.eventType);
             pstmt.execute();
             ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
@@ -180,7 +180,7 @@ public class SentinelDao implements SentinelDaoIface {
             pstmt.setDouble(19, config.hysteresis);
             pstmt.setBoolean(20, config.useScript);
             pstmt.setString(21, config.script);
-            pstmt.setInt(22, config.type);
+            pstmt.setInt(22, config.eventType);
             pstmt.setLong(23, config.id);
             pstmt.execute();
         } catch (SQLException e) {
