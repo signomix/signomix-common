@@ -2590,6 +2590,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             searchParams = new String[0];
         }
         String query = selector.query;
+        if(logger.isDebugEnabled()) {
+            logger.debug("query = " + query);
+        }
         Device device;
         String parametrizedParam = "";
         boolean isParametrized = false;
@@ -2693,11 +2696,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     }
                 }
 
+            }else if(searchParts.length == 3) {
+                if (searchParts[0].equals("tag")) {
+                    return getOrganizationDevicesByTag(organizationId, searchParts[1], searchParts[2], limit, offset);
+                }else{
+                    return devices;
+                }
             }
         }
         String query = "SELECT * FROM devices WHERE organization=? " + searchCondition + " LIMIT ? OFFSET ?";
         Device device;
         int idx = 0;
+        if (logger.isDebugEnabled()) {
+            logger.debug("query = " + query);
+        }
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setLong(1, organizationId);
             idx = 2;
@@ -2709,7 +2721,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                         idx = 3;
                     }
                 } else {
-                    pst.setString(2, "%" + searchString + "%");
+                    pst.setString(2, "%" + searchParts[1] + "%");
                     idx = 3;
                 }
             }
@@ -4120,15 +4132,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public List<Device> getOrganizationDevicesByTag(long organizationId, String tagName, String tagValue, Integer limit,
             Integer offset)
             throws IotDatabaseException {
-        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE organization=? AND tag_name=? AND tag_value=?) AND organization=? ORDER BY name LIMIT=? OFFSET=?";
+        String query = "SELECT * FROM devices WHERE eui IN (SELECT eui FROM device_tags WHERE tag_name=? AND tag_value=?) AND organization=? ORDER BY name LIMIT ? OFFSET ?";
         ArrayList<Device> list = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, organizationId);
-            pstmt.setString(2, tagName);
-            pstmt.setString(3, tagValue);
-            pstmt.setLong(4, organizationId);
-            pstmt.setInt(5, limit);
-            pstmt.setInt(6, offset);
+            pstmt.setString(1, tagName);
+            pstmt.setString(2, tagValue);
+            pstmt.setLong(3, organizationId);
+            pstmt.setInt(4, limit);
+            pstmt.setInt(5, offset);
             try (ResultSet rs = pstmt.executeQuery();) {
 
                 while (rs.next()) {
