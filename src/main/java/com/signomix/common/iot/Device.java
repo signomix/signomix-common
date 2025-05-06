@@ -83,6 +83,15 @@ public class Device {
     private String path; // device location in organization tree
     private Timestamp createdAt;
     private boolean dataProtected;
+    private boolean statusUsed; // if true then status data can be read from devicestatus table
+
+    public boolean isStatusUsed() {
+        return statusUsed;
+    }
+
+    public void setStatusUsed(boolean statusUsed) {
+        this.statusUsed = statusUsed;
+    }
 
     public boolean isDashboard() {
         return dashboard;
@@ -732,6 +741,7 @@ public class Device {
      * @param state the state to set
      */
     public void setState(Double state) {
+        //LOG.info("Setting device status to: " + state);
         this.state = state;
     }
 

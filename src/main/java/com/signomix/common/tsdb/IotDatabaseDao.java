@@ -1364,7 +1364,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             try (ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
                     device = buildDevice(rs);
-                    if (withStatus) {
+                    //logger.info("Found device: " + device.getEUI()+" using status: " + device.isStatusUsed()+" needed: " + withStatus);
+                    if (withStatus && device.isStatusUsed()) {
                         device = getDeviceStatusData(device);
                     }
                 }
@@ -1380,6 +1381,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // last(alert,ts) AS alert, last(tinterval,ts) AS tinterval FROM devicestatus
         // WHERE eui=?";
         String query = "SELECT last(ts,ts) AS lastseen, last(status,ts) AS status, last(alert,ts) AS alert FROM devicestatus WHERE eui=?";
+        logger.info(query);
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, device.getEUI());
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -2230,6 +2232,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("organizationapp bigint references applications,")
                 .append("defaultdashboard boolean default true,")
                 .append("path ltree,")
+                .append("status_used boolean default false,")
                 .append("createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);");
 
         // dashboards
@@ -2855,6 +2858,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
             e.printStackTrace();
             device.setCreatedAt(new Timestamp(0));
         }
+        try {
+            device.setStatusUsed(rs.getBoolean("status_used"));
+        } catch (Exception e) {
+            device.setStatusUsed(false);
+        }
         return device;
     }
 
@@ -2891,7 +2899,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder=?, devicekey=?, description=?, tinterval=?, template=?, pattern=?, "
                 + "commandscript=?, appid=?, groups=?, appeui=?, devid=?, active=?, project=?, "
                 + "latitude=?, longitude=?, altitude=?, retention=?, administrators=?, "
-                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=?, path=? "
+                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=?, path=?, status_used=? "
                 + "WHERE eui=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, updatedDevice.getName());
@@ -2949,7 +2957,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pst.setObject(30, updatedDevice.getPath(), java.sql.Types.OTHER);
             }
-            pst.setString(31, updatedDevice.getEUI());
+            pst.setBoolean(31, updatedDevice.isStatusUsed());
+            pst.setString(32, updatedDevice.getEUI());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2976,7 +2985,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder=?, devicekey=?, description=?, tinterval=?, template=?, pattern=?, "
                 + "commandscript=?, appid=?, groups=?, appeui=?, devid=?, active=?, project=?, "
                 + "latitude=?, longitude=?, altitude=?, retention=?, administrators=?, "
-                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=?, path=? "
+                + "framecheck=?, configuration=?, organization=?, organizationapp=?, defaultdashboard=?, path=?, status_used=? "
                 + "WHERE eui=?;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, updatedDevice.getName());
@@ -3034,7 +3043,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pst.setObject(30, updatedDevice.getPath(), java.sql.Types.OTHER);
             }
-            pst.setString(31, updatedDevice.getEUI());
+            pst.setBoolean(31, updatedDevice.isStatusUsed());
+            pst.setString(32, updatedDevice.getEUI());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -3109,8 +3119,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
                 + "latitude, longitude, altitude, retention, administrators, "
-                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path, status_used) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getName());
@@ -3168,6 +3178,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pst.setObject(31, device.getPath(), java.sql.Types.OTHER);
             }
+            pst.setBoolean(32, device.isStatusUsed());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -3593,8 +3604,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "decoder, devicekey, description, tinterval, template, pattern, "
                 + "commandscript, appid, groups, appeui, devid, active, project, "
                 + "latitude, longitude, altitude, retention, administrators, "
-                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "framecheck, configuration, organization, organizationapp, defaultdashboard, path, status_used) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, device.getEUI());
             pstmt.setString(2, device.getName());
@@ -3651,6 +3662,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             } else {
                 pstmt.setObject(31, device.getPath(), java.sql.Types.OTHER);
             }
+            pstmt.setBoolean(32, device.isStatusUsed());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
