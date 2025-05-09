@@ -11,6 +11,7 @@ import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.CommandDto;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
+import com.signomix.common.iot.DeviceStatusDto;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
@@ -62,7 +63,8 @@ public interface IotDatabaseIface {
     public List<Device> getDevicesRequiringAlert(boolean paid) throws IotDatabaseException;
     public List<Device> getGroupDevices(String groupID) throws IotDatabaseException;
     public List<Device> getGroupVirtualDevices(String groupID) throws IotDatabaseException;
-
+    public DeviceStatusDto getDeviceStatus(String deviceEUI) throws IotDatabaseException;
+    
     //tags
     public List<Tag> getDeviceTags(String deviceEui) throws IotDatabaseException;
     public String getDeviceTagValue(String deviceEui, String tagName) throws IotDatabaseException;

@@ -32,6 +32,7 @@ import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.CommandDto;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
+import com.signomix.common.iot.DeviceStatusDto;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
@@ -2680,6 +2681,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
     public long getNextId(String tableName, String columnName) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getNextId'");
+    }
+
+    @Override
+    public DeviceStatusDto getDeviceStatus(String deviceEUI) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeviceStatus'");
     }
 
 }

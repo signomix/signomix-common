@@ -38,6 +38,7 @@ import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.CommandDto;
 import com.signomix.common.iot.Device;
 import com.signomix.common.iot.DeviceGroup;
+import com.signomix.common.iot.DeviceStatusDto;
 import com.signomix.common.iot.DeviceTemplate;
 import com.signomix.common.iot.virtual.VirtualData;
 
@@ -1009,16 +1010,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         if (logger.isDebugEnabled()) {
             logger.debug("Updating device status.");
         }
-        /*
-         * Device device = getDevice(eui);
-         * if (device == null) {
-         * LOG.warn("Device " + eui + " not found");
-         * throw new IotDatabaseException(IotDatabaseException.NOT_FOUND,
-         * "device not found", null);
-         * }
-         * device.setState(newStatus);
-         */
-        // Device previous = getDevice(device.getEUI());
+
         String paidTypes = "(0,1,5,7,8,9,10)";
         String query;
         // if (null != newStatus) {
@@ -1376,7 +1368,31 @@ public class IotDatabaseDao implements IotDatabaseIface {
         return device;
     }
 
-    private Device getDeviceStatusData(Device device) throws IotDatabaseException {
+    @Override
+    public DeviceStatusDto getDeviceStatus(String deviceEUI) throws IotDatabaseException {
+        
+        String query = "SELECT last(ts,ts) AS lastseen, last(status,ts) AS status, last(alert,ts) AS alert, last(tinterval,ts) AS tinterval, last(paid,ts) as paid FROM devicestatus WHERE eui=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            try (ResultSet rs = pstmt.executeQuery();) {
+                if (rs.next()) {
+                    DeviceStatusDto status = new DeviceStatusDto();
+                    status.eui = deviceEUI;
+                    status.lastSeen=rs.getTimestamp("lastseen").getTime();
+                    status.status=rs.getDouble("status");
+                    status.alert=rs.getInt("alert");
+                    status.transmissionInterval=rs.getLong("tinterval");
+                    status.paid=rs.getBoolean("paid");
+                    return status;
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        return null;
+    }
+
+    public Device getDeviceStatusData(Device device) throws IotDatabaseException {
         // String query = "SELECT last(ts,ts) AS lastseen, last(status,ts) AS status,
         // last(alert,ts) AS alert, last(tinterval,ts) AS tinterval FROM devicestatus
         // WHERE eui=?";
