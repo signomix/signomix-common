@@ -30,7 +30,7 @@ public interface DashboardIface {
      * @return
      * @throws IotDatabaseException
      */
-    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset) throws IotDatabaseException;
+    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset, String searchString) throws IotDatabaseException;
 
     //favourites
     public void addFavouriteDashboard(String userID, String dashboardID) throws IotDatabaseException;

@@ -320,7 +320,7 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
-    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset) throws IotDatabaseException{
+    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset, String searchString) throws IotDatabaseException{
         String query = "SELECT * FROM dashboards WHERE organization= ? ORDER BY name LIMIT ? OFFSET ?";
         logger.info("getOrganizationDashboards: " + organizationId);
         List<Dashboard> dashboards = new ArrayList<>();

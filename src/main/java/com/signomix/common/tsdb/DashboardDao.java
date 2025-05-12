@@ -344,15 +344,40 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
-    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset)
+    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset, String searchString)
             throws IotDatabaseException {
-        String query = "SELECT * FROM dashboards WHERE organization= ? ORDER BY name LIMIT ? OFFSET ?";
+        String searchCondition = "";
+        String[] searchParts;
+        if (null == searchString || searchString.isEmpty()) {
+            searchParts = new String[0];
+        } else {
+            searchParts = searchString.split(":");
+            if (searchParts.length == 2) {
+                if (searchParts[0].equals("id")) {
+                    searchCondition = " LOWER(id) LIKE LOWER(?) ";
+                } else if (searchParts[0].equals("title")) {
+                    searchCondition = " LOWER(title) LIKE LOWER(?) ";
+                }
+            }
+        }
+        String query = "SELECT * FROM dashboards WHERE organization= ? ";
+        if(!searchCondition.isEmpty()){
+            query = query + " AND " + searchCondition;
+        }
+        query = query +" ORDER BY name LIMIT ? OFFSET ?";
         logger.debug("getOrganizationDashboards: " + organizationId);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);
-            pstmt.setInt(2, limit);
-            pstmt.setInt(3, offset);
+            if(!searchCondition.isEmpty()){
+                pstmt.setString(2, "%" + searchParts[1] + "%");
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }else{
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
+            }
+
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     logger.debug("getDashboards: " + rs.getString("id"));
