@@ -155,8 +155,8 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public void updateConfig(SentinelConfig config) throws IotDatabaseException {
         String query = "UPDATE sentinels SET name=?, active=?, user_id=?, organization_id=?, type=?, device_eui=?, group_eui=?, tag_name=?, "
-        +"tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, "
-        +"every_time=?, time_shift=?, hysteresis=?, use_script=?, script=?, config_type=? WHERE id=?";
+                + "tag_value=?, alert_level=?, alert_message=?, alert_ok=?, condition_ok_message=?, conditions=?::json, team=?, administrators=?, "
+                + "every_time=?, time_shift=?, hysteresis=?, use_script=?, script=?, config_type=? WHERE id=?";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, config.name);
@@ -371,18 +371,21 @@ public class SentinelDao implements SentinelDaoIface {
             query += " AND config_type=?";
         }
         query += " ORDER BY id DESC LIMIT ? OFFSET ?";
-        logger.info("query: "+query);
-        logger.info("deviceEui: "+deviceEui);
-        logger.info("type: "+type);
+        if (logger.isDebugEnabled()) {
+            logger.debug("query: " + query);
+            logger.debug("deviceEui: " + deviceEui);
+            logger.debug("type: " + type);
+        }
+
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
-            
+
             if (type != SentinelConfig.EVENT_TYPE_ANY) {
                 pstmt.setInt(2, type);
                 pstmt.setInt(3, limit);
                 pstmt.setInt(4, offset);
-            }else{
+            } else {
                 pstmt.setInt(2, limit);
                 pstmt.setInt(3, offset);
             }
@@ -468,9 +471,9 @@ public class SentinelDao implements SentinelDaoIface {
         return devices;
     }
 
-
     /**
-     * Returns map of devices and their channels for given sentinel config and device
+     * Returns map of devices and their channels for given sentinel config and
+     * device
      * eui.
      * Example result: { "eui1": { "temperature": "d1", "humidity": "d2" }, "eui2":
      * { "temperature": "d14", "humidity": "d1" } }
@@ -710,7 +713,7 @@ public class SentinelDao implements SentinelDaoIface {
                     row.add(rs.getDouble("d24"));
                     values.add(row);
                 }
-                
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
@@ -787,11 +790,11 @@ public class SentinelDao implements SentinelDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, configId);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                
+
                 while (rs.next()) {
                     devices.put(rs.getString("eui"), rs.getString("channels"));
                 }
-                
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
@@ -824,7 +827,7 @@ public class SentinelDao implements SentinelDaoIface {
     @Override
     public int getSentinelStatus(long sentinelId) throws IotDatabaseException {
         String query = "SELECT DISTINCT ON (sentinel_id) level FROM sentinel_events WHERE sentinel_id=? AND tstamp > now() - INTERVAL '24 hours' ORDER BY sentinel_id, tstamp DESC;";
-        int status=0;
+        int status = 0;
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, sentinelId);
@@ -845,7 +848,7 @@ public class SentinelDao implements SentinelDaoIface {
     public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset, int type)
             throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE (tag_name=? AND tag_value=?)";
-        if(type != SentinelConfig.EVENT_TYPE_ANY) {
+        if (type != SentinelConfig.EVENT_TYPE_ANY) {
             query += " AND config_type=?";
         }
         query += " ORDER BY id DESC LIMIT ? OFFSET ?";
@@ -854,13 +857,16 @@ public class SentinelDao implements SentinelDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, tagName);
             pstmt.setString(2, tagValue);
-            pstmt.setInt(3, limit);
-            pstmt.setInt(4, offset);
-            if(type != SentinelConfig.EVENT_TYPE_ANY) {
-                pstmt.setInt(5, type);
+            if (type != SentinelConfig.EVENT_TYPE_ANY) {
+                pstmt.setInt(3, type);
+                pstmt.setInt(4, limit);
+                pstmt.setInt(5, offset);
+            } else {
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                
+
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
@@ -888,7 +894,7 @@ public class SentinelDao implements SentinelDaoIface {
                     config.eventType = rs.getInt("config_type");
                     configs.add(config);
                 }
-                
+
             } catch (Exception e) {
                 throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
             }
@@ -899,9 +905,10 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset, int type) throws IotDatabaseException {
+    public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset, int type)
+            throws IotDatabaseException {
         String query = "SELECT * FROM sentinels WHERE group_eui=? ";
-        if(type != SentinelConfig.EVENT_TYPE_ANY) {
+        if (type != SentinelConfig.EVENT_TYPE_ANY) {
             query += " AND config_type=? ";
         }
         query += "ORDER BY id DESC LIMIT ? OFFSET ?";
@@ -909,17 +916,17 @@ public class SentinelDao implements SentinelDaoIface {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, groupName);
-            
-            if(type != SentinelConfig.EVENT_TYPE_ANY) {
+
+            if (type != SentinelConfig.EVENT_TYPE_ANY) {
                 pstmt.setInt(2, type);
                 pstmt.setInt(3, limit);
                 pstmt.setInt(4, offset);
-            }else{
+            } else {
                 pstmt.setInt(2, limit);
                 pstmt.setInt(3, offset);
             }
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
-                
+
                 while (rs.next()) {
                     SentinelConfig config = new SentinelConfig();
                     config.id = rs.getLong("id");
