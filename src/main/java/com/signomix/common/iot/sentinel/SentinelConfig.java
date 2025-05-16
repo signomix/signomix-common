@@ -38,6 +38,7 @@ public class SentinelConfig {
     public String script;
     public String scriptLanguage;
     public boolean checkOthers = false;
+    public boolean processed = false;
 
     public Integer eventType = 0; // 0: data event, 1: command event, null: data event
     //public Integer reactionType = 0; // 0: send alert, 1: send command, 2: send alert and command, null: send alert
