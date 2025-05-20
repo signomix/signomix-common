@@ -9,3 +9,10 @@ doc/dev3.json
 doc/dev4.json
 doc/test.sql
 build-report.txt
+.settings/org.eclipse.core.resources.prefs
+.settings/org.eclipse.jdt.apt.core.prefs
+.settings/org.eclipse.jdt.core.prefs
+.settings/org.eclipse.m2e.core.prefs
+.zed/settings.json
+.project
+.classpath
