@@ -49,8 +49,8 @@ public class QuestDbDao implements EventLogDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY data_access_events TO '/var/lib/postgresql/data/export/data_access_events.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY account_events TO '/var/lib/postgresql/data/export/account_events.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY data_access_events TO '/var/lib/postgresql/data/export/qdb_data_access_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_events TO '/var/lib/postgresql/data/export/qdb_account_events.csv' DELIMITER ';' CSV HEADER;";
         try (var connection = dataSource.getConnection();
                 var statement = connection.createStatement()) {
             statement.execute(query);

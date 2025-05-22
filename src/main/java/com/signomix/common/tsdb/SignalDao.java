@@ -36,7 +36,9 @@ public class SignalDao implements SignalDaoIface {
     @Override
     public void backupDb() throws IotDatabaseException {
         String query = "COPY (SELECT * FROM signals) to '/var/lib/postgresql/data/export/signals.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY (SELECT* FROM user_signals) to '/var/lib/postgresql/data/export/user_signals.csv' DELIMITER ';' CSV HEADER;";
+                + "COPY (SELECT * FROM user_signals) to '/var/lib/postgresql/data/export/user_signals.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM archive_signals) to '/var/lib/postgresql/data/export/archive_signals.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM archive_user_signals) to '/var/lib/postgresql/data/export/archive_user_signals.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();

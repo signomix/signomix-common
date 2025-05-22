@@ -220,7 +220,8 @@ public class BillingDao implements BillingDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY orders TO '/var/lib/postgresql/data/export/orders.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY orders TO '/var/lib/postgresql/data/export/orders.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_points TO '/var/lib/postgresql/data/export/account_points.csv' DELIMITER ';' CSV HEADER;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.execute();

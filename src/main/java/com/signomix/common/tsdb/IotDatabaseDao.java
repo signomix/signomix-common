@@ -1361,9 +1361,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             "COPY account_params to '/var/lib/postgresql/data/export/account_params.csv' DELIMITER ';' CSV HEADER;" +
             "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;" +
             "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;" +
+            "COPY archive_alerts to '/var/lib/postgresql/data/export/archive_alerts.csv' DELIMITER ';' CSV HEADER;" +
             "COPY analyticdata to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;" +
-            // + "COPY applications to '/var/lib/postgresql/data/export/applications.csv'
-            // DELIMITER ';' CSV HEADER;"
             "COPY commands to '/var/lib/postgresql/data/export/commands.csv' DELIMITER ';' CSV HEADER;" +
             "COPY commandslog to '/var/lib/postgresql/data/export/commandslog.csv' DELIMITER ';' CSV HEADER;" +
             "COPY dashboards to '/var/lib/postgresql/data/export/dashboards.csv' DELIMITER ';' CSV HEADER;" +
@@ -1374,6 +1373,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             "COPY devices to '/var/lib/postgresql/data/export/devices.csv' DELIMITER ';' CSV HEADER;" +
             "COPY device_tags to '/var/lib/postgresql/data/export/device_tags.csv' DELIMITER ';' CSV HEADER;" +
             "COPY devicetemplates to '/var/lib/postgresql/data/export/devicetemplates.csv' DELIMITER ';' CSV HEADER;" +
+            "COPY favourites to '/var/lib/postgresql/data/export/favourites.csv' DELIMITER ';' CSV HEADER;" +
             "COPY groups to '/var/lib/postgresql/data/export/groups.csv' DELIMITER ';' CSV HEADER;" +
             "COPY virtualdevicedata to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
         try (
