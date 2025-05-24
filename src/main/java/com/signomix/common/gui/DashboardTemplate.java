@@ -8,7 +8,6 @@ import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -19,10 +18,21 @@ import java.util.Map;
 public class DashboardTemplate {
 
     private String id;
+    private String name;
     private String title;
     private ArrayList<Widget> widgets;
     private ArrayList<DashboardItem> items;
+    private ArrayList<DashboardItem> itemsMobile;
     private long organizationId = 0;
+    private String variables;
+
+    public String getVariables() {
+        return variables;
+    }
+
+    public void setVariables(String variables) {
+        this.variables = variables;
+    }
 
     public DashboardTemplate() {
         id = null;
@@ -159,8 +169,11 @@ public class DashboardTemplate {
             w.setRange((String) m.get("range"));
             w.setUnitName((String) m.get("unitName"));
             try {
-                w.setWidth(((Long) m.get("width")).intValue());
+                w.setWidth((Integer) m.get("width"));
             } catch (Error e) {
+                e.printStackTrace();
+                w.setWidth(1);
+            } catch (NullPointerException e) {
                 e.printStackTrace();
                 w.setWidth(1);
             }

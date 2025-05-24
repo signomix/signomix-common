@@ -38,24 +38,39 @@ public class Widget {
     private boolean yAxisAutoScale;
     private boolean chartArea;
     private boolean chartMarkers;
-    
-    public Widget(){
-        width=1;
-        modified=false;
-        axisOptions=false;
-        yAxisAutoScale=false;
-        chartArea=false;
-        chartMarkers=false;
+
+    public Widget() {
+        width = 1;
+        modified = false;
+        axisOptions = false;
+        yAxisAutoScale = false;
+        chartArea = false;
+        chartMarkers = false;
     }
-    
-    public Widget(String userID, String name){
-        width=1;
-        modified=false;
+
+    public Widget(String userID, String name) {
+        width = 1;
+        modified = false;
+    }
+
+    public void replaceVariable(String variable, String value) {
+        if (query != null && query.contains(variable)) {
+            query = query.replace(variable, value);
+        }
+        if (title != null && title.contains(variable)) {
+            title = title.replace(variable, value);
+        }
+        if (dev_id != null && dev_id.contains(variable)) {
+            dev_id = dev_id.replace(variable, value);
+        }
+        if (group != null && group.contains(variable)) {
+            group = group.replace(variable, value);
+        }
     }
 
     public boolean isAxisOptions() {
         return axisOptions;
-    }   
+    }
 
     public void setAxisOptions(boolean axisOptions) {
         this.axisOptions = axisOptions;
@@ -84,7 +99,6 @@ public class Widget {
     public void setChartMarkers(boolean chartMarkers) {
         this.chartMarkers = chartMarkers;
     }
-    
 
     public String getChartOption() {
         return chartOption;
@@ -184,14 +198,14 @@ public class Widget {
      * @return the dev_id
      */
     public String getDev_id() {
-        return dev_id!=null?dev_id.toUpperCase():"";
+        return dev_id != null ? dev_id.toUpperCase() : "";
     }
 
     /**
      * @param dev_id the dev_id to set
      */
     public void setDev_id(String dev_id) {
-        this.dev_id = dev_id!=null?dev_id.toUpperCase():"";
+        this.dev_id = dev_id != null ? dev_id.toUpperCase() : "";
     }
 
     /**
@@ -205,7 +219,9 @@ public class Widget {
      * @param channel the channel to set
      */
     public void setChannel(String channel) {
-        this.channel = channel.replaceAll("\\s", "").toLowerCase();
+        if (null != channel && !channel.isEmpty()) {
+            this.channel = channel.replaceAll("\\s", "").toLowerCase();
+        }
     }
 
     /**
@@ -226,7 +242,7 @@ public class Widget {
      * @return the query
      */
     public String getQuery() {
-        if(query==null || query.isEmpty()){
+        if (query == null || query.isEmpty()) {
             setQuery("last 1");
         }
         return query;
@@ -299,7 +315,7 @@ public class Widget {
      * @return the width
      */
     public int getWidth() {
-        if(width<1||width>4){
+        if (width < 1 || width > 4) {
             return 1;
         }
         return width;
@@ -311,12 +327,12 @@ public class Widget {
     public void setWidth(int width) {
         this.width = width;
     }
-    
-    public String serialize(){
+
+    public String serialize() {
         return JsonWriter.objectToJson(this);
     }
-    
-    public static Widget parse(String source){
+
+    public static Widget parse(String source) {
         return (Widget) JsonReader.jsonToJava(source);
     }
 
@@ -324,17 +340,17 @@ public class Widget {
      * @return the group
      */
     public String getGroup() {
-        return group!=null?group.toUpperCase():"";
+        return group != null ? group.toUpperCase() : "";
     }
 
     /**
      * @param group the group to set
      */
     public void setGroup(String group) {
-        this.group = group!=null?group.toUpperCase():"";
+        this.group = group != null ? group.toUpperCase() : "";
     }
-    
-    public void normalize(){
+
+    public void normalize() {
         setChannel(channel);
     }
 

@@ -1,19 +1,16 @@
 package com.signomix.common.tsdb;
 
+import com.signomix.common.db.ApplicationDaoIface;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.iot.Application;
+import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.db.ApplicationDaoIface;
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.iot.Application;
-
-import io.agroal.api.AgroalDataSource;
 
 public class ApplicationDao implements ApplicationDaoIface {
 
@@ -89,7 +86,7 @@ public class ApplicationDao implements ApplicationDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
-        try (Connection conn = dataSource.getConnection();
+        /* try (Connection conn = dataSource.getConnection();
                 PreparedStatement pst = conn.prepareStatement(
                         "INSERT INTO applications values (0," + DEFAULT_ORGANIZATION_ID + ",0,'system','','','','');");) {
             pst.executeUpdate();
@@ -99,12 +96,13 @@ public class ApplicationDao implements ApplicationDaoIface {
             // e.getMessage(), e);
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
-        }
+        } */
     }
 
     @Override
     public Application addApplication(Application application) throws IotDatabaseException {
-        String query = "INSERT INTO APPLICATIONS (organization,version,name,description,config,decoder,code) values (?,?,?,?,?,?,?);";
+        Application app = application;
+        String query = "INSERT INTO APPLICATIONS (organization,version,name,description,config,decoder,code) values (?,?,?,?,?,?,?) RETURNING id;";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.setInt(1, application.organization);
             pst.setInt(2, application.version);
@@ -113,12 +111,16 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setString(5, application.config.getAsString());
             pst.setString(6, application.decoder);
             pst.setString(7, application.code);
-            pst.executeUpdate();
+            try (ResultSet rs = pst.executeQuery();) {
+                if (rs.next()) {
+                    app.id = rs.getInt(1);
+                }
+            }
         } catch (SQLException e) {
             logger.warn("addApplication: " + e.getMessage());
             throw new IotDatabaseException(e.getErrorCode(), e.getMessage());
         }
-        return getApplication(application.organization, application.name);
+        return app;
     }
 
     @Override

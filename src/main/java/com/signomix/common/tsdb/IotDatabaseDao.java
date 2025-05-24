@@ -2770,7 +2770,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
             .append("CREATE TABLE IF NOT EXISTS dashboardtemplates (")
             .append("id varchar primary key,")
             .append("title varchar,")
+            .append("name varchar,")
             .append("items varchar,")
+            .append("items_mobile varchar,")
+            .append("variables varchar,")
             .append("widgets varchar);");
         // devices
         sb
@@ -2828,6 +2831,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             .append("items varchar,")
             .append("token varchar,")
             .append("shared boolean,")
+            .append("template varchar,")
+            .append("items_mobile varchar,")
+            .append("variables varchar,")
             .append(
                 "organization bigint default " + defaultOrganizationId + ","
             )

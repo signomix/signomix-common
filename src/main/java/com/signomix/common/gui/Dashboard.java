@@ -4,13 +4,13 @@
  */
 package com.signomix.common.gui;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-
 import com.cedarsoftware.util.io.JsonReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 /**
  *
@@ -31,6 +31,52 @@ public class Dashboard {
     private int version = 0;
     private long organizationId = 0;
     private boolean favourite = false;
+    private String templateId;
+
+    public String getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId;
+    }
+
+    public String getVariables() {
+        return variables;
+    }
+
+    public void setVariables(String variables) {
+        this.variables = variables;
+    }
+
+    /**
+     * Replaces variables in all widgets in the dashboard.
+     * 
+     * @param templateVariables Comma-separated list of variable names to replace.
+     * @param dashboardVariables Comma-separated list of variable=value pairs.
+     */
+    public void replaceVariables(String templateVariables, String dashboardVariables) {
+        String[] vars = templateVariables.split(",");
+        String[] replacementsStrings = dashboardVariables.split(",");
+        HashMap<String, String> replacements = new HashMap<>();
+        for (String replacement : replacementsStrings) {
+            String[] parts = replacement.split("=");
+            if (parts.length == 2) {
+                replacements.put(parts[0].trim(), parts[1].trim());
+            }
+        }
+        for (String var : vars) {
+            String replacement = replacements.get(var.trim());
+            if (replacement != null) {
+                widgets.forEach(widget -> {
+                    ((Widget) widget).replaceVariable(var.trim(), replacement);
+                });
+            }
+        }
+
+    }
+
+    private String variables;
 
     public Dashboard() {
         id = null;

@@ -168,6 +168,8 @@ public class DashboardDao implements DashboardIface {
                     dashboardTemplate.setId(rs.getString("id"));
                     dashboardTemplate.setTitle(rs.getString("title"));
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboardTemplate.setItemsFromJson(rs.getString("items"));
+                    dashboardTemplate.setOrganizationId(rs.getLong("organization"));
                     
                 }
             }
@@ -498,6 +500,94 @@ public class DashboardDao implements DashboardIface {
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<DashboardTemplate> getUserDashboardTemplates(String userId, Integer limit, Integer offset,
+            String searchString) throws IotDatabaseException {
+
+        List<DashboardTemplate> dashboardTemplates = new ArrayList<>();
+       
+        return dashboardTemplates;
+    }
+
+    @Override
+    public List<DashboardTemplate> getOrganizationDashboardTemplates(long organizationId, Integer limit, Integer offset,
+            String searchString) throws IotDatabaseException {
+        String searchCondition = "";
+        String[] searchParts;
+        if (null == searchString || searchString.isEmpty()) {
+            searchParts = new String[0];
+        } else {
+            searchParts = searchString.split(":");
+            if (searchParts.length == 2) {
+                if (searchParts[0].equals("id")) {
+                    searchCondition = " LOWER(id) LIKE LOWER(?) ";
+                } else if (searchParts[0].equals("title")) {
+                    searchCondition = " LOWER(title) LIKE LOWER(?) ";
+                }
+            }
+        }
+        String query = "SELECT * FROM dashboardtemplates WHERE organization= ? ";
+        if(!searchCondition.isEmpty()){
+            query = query + " AND " + searchCondition;
+        }
+        query = query + " ORDER BY title LIMIT ? OFFSET ?";
+        List<DashboardTemplate> dashboardTemplates = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setLong(1, organizationId);
+            if(!searchCondition.isEmpty()){
+                pstmt.setString(2, "%" + searchParts[1] + "%");
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }else{
+                pstmt.setInt(2, limit);
+                pstmt.setInt(3, offset);
+            }
+            try (ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()) {
+                    DashboardTemplate dashboardTemplate = new DashboardTemplate();
+                    dashboardTemplate.setId(rs.getString("id"));
+                    dashboardTemplate.setTitle(rs.getString("title"));
+                    dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboardTemplate.setItemsFromJson(rs.getString("items"));
+                    dashboardTemplates.add(dashboardTemplate);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        }
+        return dashboardTemplates;
+    }
+
+    @Override
+    public void updateDashboardTemplate(DashboardTemplate dashboardTemplate) throws IotDatabaseException {
+        String query = "UPDATE dashboardtemplates SET title=?,widgets=?,items=?,organization=? WHERE id=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, dashboardTemplate.getTitle());
+            pstmt.setString(2, dashboardTemplate.getWidgetsAsJson());
+            pstmt.setString(3, dashboardTemplate.getItemsAsJson());
+            pstmt.setLong(4, dashboardTemplate.getOrganizationId());
+            pstmt.setString(5, dashboardTemplate.getId());
+            int count = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeDashboardTemplate(String dashboardTemplateId) throws IotDatabaseException {
+        String query = "DELETE FROM dashboardtemplates WHERE id=?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, dashboardTemplateId);
+            int count = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
 

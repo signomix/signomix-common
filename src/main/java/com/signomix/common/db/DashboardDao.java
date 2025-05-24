@@ -451,4 +451,30 @@ public class DashboardDao implements DashboardIface {
         }
     }
 
+    @Override
+    public List<DashboardTemplate> getUserDashboardTemplates(String userId, Integer limit, Integer offset,
+            String searchString) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUserDashboardTemplates'");
+    }
+
+    @Override
+    public List<DashboardTemplate> getOrganizationDashboardTemplates(long organizationId, Integer limit, Integer offset,
+            String searchString) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOrganizationDashboardTemplates'");
+    }
+
+    @Override
+    public void updateDashboardTemplate(DashboardTemplate dashboardTemplate) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateDashboardTemplate'");
+    }
+
+    @Override
+    public void removeDashboardTemplate(String dashboardTemplateId) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeDashboardTemplate'");
+    }
+
 }
