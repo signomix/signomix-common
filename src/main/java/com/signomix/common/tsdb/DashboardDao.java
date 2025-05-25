@@ -170,7 +170,7 @@ public class DashboardDao implements DashboardIface {
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
                     dashboardTemplate.setItemsFromJson(rs.getString("items"));
                     dashboardTemplate.setOrganizationId(rs.getLong("organization"));
-                    
+                    dashboardTemplate.setVariables(rs.getString("variables"));
                 }
             }
         } catch (SQLException e) {
@@ -183,12 +183,13 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void saveAsTemplate(Dashboard dashboard) throws IotDatabaseException {
-        String query = "INSERT INTO dashboardtemplates (id,title,widgets,items) VALUES (?,?,?,?)";
+        String query = "INSERT INTO dashboardtemplates (id,title,widgets,items,variables) VALUES (?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboard.getId());
             pstmt.setString(2, dashboard.getTitle());
             pstmt.setString(3, dashboard.getWidgetsAsJson());
             pstmt.setString(4, dashboard.getItemsAsJson());
+            pstmt.setString(5, dashboard.getVariables());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -479,6 +480,7 @@ public class DashboardDao implements DashboardIface {
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
                     dashboardTemplate.setItemsFromJson(rs.getString("items"));
                     dashboardTemplate.setOrganizationId(rs.getLong("organization"));
+                    dashboardTemplate.setVariables(rs.getString("variables"));
                     dashboardTemplates.add(dashboardTemplate);
                 }
             }
@@ -490,13 +492,14 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void addDashboardTemplate(DashboardTemplate dashboardTemplate) throws IotDatabaseException {
-        String query = "INSERT INTO dashboardtemplates (id,title,widgets,items,organization) VALUES (?,?,?,?,?)";
+        String query = "INSERT INTO dashboardtemplates (id,title,widgets,items,organization,variables) VALUES (?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboardTemplate.getId());
             pstmt.setString(2, dashboardTemplate.getTitle());
             pstmt.setString(3, dashboardTemplate.getWidgetsAsJson());
             pstmt.setString(4, dashboardTemplate.getItemsAsJson());
             pstmt.setLong(5, dashboardTemplate.getOrganizationId());
+            pstmt.setString(6, dashboardTemplate.getVariables());
             pstmt.execute();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
@@ -552,6 +555,8 @@ public class DashboardDao implements DashboardIface {
                     dashboardTemplate.setTitle(rs.getString("title"));
                     dashboardTemplate.setWidgetsFromJson(rs.getString("widgets"));
                     dashboardTemplate.setItemsFromJson(rs.getString("items"));
+                    dashboardTemplate.setOrganizationId(rs.getLong("organization"));
+                    dashboardTemplate.setVariables(rs.getString("variables"));
                     dashboardTemplates.add(dashboardTemplate);
                 }
             }
@@ -563,13 +568,14 @@ public class DashboardDao implements DashboardIface {
 
     @Override
     public void updateDashboardTemplate(DashboardTemplate dashboardTemplate) throws IotDatabaseException {
-        String query = "UPDATE dashboardtemplates SET title=?,widgets=?,items=?,organization=? WHERE id=?";
+        String query = "UPDATE dashboardtemplates SET title=?,widgets=?,items=?,organization=?,variables=? WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, dashboardTemplate.getTitle());
             pstmt.setString(2, dashboardTemplate.getWidgetsAsJson());
             pstmt.setString(3, dashboardTemplate.getItemsAsJson());
             pstmt.setLong(4, dashboardTemplate.getOrganizationId());
-            pstmt.setString(5, dashboardTemplate.getId());
+            pstmt.setString(5, dashboardTemplate.getVariables());
+            pstmt.setString(6, dashboardTemplate.getId());
             int count = pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);

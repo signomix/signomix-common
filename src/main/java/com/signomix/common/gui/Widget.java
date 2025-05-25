@@ -6,6 +6,8 @@ package com.signomix.common.gui;
 
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -360,6 +362,47 @@ public class Widget {
 
     public void setModified(boolean modified) {
         this.modified = modified;
+    }
+    
+    /**
+     * Get variables from widget's query, title, dev_id and group.
+     * @return collection of variables found in widget's query, title, dev_id and group
+     */
+    public List<String> getVariables() {
+        List<String> variables = new ArrayList<>();
+        if (query != null) {
+            variables.addAll(findBracedSubstrings(query));
+        }
+        if (title != null) {
+            variables.addAll(findBracedSubstrings(title));
+        }
+        if (dev_id != null) {
+            variables.addAll(findBracedSubstrings(dev_id));
+        }
+        if (group != null) {
+            variables.addAll(findBracedSubstrings(group));
+        }
+        return variables;
+    }
+
+    /**
+     * Finds all substrings enclosed in curly braces {} in the input string.
+     *
+     * @param input the input string to search
+     * @return a list of substrings found within curly braces
+     */
+    public static List<String> findBracedSubstrings(String input) {
+        List<String> result = new ArrayList<>();
+        int start = -1;
+        for (int i = 0; i < input.length(); i++) {
+            if (input.charAt(i) == '{') {
+                start = i;
+            } else if (input.charAt(i) == '}' && start != -1) {
+                result.add(input.substring(start, i + 1));
+                start = -1;
+            }
+        }
+        return result;
     }
 
 }

@@ -9,7 +9,11 @@ import com.cedarsoftware.util.io.JsonWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import org.jboss.logging.Logger;
 
 /**
  *
@@ -17,14 +21,62 @@ import java.util.Map;
  */
 public class DashboardTemplate {
 
+    private static final Logger logger = Logger.getLogger(DashboardTemplate.class);
+
     private String id;
-    private String name;
     private String title;
-    private ArrayList<Widget> widgets;
+    private ArrayList<Object> widgets;
     private ArrayList<DashboardItem> items;
     private ArrayList<DashboardItem> itemsMobile;
     private long organizationId = 0;
     private String variables;
+
+
+    public void parseVariables() {
+        HashSet<String> variableSet = new HashSet<>();
+        List<String> variableList;
+
+        // Extract variables from the title
+        variableList = findBracedSubstrings(title);
+        for (String variable : variableList) {
+            variableSet.add(variable);
+        }
+        // Extract variables from the widgets
+        for (Object widget : widgets) {
+            if (widget instanceof Widget) {
+                Widget w = (Widget) widget;
+                variableList = findBracedSubstrings(w.getQuery());
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+            } else if (widget instanceof LinkedHashMap) {
+                LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>) widget;
+                variableList = findBracedSubstrings((String) map.get("query"));
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings((String) map.get("group"));
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings((String) map.get("dev_id"));
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings((String) map.get("title"));
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings((String) map.get("description"));
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+            } else {
+                logger.warn("Invalid widget type in DashboardTemplate: " + widget.getClass().getName());
+            }
+        }
+        variables= String.join(",", variableSet);
+    }
 
     public String getVariables() {
         return variables;
@@ -137,7 +189,7 @@ public class DashboardTemplate {
     /**
      * @return the widgets
      */
-    public ArrayList<Widget> getWidgets() {
+    public ArrayList getWidgets() {
         return widgets;
     }
 
@@ -171,10 +223,10 @@ public class DashboardTemplate {
             try {
                 w.setWidth((Integer) m.get("width"));
             } catch (Error e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 w.setWidth(1);
             } catch (NullPointerException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 w.setWidth(1);
             }
             w.setModified(false);
@@ -189,6 +241,29 @@ public class DashboardTemplate {
             w.setConfig((String) m.get("config"));
             widgets.add(w);
         }
+    }
+
+    /**
+     * Finds all substrings enclosed in curly braces {} in the input string.
+     *
+     * @param input the input string to search
+     * @return a list of substrings found within curly braces
+     */
+    public static List<String> findBracedSubstrings(String input) {
+        List<String> result = new ArrayList<>();
+        if (input == null || input.isEmpty()) {
+            return result; // Return empty list if input is null or empty
+        }
+        int start = -1;
+        for (int i = 0; i < input.length(); i++) {
+            if (input.charAt(i) == '{') {
+                start = i;
+            } else if (input.charAt(i) == '}' && start != -1) {
+                result.add(input.substring(start, i + 1));
+                start = -1;
+            }
+        }
+        return result;
     }
 
 }
