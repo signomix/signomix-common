@@ -56,6 +56,10 @@ public class Dashboard {
      * @param dashboardVariables Comma-separated list of variable=value pairs.
      */
     public void replaceVariables(String templateVariables, String dashboardVariables) {
+        if(templateVariables == null || templateVariables.isEmpty() ||
+                dashboardVariables == null || dashboardVariables.isEmpty()) {
+            return;
+        }
         String[] vars = templateVariables.split(",");
         String[] replacementsStrings = dashboardVariables.split(",");
         HashMap<String, String> replacements = new HashMap<>();
@@ -67,7 +71,9 @@ public class Dashboard {
         }
         for (String var : vars) {
             String replacement = replacements.get(var.trim());
+            
             if (replacement != null) {
+                this.title = this.title.replace(var.trim(), replacement);
                 widgets.forEach(widget -> {
                     ((Widget) widget).replaceVariable(var.trim(), replacement);
                 });
