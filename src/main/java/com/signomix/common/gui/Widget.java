@@ -19,6 +19,7 @@ public class Widget {
     private String channel;
     private String channelTranslated;
     private String type;
+    private String chartType;
     private String query;
     private String range;
     private String title;
@@ -364,6 +365,14 @@ public class Widget {
         this.modified = modified;
     }
     
+    public String getChartType() {
+        return chartType;
+    }
+
+    public void setChartType(String chartType) {
+        this.chartType = chartType;
+    }
+
     /**
      * Get variables from widget's query, title, dev_id and group.
      * @return collection of variables found in widget's query, title, dev_id and group

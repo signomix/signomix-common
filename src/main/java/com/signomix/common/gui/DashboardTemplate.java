@@ -31,7 +31,6 @@ public class DashboardTemplate {
     private long organizationId = 0;
     private String variables;
 
-
     public void parseVariables() {
         HashSet<String> variableSet = new HashSet<>();
         List<String> variableList;
@@ -75,7 +74,7 @@ public class DashboardTemplate {
                 logger.warn("Invalid widget type in DashboardTemplate: " + widget.getClass().getName());
             }
         }
-        variables= String.join(",", variableSet);
+        variables = String.join(",", variableSet);
     }
 
     public String getVariables() {
@@ -119,11 +118,11 @@ public class DashboardTemplate {
                 try {
                     items = objectMapper.readValue(jsonString, ArrayList.class);
                 } catch (JsonProcessingException ex) {
-                    //ex.printStackTrace();
+                    // ex.printStackTrace();
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -213,8 +212,29 @@ public class DashboardTemplate {
             w.setDev_id((String) m.get("dev_id"));
             w.setChannel((String) m.get("channel"));
             w.setChartOption((String) m.get("chartOption"));
+            try {
+                w.setChartArea((Boolean) m.get("chartArea"));
+            } catch (Exception e) {
+                w.setChartArea(false);
+            }
+            try {
+                w.setChartMarkers((Boolean) m.get("chartMarkers"));
+            } catch (Exception e) {
+                w.setChartMarkers(false);
+            }
+            try {
+                w.setyAxisAutoScale((Boolean) m.get("yAxisAutoScale"));
+            } catch (Exception e) {
+                w.setyAxisAutoScale(false);
+            }
+            try {
+                w.setAxisOptions((Boolean) m.get("axisOptions"));
+            } catch (Exception e) {
+                w.setAxisOptions(false);
+            }
             w.setChannelTranslated((String) m.get("channelTranslated"));
             w.setType((String) m.get("type"));
+            w.setChartType((String) m.get("chartType"));
             w.setTitle((String) m.get("title"));
             w.setDescription((String) m.get("description"));
             w.setQuery((String) m.get("query"));
@@ -223,10 +243,10 @@ public class DashboardTemplate {
             try {
                 w.setWidth((Integer) m.get("width"));
             } catch (Error e) {
-                //e.printStackTrace();
+                // e.printStackTrace();
                 w.setWidth(1);
             } catch (NullPointerException e) {
-                //e.printStackTrace();
+                // e.printStackTrace();
                 w.setWidth(1);
             }
             w.setModified(false);
@@ -240,6 +260,12 @@ public class DashboardTemplate {
             w.setIcon((String) m.get("icon"));
             w.setConfig((String) m.get("config"));
             widgets.add(w);
+            /*
+             * "yAxisAutoScale": false,
+             * "axisOptions": false,
+             * "chartArea": false,
+             * "chartMarkers": false
+             */
         }
     }
 
