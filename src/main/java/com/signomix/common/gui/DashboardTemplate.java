@@ -259,6 +259,9 @@ public class DashboardTemplate {
             w.setRounding((String) m.get("rounding"));
             w.setIcon((String) m.get("icon"));
             w.setConfig((String) m.get("config"));
+            w.setCommandJSON((String) m.get("commandJSON"));
+            w.setCommandText((String) m.get("commandText"));
+            w.setDashboardID((String) m.get("dashboardID"));
             widgets.add(w);
             /*
              * "yAxisAutoScale": false,

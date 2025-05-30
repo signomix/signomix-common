@@ -52,11 +52,11 @@ public class Dashboard {
     /**
      * Replaces variables in all widgets in the dashboard.
      * 
-     * @param templateVariables Comma-separated list of variable names to replace.
+     * @param templateVariables  Comma-separated list of variable names to replace.
      * @param dashboardVariables Comma-separated list of variable=value pairs.
      */
     public void replaceVariables(String templateVariables, String dashboardVariables) {
-        if(templateVariables == null || templateVariables.isEmpty() ||
+        if (templateVariables == null || templateVariables.isEmpty() ||
                 dashboardVariables == null || dashboardVariables.isEmpty()) {
             return;
         }
@@ -71,7 +71,7 @@ public class Dashboard {
         }
         for (String var : vars) {
             String replacement = replacements.get(var.trim());
-            
+
             if (replacement != null) {
                 this.title = this.title.replace(var.trim(), replacement);
                 widgets.forEach(widget -> {
@@ -393,6 +393,7 @@ public class Dashboard {
 
     public HashSet<String> getDeviceEuis() {
         HashSet<String> euis = new HashSet<>();
+        boolean isWidget = false;
         try {
             LinkedHashMap map = new LinkedHashMap();
             String devId;
@@ -404,14 +405,32 @@ public class Dashboard {
                     euis.add(devId);
                 }
             }
+        } catch (ClassCastException e1) {
+            // If widgets are not LinkedHashMap, try casting to Widget
+            isWidget = true;
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (isWidget) {
+            try {
+                String devId;
+                for (int i = 0; i < widgets.size(); i++) {
+                    Widget map = (Widget) widgets.get(i);
+                    devId = (String) map.getDev_id();
+                    if (devId != null && !devId.isEmpty()) {
+                        euis.add(devId);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return euis;
     }
 
     public HashSet<String> getGroupEuis() {
         HashSet<String> euis = new HashSet<>();
+        boolean isWidget = false;
         try {
             LinkedHashMap map = new LinkedHashMap();
             String groupId;
@@ -422,8 +441,25 @@ public class Dashboard {
                     euis.add(groupId);
                 }
             }
+        }catch(ClassCastException e1){
+            // If widgets are not LinkedHashMap, try casting to Widget
+            isWidget = true;
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (isWidget) {
+            try {
+                String groupId;
+                for (int i = 0; i < widgets.size(); i++) {
+                    Widget map = (Widget) widgets.get(i);
+                    groupId = (String) map.getGroup();
+                    if (groupId != null && !groupId.isEmpty()) {
+                        euis.add(groupId);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return euis;
     }

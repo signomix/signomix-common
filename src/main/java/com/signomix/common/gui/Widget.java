@@ -41,6 +41,33 @@ public class Widget {
     private boolean yAxisAutoScale;
     private boolean chartArea;
     private boolean chartMarkers;
+    private String commandText;
+    private String commandJSON;
+    private String dashboardID;
+
+    public String getDashboardID() {
+        return dashboardID;
+    }
+
+    public void setDashboardID(String dashboardID) {
+        this.dashboardID = dashboardID;
+    }
+
+    public String getCommandText() {
+        return commandText;
+    }
+
+    public void setCommandText(String commandText) {
+        this.commandText = commandText;
+    }
+
+    public String getCommandJSON() {
+        return commandJSON;
+    }
+
+    public void setCommandJSON(String commandJSON) {
+        this.commandJSON = commandJSON;
+    }
 
     public Widget() {
         width = 1;
@@ -68,6 +95,18 @@ public class Widget {
         }
         if (group != null && group.contains(variable)) {
             group = group.replace(variable, value);
+        }
+        if (config != null && config.contains(variable)) {
+            config = config.replace(variable, value);
+        }
+        if (commandJSON != null && commandJSON.contains(variable)) {
+            commandJSON = commandJSON.replace(variable, value);
+        }
+        if (commandText != null && commandText.contains(variable)) {
+            commandText = commandText.replace(variable, value);
+        }
+        if (dashboardID != null && dashboardID.contains(variable)) {
+            dashboardID = dashboardID.replace(variable, value);
         }
     }
 
@@ -364,7 +403,7 @@ public class Widget {
     public void setModified(boolean modified) {
         this.modified = modified;
     }
-    
+
     public String getChartType() {
         return chartType;
     }
@@ -375,7 +414,9 @@ public class Widget {
 
     /**
      * Get variables from widget's query, title, dev_id and group.
-     * @return collection of variables found in widget's query, title, dev_id and group
+     * 
+     * @return collection of variables found in widget's query, title, dev_id and
+     *         group
      */
     public List<String> getVariables() {
         List<String> variables = new ArrayList<>();
@@ -391,6 +432,19 @@ public class Widget {
         if (group != null) {
             variables.addAll(findBracedSubstrings(group));
         }
+        if (config != null) {
+            variables.addAll(findBracedSubstrings(config));
+        }
+        if (commandJSON != null) {
+            variables.addAll(findBracedSubstrings(commandJSON));
+        }
+        if (commandText != null) {
+            variables.addAll(findBracedSubstrings(commandText));
+        }
+        if (dashboardID != null) {
+            variables.addAll(findBracedSubstrings(dashboardID));
+        }
+
         return variables;
     }
 
@@ -402,12 +456,17 @@ public class Widget {
      */
     public static List<String> findBracedSubstrings(String input) {
         List<String> result = new ArrayList<>();
+        String varString;
         int start = -1;
         for (int i = 0; i < input.length(); i++) {
             if (input.charAt(i) == '{') {
                 start = i;
             } else if (input.charAt(i) == '}' && start != -1) {
-                result.add(input.substring(start, i + 1));
+                varString = input.substring(start + 1, i);
+                // check if the variable does not contain " or ' characters
+                if (!varString.contains("\"") && !varString.contains("'")) {
+                    result.add(input.substring(start, i + 1));
+                }
                 start = -1;
             }
         }
