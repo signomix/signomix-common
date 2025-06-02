@@ -48,6 +48,26 @@ public class DashboardTemplate {
                 for (String variable : variableList) {
                     variableSet.add(variable);
                 }
+                variableList = findBracedSubstrings(w.getGroup());
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings(w.getDev_id());
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings(w.getTitle());
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings(w.getDescription());
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings(w.getDashboardID());
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
             } else if (widget instanceof LinkedHashMap) {
                 LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>) widget;
                 variableList = findBracedSubstrings((String) map.get("query"));
@@ -67,6 +87,10 @@ public class DashboardTemplate {
                     variableSet.add(variable);
                 }
                 variableList = findBracedSubstrings((String) map.get("description"));
+                for (String variable : variableList) {
+                    variableSet.add(variable);
+                }
+                variableList = findBracedSubstrings((String) map.get("dashboardID"));
                 for (String variable : variableList) {
                     variableSet.add(variable);
                 }

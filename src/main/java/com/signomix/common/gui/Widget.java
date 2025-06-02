@@ -8,12 +8,16 @@ import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
 import java.util.ArrayList;
 import java.util.List;
+import org.jboss.logging.Logger;
 
 /**
  *
  * @author Grzegorz Skorupa <g.skorupa at gmail.com>
  */
 public class Widget {
+
+    private static final Logger logger = Logger.getLogger(Widget.class);
+
     private String name;
     private String dev_id;
     private String channel;
@@ -84,6 +88,9 @@ public class Widget {
     }
 
     public void replaceVariable(String variable, String value) {
+        if(logger.isDebugEnabled()){
+            logger.debug("Replacing variable "+variable+" with value "+value+" in widget "+name);
+        }
         if (query != null && query.contains(variable)) {
             query = query.replace(variable, value);
         }
@@ -104,6 +111,9 @@ public class Widget {
         }
         if (commandText != null && commandText.contains(variable)) {
             commandText = commandText.replace(variable, value);
+        }
+        if(logger.isDebugEnabled()){
+            logger.debug("Replacing variable "+variable+" with value "+value+" in dashboardID "+dashboardID);
         }
         if (dashboardID != null && dashboardID.contains(variable)) {
             dashboardID = dashboardID.replace(variable, value);
