@@ -4,16 +4,14 @@
  */
 package com.signomix.common.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.signomix.common.DateTool;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
 import org.jboss.logging.Logger;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.signomix.common.DateTool;
 
 /**
  *
@@ -30,6 +28,8 @@ public class DataQuery {
     public int maximum;
     public int summary;
     private String channelName;
+    private String multiplierChannelName;
+    private String multiplierDeviceEui;
     private boolean timeseries;
     private String project;
     private Double newValue;
@@ -57,6 +57,8 @@ public class DataQuery {
     private Boolean isInterval; // is interval
     private Boolean intervalTimestampAtEnd; // is interval timestamp at the end of interval
     private boolean intervalDeltas; // is interval deltas
+    private boolean gapfill; // is gapfill enabled
+
     private String format; // format to which data should be converted (possible values: csv, html, json). JSON is default
     private Boolean forceAscendingSorting;
     public void setSource(String source) {
@@ -136,6 +138,8 @@ public class DataQuery {
         minimum = 0;
         maximum = 0;
         channelName = null;
+        multiplierChannelName = null;
+        multiplierDeviceEui = null;
         timeseries = false;
         project = null;
         newValue = null;
@@ -295,6 +299,14 @@ public class DataQuery {
                     dq.setChannelName(params[i + 1]);
                     i = i + 2;
                     break;
+                case "mpy":
+                    dq.setMultiplierChannelName(params[i + 1]);
+                    i= i + 2;
+                    break;
+                case "mpyeui":
+                    dq.setMultiplierDeviceEui(params[i + 1]);
+                    i = i + 2;
+                    break;
                 case "group":
                     dq.setGroup(params[i + 1]);
                     i = i + 2;
@@ -389,6 +401,10 @@ public class DataQuery {
                     break;
                 case "deltas":
                     dq.intervalDeltas = true;
+                    i = i + 1;
+                    break;
+                case "gapfill":
+                    dq.gapfill = true;
                     i = i + 1;
                     break;
                 case "format":
@@ -511,6 +527,19 @@ public class DataQuery {
         return (null != channelName) ? (Arrays.asList(channelName.split(","))) : new ArrayList<>();
     }
 
+    public void setMultiplierChannels(List<String> channels) {
+        if (null != channels && !channels.isEmpty()) {
+            multiplierChannelName = channels.get(0);
+            for (int i = 1; i < channels.size(); i++) {
+                multiplierChannelName += "," + channels.get(i);
+            }
+        }
+    }
+
+    public List<String> getMultiplierChannels() {
+        return (null != multiplierChannelName) ? (Arrays.asList(multiplierChannelName.split(","))) : new ArrayList<>();
+    }
+
     public void setChannels(List<String> channels) {
         if (null != channels && !channels.isEmpty()) {
             channelName = channels.get(0);
@@ -554,6 +583,22 @@ public class DataQuery {
      */
     public void setChannelName(String channelName) {
         this.channelName = channelName;
+    }
+
+    public String getMultiplierChannelName() {
+        return multiplierChannelName;
+    }
+
+    public void setMultiplierChannelName(String multiplierChannelName) {
+        this.multiplierChannelName = multiplierChannelName;
+    }
+
+    public String getMultiplierDeviceEui() {
+        return multiplierDeviceEui;
+    }
+
+    public void setMultiplierDeviceEui(String multiplierDeviceEui) {
+        this.multiplierDeviceEui = multiplierDeviceEui;
     }
 
     /**
@@ -721,4 +766,7 @@ public class DataQuery {
         return tag.split(":")[1];
     }
 
+    public boolean isGapfill() {
+        return gapfill;
+    }
 }
