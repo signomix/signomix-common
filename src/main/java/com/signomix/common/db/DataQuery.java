@@ -4,14 +4,16 @@
  */
 package com.signomix.common.db;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.signomix.common.DateTool;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.signomix.common.DateTool;
 
 /**
  *
@@ -61,6 +63,9 @@ public class DataQuery {
 
     private String format; // format to which data should be converted (possible values: csv, html, json). JSON is default
     private Boolean forceAscendingSorting;
+    private String zone;
+    
+    
     public void setSource(String source) {
         this.source = source;
     }
@@ -171,6 +176,15 @@ public class DataQuery {
         intervalDeltas = false;
         format = "json";
         forceAscendingSorting = false;
+        zone = null; // equivalent to UTC
+    }
+
+    public String getZone() {
+        // replace "_" with "/" in zone
+        if(zone != null) {
+            //zone = zone.replace("_", "/");
+        }
+        return zone;
     }
 
     private static String clean(String query) {
@@ -400,8 +414,13 @@ public class DataQuery {
                     i = i + 1;
                     break;
                 case "deltas":
+                case "delta":
                     dq.intervalDeltas = true;
                     i = i + 1;
+                    break;
+                case "zone":
+                    dq.zone = params[i + 1];
+                    i = i + 2;
                     break;
                 case "gapfill":
                     dq.gapfill = true;
