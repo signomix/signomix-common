@@ -24,7 +24,7 @@ import com.signomix.common.iot.ChannelData;
 public class IotData2 implements IotDataIface {
 
     public String applicationID;
-    public String deviceId=null;
+    public String deviceId = null;
     public String dev_eui;
     public String authKey;
     public boolean authRequired = false;
@@ -73,7 +73,7 @@ public class IotData2 implements IotDataIface {
 
     @Override
     public long getTimestamp() {
-        if(null == timestampUTC){
+        if (null == timestampUTC) {
             return System.currentTimeMillis();
         }
         return timestampUTC.getTime();
@@ -130,13 +130,13 @@ public class IotData2 implements IotDataIface {
         }
         // Data channel names should be lowercase. We can fix user mistakes here.
         HashMap<String, Object> tempMap;
-        if(null==payload_fields){
-            payload_fields=new ArrayList<>();
+        if (null == payload_fields) {
+            payload_fields = new ArrayList<>();
         }
         for (int i = 0; i < payload_fields.size(); i++) {
             tempMap = new HashMap<>();
             tempMap.put("name", ((String) payload_fields.get(i).get("name")).toLowerCase());
-            tempMap.put("stringValue", ""+payload_fields.get(i).get("value"));
+            tempMap.put("stringValue", "" + payload_fields.get(i).get("value"));
             try {
                 tempMap.put("value", (Double) payload_fields.get(i).get("value"));
             } catch (ClassCastException e) {
@@ -211,9 +211,16 @@ public class IotData2 implements IotDataIface {
     }
 
     public void prepareIotValues(long timestamp) {
+        long ts = timestamp;
+        if (this.timestampUTC != null) {
+            ts = this.timestampUTC.getTime();
+        }
+        if (ts == 0) {
+            ts = timestamp;
+        }
         for (int i = 0; i < this.payload_fields.size(); i++) {
             ChannelData mval = new ChannelData();
-            mval.setTimestamp(timestamp);
+            mval.setTimestamp(ts);
             mval.setDeviceEUI(this.getDeviceEUI());
             mval.setName((String) this.payload_fields.get(i).get("name"));
             try {
@@ -225,13 +232,13 @@ public class IotData2 implements IotDataIface {
             if (this.getTimeField() != null) {
                 mval.setTimestamp(this.getTimeField().toEpochMilli());
             } else {
-                try {
-                    //mval.setTimestamp(this.getTimestamp());
+                /* try {
+                    // mval.setTimestamp(this.getTimestamp());
                     mval.setTimestamp(timestamp);
-                    //logger.info("TIMESTAMP from clock: " + mval.getName());
+                    logger.info("TIMESTAMP from clock: " + mval.getName());
                 } catch (Exception e) {
                     mval.setTimestamp(timestamp);
-                }
+                } */
             }
             if (mval.getTimestamp() == 0) {
                 mval.setTimestamp(timestamp);

@@ -1,6 +1,5 @@
 package com.signomix.common;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.DateTimeException;
 import java.time.Instant;
@@ -29,6 +28,12 @@ public class DateTool {
     public static Timestamp parseTimestamp(String input, String secondaryInput, boolean useSystemTimeOnError)
             throws Exception {
         if (null == input || input.isEmpty()) {
+            try {
+                Timestamp ts = Timestamp.from(Instant.parse(secondaryInput));
+                return ts;
+            } catch (Exception e) {
+                LOG.debug("(0)"+e.getMessage());
+            }
             return null;
         }
         String timeString = input.replace('~', '+').replace('_', '/');
@@ -108,32 +113,45 @@ public class DateTool {
                 LOG.debug("(1)"+e.getMessage());
             }
             try {
-                return getTimestamp(timeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                ts = getTimestamp(timeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                return ts;
             } catch (Exception e) {
                 LOG.debug("(2)"+e.getMessage());
             }
             try {
-                return getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ssX");
+                ts = getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ssZ");
+                LOG.info("Parsed timestamp: " + ts);
+                return ts;
+            } catch (Exception e) {
+                LOG.debug("(2b)"+e.getMessage());
+            }
+            try {
+                ts= getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ssX");
+                return ts;
             } catch (Exception e) {
                 LOG.debug("(3)"+e.getMessage());
             }
             try {
-                return getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ss.SSSX");
+                ts = getTimestamp(timeString, "yyyy-MM-dd'T'HH:mm:ss.SSSX");
+                return ts;
             } catch (Exception e) {
                 LOG.debug("(4)"+e.getMessage());
             }
             try {
-                return getTimestamp(timeString, "yyyy-MM-dd'T'HHmmssX");
+                ts = getTimestamp(timeString, "yyyy-MM-dd'T'HHmmssX");
+                return ts;
             } catch (Exception e) {
                 LOG.debug("(5)"+e.getMessage());
             }
             try {
-                return getTimestamp(timeString, "yyyy-MM-dd'T'HHmmss.SSSX");
+                ts = getTimestamp(timeString, "yyyy-MM-dd'T'HHmmss.SSSX");
+                return ts;
             } catch (Exception e) {
                 LOG.debug("(6)"+e.getMessage());
             }
             try {
-                return getTimestamp(timeString, CHIRPSTACK_TIME_FORMAT);
+                ts = getTimestamp(timeString, CHIRPSTACK_TIME_FORMAT);
+                return ts;
             } catch (Exception e) {
                 LOG.debug("(7)"+e.getMessage());
             }
