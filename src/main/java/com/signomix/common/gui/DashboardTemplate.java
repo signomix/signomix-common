@@ -4,16 +4,18 @@
  */
 package com.signomix.common.gui;
 
-import com.cedarsoftware.util.io.JsonReader;
-import com.cedarsoftware.util.io.JsonWriter;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.jboss.logging.Logger;
+
+import com.cedarsoftware.util.io.JsonReader;
+import com.cedarsoftware.util.io.JsonWriter;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -235,6 +237,7 @@ public class DashboardTemplate {
             w.setName((String) m.get("name"));
             w.setDev_id((String) m.get("dev_id"));
             w.setChannel((String) m.get("channel"));
+            w.setChannelTranslated((String) m.get("channel_translated"));
             w.setChartOption((String) m.get("chartOption"));
             try {
                 w.setChartArea((Boolean) m.get("chartArea"));
@@ -256,7 +259,10 @@ public class DashboardTemplate {
             } catch (Exception e) {
                 w.setAxisOptions(false);
             }
-            w.setChannelTranslated((String) m.get("channelTranslated"));
+            String channelTranslated = (String) m.get("channelTranslated");
+            if (channelTranslated != null && channelTranslated.length() > 0) {
+                w.setChannelTranslated(channelTranslated);
+            }
             w.setType((String) m.get("type"));
             w.setChartType((String) m.get("chartType"));
             w.setTitle((String) m.get("title"));
