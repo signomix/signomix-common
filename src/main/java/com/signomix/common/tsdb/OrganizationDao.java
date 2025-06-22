@@ -35,6 +35,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         sb.append("create table if not exists organizations (")
                 .append("id SERIAL PRIMARY KEY,")
                 .append("code varchar unique,")
+                .append("vat varchar unique,")
                 .append("name varchar,")
                 .append("description varchar,")
                 .append("configuration jsonb default '{}'::jsonb,")
@@ -62,7 +63,7 @@ public class OrganizationDao implements OrganizationDaoIface {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         }
-        query = "insert into organizations (id,code,name,description) values (1,'','default','default organization - for accounts without organization feature');";
+        query = "insert into organizations (id,code,vat,name,description) values (1,'','','default','default organization - for accounts without organization feature');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
@@ -312,7 +313,7 @@ public class OrganizationDao implements OrganizationDaoIface {
 
     @Override
     public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException {
-        String query = "SELECT id,code,name,description, (select count(*) from tenants as t where t.organization_id=o.id) tenants, configuration, locked from organizations o";
+        String query = "SELECT id,code,vat,name,description, (select count(*) from tenants as t where t.organization_id=o.id) tenants, configuration, locked from organizations o";
         if (limit != null) {
             query += " LIMIT " + limit;
         }
@@ -326,6 +327,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                     Organization org = new Organization(
                             rs.getInt("id"),
                             rs.getString("code"),
+                            rs.getString("vat"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("configuration"),
@@ -343,7 +345,7 @@ public class OrganizationDao implements OrganizationDaoIface {
     @Override
     public Organization getOrganization(long id) throws IotDatabaseException {
         Organization org = null;
-        String query = "SELECT id,code,name,description, (select count(*) from tenants as t where t.organization_id=o.id) tenants, configuration, locked from organizations o where o.id=?";
+        String query = "SELECT id,code,vat,name,description, (select count(*) from tenants as t where t.organization_id=o.id) tenants, configuration, locked from organizations o where o.id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -351,6 +353,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                     org = new Organization(
                             rs.getInt("id"),
                             rs.getString("code"),
+                            rs.getString("vat"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("configuration"),
@@ -368,7 +371,7 @@ public class OrganizationDao implements OrganizationDaoIface {
     @Override
     public Organization getOrganization(String code) throws IotDatabaseException {
         Organization org = null;
-        String query = "SELECT id,code,name,description, (select count(*) from tenants as t where t.organization_id=o.id) tenants, configuration, locked from organizations o where o.code=?";
+        String query = "SELECT id,code,vat,name,description, (select count(*) from tenants as t where t.organization_id=o.id) tenants, configuration, locked from organizations o where o.code=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, code);
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -376,6 +379,7 @@ public class OrganizationDao implements OrganizationDaoIface {
                     org = new Organization(
                             rs.getInt("id"),
                             rs.getString("code"),
+                            rs.getString("vat"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("configuration"),
@@ -391,12 +395,13 @@ public class OrganizationDao implements OrganizationDaoIface {
 
     @Override
     public void addOrganization(Organization org) throws IotDatabaseException {
-        String query = "INSERT INTO organizations (code,name,description,configuration) VALUES (?,?,?,?)";
+        String query = "INSERT INTO organizations (code,vat,name,description,configuration) VALUES (?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, org.code);
-            pstmt.setString(2, org.name);
-            pstmt.setString(3, org.description);
-            pstmt.setObject(4, org.configuration, Types.OTHER);
+            pstmt.setString(2, org.vat);
+            pstmt.setString(3, org.name);
+            pstmt.setString(4, org.description);
+            pstmt.setObject(5, org.configuration, Types.OTHER);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
@@ -405,15 +410,16 @@ public class OrganizationDao implements OrganizationDaoIface {
 
     @Override
     public void updateOrganization(Organization org) throws IotDatabaseException {
-        String query = "UPDATE organizations SET code=?,name=?,description=?, configuration=?, locked=? WHERE id=?";
+        String query = "UPDATE organizations SET code=?,vat=?,name=?,description=?, configuration=?, locked=? WHERE id=?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, org.code);
-            pstmt.setString(2, org.name);
-            pstmt.setString(3, org.description);
-            pstmt.setObject(4, org.configuration, Types.OTHER);
-            pstmt.setBoolean(5, org.locked);
-            pstmt.setLong(6, org.id);
-            
+            pstmt.setString(2, org.vat);
+            pstmt.setString(3, org.name);
+            pstmt.setString(4, org.description);
+            pstmt.setObject(5, org.configuration, Types.OTHER);
+            pstmt.setBoolean(6, org.locked);
+            pstmt.setLong(7, org.id);
+
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
