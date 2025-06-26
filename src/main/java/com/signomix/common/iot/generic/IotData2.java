@@ -111,6 +111,9 @@ public class IotData2 implements IotDataIface {
     }
 
     public void setTimestampUTC(long systemTimestamp) {
+        if( timestampUTC!=null){
+            return;
+        }
         // timestamp
         try {
             timestampUTC = DateTool.parseTimestamp(timestamp, time, true);

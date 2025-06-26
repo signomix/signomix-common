@@ -292,6 +292,7 @@ public class DashboardTemplate {
             w.setCommandJSON((String) m.get("commandJSON"));
             w.setCommandText((String) m.get("commandText"));
             w.setDashboardID((String) m.get("dashboardID"));
+            w.setImageUrl((String) m.get("imageUrl"));
             widgets.add(w);
             /*
              * "yAxisAutoScale": false,

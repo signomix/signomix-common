@@ -197,7 +197,7 @@ public class Device {
             mapping = new ObjectMapper().readValue(applicationConfig, HashMap.class);
             this.applicationConfig = mapping;
         } catch (IOException ex) {
-            LOG.warn(ex.getMessage());
+            //LOG.warn(ex.getMessage());
             this.applicationConfig = new HashMap<>();
         }
     }
@@ -363,7 +363,7 @@ public class Device {
         try {
             return URLDecoder.decode(code, "UTF-8");
         } catch (NullPointerException | UnsupportedEncodingException e) {
-            LOG.warn(e.getMessage());
+            //LOG.warn(e.getMessage());
         }
         return "";
     }
@@ -460,7 +460,7 @@ public class Device {
         try {
             return URLDecoder.decode(encoder, "UTF-8");
         } catch (NullPointerException | UnsupportedEncodingException e) {
-            LOG.warn(e.getMessage());
+            //LOG.warn(e.getMessage());
             return "";
         }
     }
@@ -771,7 +771,7 @@ public class Device {
         try {
             this.configuration = new ObjectMapper().writeValueAsString(configuration);
         } catch (IOException ex) {
-            LOG.warn(ex.getMessage());
+            //LOG.warn(ex.getMessage());
             this.configuration = null;
         }
     }

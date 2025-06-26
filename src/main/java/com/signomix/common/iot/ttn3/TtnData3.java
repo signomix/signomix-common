@@ -1,7 +1,7 @@
 package com.signomix.common.iot.ttn3;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
@@ -28,11 +28,11 @@ public class TtnData3 extends TtnData implements IotDataIface {
     public Double altitude = null;
     public Object[] rxMetadata;
     public String rxMetadataJson;
-    private long timestamp;
+    public long timestamp;
     private long receivedUplinkTimestamp;
     private String[] payloadFieldNames = {};
     public String timestampStr1;
-    public String timestampStr2;
+    public String timestampStr2=null; //TODO: remove
 
     @Override
     public String getDeviceID() {
@@ -139,17 +139,31 @@ public class TtnData3 extends TtnData implements IotDataIface {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void normalize() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSz");
+        // 2025-06-26T07:43:02.820845476Z
+        /*
+         * SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSz");
+         * try {
+         * timestamp = sdf.parse(timestampStr1).getTime();
+         * } catch (ParseException ex) {
+         * timestamp = System.currentTimeMillis();
+         * }
+         */
+        
+       /*  Instant instant;
+        Timestamp ts;
+
         try {
-            timestamp = sdf.parse(timestampStr1).getTime();
-        } catch (ParseException ex) {
+            instant = Instant.parse(timestampStr1);
+            timestamp = Timestamp.from(instant).getTime();
+        } catch (DateTimeParseException e) {
             timestamp = System.currentTimeMillis();
-        }
-        try {
+        } */
+
+        /* try {
             receivedUplinkTimestamp = sdf.parse(timestampStr2).getTime();
         } catch (ParseException ex) {
             receivedUplinkTimestamp = System.currentTimeMillis();
-        }
+        } */
         if (null != decodedPayload) {
             Iterator it = decodedPayload.keySet().iterator();
             String key, subKey;
