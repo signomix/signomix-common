@@ -16,6 +16,9 @@ import org.jboss.logging.Logger;
 import com.signomix.common.DateTool;
 import com.signomix.common.db.IotDataIface;
 import com.signomix.common.iot.ChannelData;
+import com.signomix.common.iot.chirpstack.uplink.ChirpstackUplink;
+import com.signomix.common.iot.ttn3.TtnData;
+import com.signomix.common.iot.ttn3.TtnData3;
 
 /**
  *
@@ -40,6 +43,8 @@ public class IotData2 implements IotDataIface {
     public Timestamp timestampUTC;
     public Long port = null;
     public Long counter = null;
+    public ChirpstackUplink chirpstackUplink = null;
+    public TtnData3 ttnUplink = null;
 
     private Logger logger = Logger.getLogger(IotData2.class.getName());
 

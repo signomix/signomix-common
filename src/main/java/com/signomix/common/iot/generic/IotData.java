@@ -4,7 +4,7 @@
  */
 package com.signomix.common.iot.generic;
 
-import com.signomix.common.iot.chirpstack.uplink.Uplink;
+import com.signomix.common.iot.chirpstack1.uplink.Uplink;
 
 /**
  *

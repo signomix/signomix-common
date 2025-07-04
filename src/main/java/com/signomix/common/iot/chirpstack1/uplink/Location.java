@@ -1,5 +1,13 @@
-package com.signomix.common.iot.chirpstack.uplink;
+/**
+* Copyright (C) Grzegorz Skorupa 2020.
+* Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+package com.signomix.common.iot.chirpstack1.uplink;
 
+/**
+ *
+ * @author greg
+ */
 public class Location {
 
     public Double latitude;

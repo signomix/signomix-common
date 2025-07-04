@@ -373,10 +373,18 @@ public class Device {
      */
     public void setCode(String code) {
         if (code != null) {
+            // replace all + with %2B to avoid problems with URL encoding
             this.code = code.replaceAll("\\+", "%2B");
         } else {
             this.code = "";
         }
+        /* 
+        // remove all empty lines or lines with only whitespaces
+        this.code = this.code.replaceAll("(?m)^[ \t]*\r?\n", "");
+        this.code = this.code.replaceAll("(?m)^[ \t]*$", "");
+        // remove all leading and trailing whitespaces
+        this.code = this.code.trim(); 
+        */
     }
 
     /**
@@ -778,7 +786,7 @@ public class Device {
 
     public HashMap<String, Object> getConfigurationMap() {
         if (null == configuration || configuration.trim().isEmpty()) {
-            System.out.println("EMPTY CONFIG");
+            //System.out.println("EMPTY CONFIG");
             return new HashMap<>();
         }
         HashMap<String, Object> mapping;
