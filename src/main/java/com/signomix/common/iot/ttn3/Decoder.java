@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -51,7 +52,7 @@ public class Decoder {
      * public Double getAltitude();
      */
 
-    public TtnData3 decode(String json) {
+    public static TtnData3 decode(String json) {
         if (logger.isDebugEnabled()) {
             logger.debug("Decoding TTN3 data: " + json);
         }
@@ -80,7 +81,7 @@ public class Decoder {
         data.fCounter = (Long) uplinkMessage.get("f_cnt");
         data.frmPayload = (String) uplinkMessage.get("frm_payload");
         data.decodedPayload = (Map) uplinkMessage.get("decoded_payload");
-        data.rxMetadata = (Object[]) uplinkMessage.get("rx_metadata");
+        data.rxMetadata = (List) uplinkMessage.get("rx_metadata");
         // data.timestampStr2 = (String) map.get("received_at");
         try {
             Instant instant = Instant.parse(data.timestampStr1);

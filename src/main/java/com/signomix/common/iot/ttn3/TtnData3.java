@@ -1,15 +1,15 @@
 package com.signomix.common.iot.ttn3;
 
-import java.sql.Timestamp;
-import java.text.ParseException;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.signomix.common.db.IotDataIface;
+import com.signomix.common.iot.tts.RxMetadata;
 
 /**
  *
@@ -26,7 +26,8 @@ public class TtnData3 extends TtnData implements IotDataIface {
     public Double latitude = null;
     public Double longitude = null;
     public Double altitude = null;
-    public Object[] rxMetadata;
+    //public Object[] rxMetadata;
+    public List<RxMetadata> rxMetadata;
     public String rxMetadataJson;
     public long timestamp;
     private long receivedUplinkTimestamp;

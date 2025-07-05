@@ -1,0 +1,86 @@
+{
+    "end_device_ids": {
+        "device_id": "eui-24e124468d355937",
+        "application_ids": {
+            "application_id": "smart-sense-app"
+        },
+        "dev_eui": "24E124468D355937",
+        "join_eui": "24E124C0002A0001",
+        "dev_addr": "260B1DB5"
+    },
+    "correlation_ids": [
+        "gs:uplink:01JZD3NCZYQ8TD1JQ15H9F50B9"
+    ],
+    "received_at": "2025-07-05T10:56:09.934296363Z",
+    "uplink_message": {
+        "session_key_id": "AZb3U47WjqWpkhjeAnnjUA==",
+        "f_port": 85,
+        "f_cnt": 12690,
+        "frm_payload": "/xkABAWaGXJD/xkBBAWaGXpD/xkCBAUzs3RD/xkDBAV7FEhC/xkEBAUK1yM+/xkFBAUK1yM8/xkGBAUAAEA//xkHBAV3vh8+/xkIBAWmm0Q7/xkJBAVvEgM7/xkKBAWamRk+/xkLBAUpWGFF/xkMBAWFqzFE/xkNBAUpLKNE/xkOBAVmrsZE",
+        "decoded_payload": {
+            "chn1": 242.10000610351562,
+            "chn10": 0.0020000000949949026,
+            "chn11": 0.15000000596046448,
+            "chn12": 3605.510009765625,
+            "chn13": 710.6799926757812,
+            "chn14": 1305.3800048828125,
+            "chn15": 1589.449951171875,
+            "chn2": 250.10000610351562,
+            "chn3": 244.6999969482422,
+            "chn4": 50.02000045776367,
+            "chn5": 0.1599999964237213,
+            "chn6": 0.009999999776482582,
+            "chn7": 0.75,
+            "chn8": 0.15600000321865082,
+            "chn9": 0.003000000026077032
+        },
+        "rx_metadata": [
+            {
+                "gateway_ids": {
+                    "gateway_id": "my-ttig-1",
+                    "eui": "58A0CBFFFE8013A9"
+                },
+                "time": "2025-07-05T10:56:09.591160058Z",
+                "timestamp": 1506203763,
+                "rssi": -68,
+                "channel_rssi": -68,
+                "snr": 9,
+                "location": {
+                    "latitude": 51.57426725879415,
+                    "longitude": 19.261481030328895,
+                    "source": "SOURCE_REGISTRY"
+                },
+                "uplink_token": "ChcKFQoJbXktdHRpZy0xEghYoMv//oATqRDzsJvOBRoMCMmJpMMGENPqqdoCILiC9oXrmQY=",
+                "received_at": "2025-07-05T10:56:09.654354446Z"
+            }
+        ],
+        "settings": {
+            "data_rate": {
+                "lora": {
+                    "bandwidth": 125000,
+                    "spreading_factor": 7,
+                    "coding_rate": "4/5"
+                }
+            },
+            "frequency": "868100000",
+            "timestamp": 1506203763,
+            "time": "2025-07-05T10:56:09.591160058Z"
+        },
+        "received_at": "2025-07-05T10:56:09.727190828Z",
+        "consumed_airtime": "0.240896s",
+        "version_ids": {
+            "brand_id": "milesight-iot",
+            "model_id": "uc100",
+            "hardware_version": "V1.0",
+            "firmware_version": "1.x",
+            "band_id": "EU_863_870"
+        },
+        "network_ids": {
+            "net_id": "000013",
+            "ns_id": "EC656E0000000181",
+            "tenant_id": "ttn",
+            "cluster_id": "eu1",
+            "cluster_address": "eu1.cloud.thethings.network"
+        }
+    }
+}
