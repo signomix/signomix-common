@@ -4,7 +4,6 @@
  */
 package com.signomix.common.iot;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
@@ -196,7 +195,7 @@ public class Device {
         try {
             mapping = new ObjectMapper().readValue(applicationConfig, HashMap.class);
             this.applicationConfig = mapping;
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             //LOG.warn(ex.getMessage());
             this.applicationConfig = new HashMap<>();
         }
@@ -778,7 +777,7 @@ public class Device {
     public void setConfiguration(HashMap<String, Object> configuration) {
         try {
             this.configuration = new ObjectMapper().writeValueAsString(configuration);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             //LOG.warn(ex.getMessage());
             this.configuration = null;
         }
@@ -792,7 +791,7 @@ public class Device {
         HashMap<String, Object> mapping;
         try {
             mapping = new ObjectMapper().readValue(configuration.trim(), HashMap.class);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             LOG.warn("Error parsing configuration: " + ex.getMessage());
             return new HashMap<>();
         }
