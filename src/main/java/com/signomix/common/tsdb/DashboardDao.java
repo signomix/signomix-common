@@ -1,17 +1,20 @@
 package com.signomix.common.tsdb;
 
-import com.signomix.common.db.DashboardIface;
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.gui.Dashboard;
-import com.signomix.common.gui.DashboardTemplate;
-import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.db.DashboardIface;
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.gui.Dashboard;
+import com.signomix.common.gui.DashboardTemplate;
+
+import io.agroal.api.AgroalDataSource;
 
 public class DashboardDao implements DashboardIface {
 
@@ -357,7 +360,7 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
-    public List<Dashboard> getOrganizationDashboards(long organizationId, Integer limit, Integer offset, String searchString)
+    public List<Dashboard> getOrganizationDashboards(long organizationId, String userId, Integer limit, Integer offset, String searchString)
             throws IotDatabaseException {
         String searchCondition = "";
         String[] searchParts;
@@ -373,7 +376,11 @@ public class DashboardDao implements DashboardIface {
                 }
             }
         }
-        String query = "SELECT * FROM dashboards WHERE organization= ? ";
+        String query = "SELECT "
+                + "d.id,d.name,d.userid,d.title,d.team,d.widgets,d.token,d.shared,d.administrators,d.items,d.organization,"
+                + "(SELECT COUNT(*) FROM favourites as f where f.userid=? and f.id=d.id and f.is_device=false) AS favourite"
+                + " FROM dashboards AS d WHERE d.organization = ?";
+        //String query = "SELECT * FROM dashboards WHERE organization= ? ";
         if(!searchCondition.isEmpty()){
             query = query + " AND " + searchCondition;
         }
@@ -381,14 +388,15 @@ public class DashboardDao implements DashboardIface {
         logger.debug("getOrganizationDashboards: " + organizationId);
         List<Dashboard> dashboards = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
-            pstmt.setLong(1, organizationId);
+            pstmt.setString(1, userId);
+            pstmt.setLong(2, organizationId);
             if(!searchCondition.isEmpty()){
-                pstmt.setString(2, "%" + searchParts[1] + "%");
+                pstmt.setString(3, "%" + searchParts[1] + "%");
+                pstmt.setInt(4, limit);
+                pstmt.setInt(5, offset);
+            }else{
                 pstmt.setInt(3, limit);
                 pstmt.setInt(4, offset);
-            }else{
-                pstmt.setInt(2, limit);
-                pstmt.setInt(3, offset);
             }
 
             try (ResultSet rs = pstmt.executeQuery();) {
@@ -406,6 +414,7 @@ public class DashboardDao implements DashboardIface {
                     dashboard.setOrganizationId(rs.getLong("organization"));
                     dashboard.setItemsFromJson(rs.getString("items"));
                     dashboard.setWidgetsFromJson(rs.getString("widgets"));
+                    dashboard.setFavourite(rs.getInt("favourite") > 0);
                     dashboards.add(dashboard);
                 }
             }
