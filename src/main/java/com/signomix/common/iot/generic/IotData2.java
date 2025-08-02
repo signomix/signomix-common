@@ -17,7 +17,6 @@ import com.signomix.common.DateTool;
 import com.signomix.common.db.IotDataIface;
 import com.signomix.common.iot.ChannelData;
 import com.signomix.common.iot.chirpstack.uplink.ChirpstackUplink;
-import com.signomix.common.iot.ttn3.TtnData;
 import com.signomix.common.iot.ttn3.TtnData3;
 
 /**
@@ -141,22 +140,25 @@ public class IotData2 implements IotDataIface {
         if (null == payload_fields) {
             payload_fields = new ArrayList<>();
         }
+        String fieldName;
         for (int i = 0; i < payload_fields.size(); i++) {
             tempMap = new HashMap<>();
-            tempMap.put("name", ((String) payload_fields.get(i).get("name")).toLowerCase());
-            tempMap.put("stringValue", "" + payload_fields.get(i).get("value"));
-            try {
-                tempMap.put("value", (Double) payload_fields.get(i).get("value"));
-            } catch (ClassCastException e) {
-                try {
-                    tempMap.put("value", ((Long) payload_fields.get(i).get("value")).doubleValue());
-                } catch (ClassCastException e1) {
-                    try {
-                        tempMap.put("value", ((Integer) payload_fields.get(i).get("value")).doubleValue());
-                    } catch (ClassCastException e2) {
-                        tempMap.put("value", (String) payload_fields.get(i).get("value"));
-                    }
-                }
+            fieldName = ((String) payload_fields.get(i).get("name")).toLowerCase();
+            tempMap.put("name", fieldName);
+            Object value = payload_fields.get(i).get("value");
+            if (value == null) {
+                logger.warn("Null value for key: " + fieldName);
+                continue; // Skip null values
+            }
+            tempMap.put("stringValue", value.toString());
+            if (value instanceof Number) {
+                tempMap.put("value", ((Number) value).doubleValue());
+            } else if (value instanceof Boolean) {
+                tempMap.put("value", (Boolean) value ? 1.0 : 0.0);
+            } else if (value instanceof String) {
+                tempMap.put("value", value);
+            } else {
+                logger.warn("Unsupported value type for key: " + fieldName + ", value: " + value);  
             }
             payload_fields.set(i, tempMap);
         }
