@@ -540,30 +540,30 @@ public class SentinelDao implements SentinelDaoIface {
                     java.util.ArrayList<Object> row = new java.util.ArrayList<>();
                     row.add(rs.getString("eui"));
                     row.add(rs.getTimestamp("tstamp"));
-                    row.add(rs.getDouble("d1"));
-                    row.add(rs.getDouble("d2"));
-                    row.add(rs.getDouble("d3"));
-                    row.add(rs.getDouble("d4"));
-                    row.add(rs.getDouble("d5"));
-                    row.add(rs.getDouble("d6"));
-                    row.add(rs.getDouble("d7"));
-                    row.add(rs.getDouble("d8"));
-                    row.add(rs.getDouble("d9"));
-                    row.add(rs.getDouble("d10"));
-                    row.add(rs.getDouble("d11"));
-                    row.add(rs.getDouble("d12"));
-                    row.add(rs.getDouble("d13"));
-                    row.add(rs.getDouble("d14"));
-                    row.add(rs.getDouble("d15"));
-                    row.add(rs.getDouble("d16"));
-                    row.add(rs.getDouble("d17"));
-                    row.add(rs.getDouble("d18"));
-                    row.add(rs.getDouble("d19"));
-                    row.add(rs.getDouble("d20"));
-                    row.add(rs.getDouble("d21"));
-                    row.add(rs.getDouble("d22"));
-                    row.add(rs.getDouble("d23"));
-                    row.add(rs.getDouble("d24"));
+                    row.add(getDoubleOrNull(rs, "d1"));
+                    row.add(getDoubleOrNull(rs, "d2"));
+                    row.add(getDoubleOrNull(rs, "d3"));
+                    row.add(getDoubleOrNull(rs, "d4"));
+                    row.add(getDoubleOrNull(rs, "d5"));
+                    row.add(getDoubleOrNull(rs, "d6"));
+                    row.add(getDoubleOrNull(rs, "d7"));
+                    row.add(getDoubleOrNull(rs, "d8"));
+                    row.add(getDoubleOrNull(rs, "d9"));
+                    row.add(getDoubleOrNull(rs, "d10"));
+                    row.add(getDoubleOrNull(rs, "d11"));
+                    row.add(getDoubleOrNull(rs, "d12"));
+                    row.add(getDoubleOrNull(rs, "d13"));
+                    row.add(getDoubleOrNull(rs, "d14"));
+                    row.add(getDoubleOrNull(rs, "d15"));
+                    row.add(getDoubleOrNull(rs, "d16"));
+                    row.add(getDoubleOrNull(rs, "d17"));
+                    row.add(getDoubleOrNull(rs, "d18"));
+                    row.add(getDoubleOrNull(rs, "d19"));
+                    row.add(getDoubleOrNull(rs, "d20"));
+                    row.add(getDoubleOrNull(rs, "d21"));
+                    row.add(getDoubleOrNull(rs, "d22"));
+                    row.add(getDoubleOrNull(rs, "d23"));
+                    row.add(getDoubleOrNull(rs, "d24"));
                     values.add(row);
                 }
 
@@ -635,30 +635,30 @@ public class SentinelDao implements SentinelDaoIface {
                     java.util.ArrayList<LastDataPair> row = new java.util.ArrayList<>();
                     eui = rs.getString("eui");
                     // row.add(rs.getTimestamp("tstamp"));
-                    row.add(new LastDataPair(eui, rs.getDouble("d1"), rs.getDouble("d1diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d2"), rs.getDouble("d2diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d3"), rs.getDouble("d3diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d4"), rs.getDouble("d4diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d5"), rs.getDouble("d5diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d6"), rs.getDouble("d6diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d7"), rs.getDouble("d7diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d8"), rs.getDouble("d8diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d9"), rs.getDouble("d9diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d10"), rs.getDouble("d10diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d11"), rs.getDouble("d11diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d12"), rs.getDouble("d12diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d13"), rs.getDouble("d13diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d14"), rs.getDouble("d14diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d15"), rs.getDouble("d15diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d16"), rs.getDouble("d16diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d17"), rs.getDouble("d17diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d18"), rs.getDouble("d18diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d19"), rs.getDouble("d19diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d20"), rs.getDouble("d20diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d21"), rs.getDouble("d21diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d22"), rs.getDouble("d22diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d23"), rs.getDouble("d23diff")));
-                    row.add(new LastDataPair(eui, rs.getDouble("d24"), rs.getDouble("d24diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs,"d1"), getDoubleOrNull(rs, "d1diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d2"), getDoubleOrNull(rs, "d2diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d3"), getDoubleOrNull(rs, "d3diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d4"), getDoubleOrNull(rs, "d4diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d5"), getDoubleOrNull(rs, "d5diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d6"), getDoubleOrNull(rs, "d6diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d7"), getDoubleOrNull(rs, "d7diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d8"), getDoubleOrNull(rs, "d8diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d9"), getDoubleOrNull(rs, "d9diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d10"), getDoubleOrNull(rs, "d10diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d11"), getDoubleOrNull(rs, "d11diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d12"), getDoubleOrNull(rs, "d12diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d13"), getDoubleOrNull(rs, "d13diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d14"), getDoubleOrNull(rs, "d14diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d15"), getDoubleOrNull(rs, "d15diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d16"), getDoubleOrNull(rs, "d16diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d17"), getDoubleOrNull(rs, "d17diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d18"), getDoubleOrNull(rs, "d18diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d19"), getDoubleOrNull(rs, "d19diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d20"), getDoubleOrNull(rs, "d20diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d21"), getDoubleOrNull(rs, "d21diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d22"), getDoubleOrNull(rs, "d22diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d23"), getDoubleOrNull(rs, "d23diff")));
+                    row.add(new LastDataPair(eui, getDoubleOrNull(rs, "d24"), getDoubleOrNull(rs, "d24diff")));
                     values.add(row);
                 }
 
@@ -671,6 +671,19 @@ public class SentinelDao implements SentinelDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return values;
+    }
+
+    private Double getDoubleOrNull(java.sql.ResultSet rs, String columnLabel) {
+        try {
+            double value = rs.getDouble(columnLabel);
+            if (rs.wasNull()) {
+                return null;
+            } else {
+                return value;
+            }
+        } catch (SQLException e) {
+            return null;
+        }
     }
 
     @Override
@@ -687,30 +700,30 @@ public class SentinelDao implements SentinelDaoIface {
                     java.util.ArrayList<Object> row = new java.util.ArrayList<>();
                     row.add(rs.getString("eui"));
                     row.add(rs.getTimestamp("tstamp"));
-                    row.add(rs.getDouble("d1"));
-                    row.add(rs.getDouble("d2"));
-                    row.add(rs.getDouble("d3"));
-                    row.add(rs.getDouble("d4"));
-                    row.add(rs.getDouble("d5"));
-                    row.add(rs.getDouble("d6"));
-                    row.add(rs.getDouble("d7"));
-                    row.add(rs.getDouble("d8"));
-                    row.add(rs.getDouble("d9"));
-                    row.add(rs.getDouble("d10"));
-                    row.add(rs.getDouble("d11"));
-                    row.add(rs.getDouble("d12"));
-                    row.add(rs.getDouble("d13"));
-                    row.add(rs.getDouble("d14"));
-                    row.add(rs.getDouble("d15"));
-                    row.add(rs.getDouble("d16"));
-                    row.add(rs.getDouble("d17"));
-                    row.add(rs.getDouble("d18"));
-                    row.add(rs.getDouble("d19"));
-                    row.add(rs.getDouble("d20"));
-                    row.add(rs.getDouble("d21"));
-                    row.add(rs.getDouble("d22"));
-                    row.add(rs.getDouble("d23"));
-                    row.add(rs.getDouble("d24"));
+                    row.add(getDoubleOrNull(rs, "d1"));
+                    row.add(getDoubleOrNull(rs, "d2"));
+                    row.add(getDoubleOrNull(rs, "d3"));
+                    row.add(getDoubleOrNull(rs, "d4"));
+                    row.add(getDoubleOrNull(rs, "d5"));
+                    row.add(getDoubleOrNull(rs, "d6"));
+                    row.add(getDoubleOrNull(rs, "d7"));
+                    row.add(getDoubleOrNull(rs, "d8"));
+                    row.add(getDoubleOrNull(rs, "d9"));
+                    row.add(getDoubleOrNull(rs, "d10"));
+                    row.add(getDoubleOrNull(rs, "d11"));
+                    row.add(getDoubleOrNull(rs, "d12"));
+                    row.add(getDoubleOrNull(rs, "d13"));
+                    row.add(getDoubleOrNull(rs, "d14"));
+                    row.add(getDoubleOrNull(rs, "d15"));
+                    row.add(getDoubleOrNull(rs, "d16"));
+                    row.add(getDoubleOrNull(rs, "d17"));
+                    row.add(getDoubleOrNull(rs, "d18"));
+                    row.add(getDoubleOrNull(rs, "d19"));
+                    row.add(getDoubleOrNull(rs, "d20"));
+                    row.add(getDoubleOrNull(rs, "d21"));
+                    row.add(getDoubleOrNull(rs, "d22"));
+                    row.add(getDoubleOrNull(rs, "d23"));
+                    row.add(getDoubleOrNull(rs, "d24"));
                     values.add(row);
                 }
 
