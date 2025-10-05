@@ -130,7 +130,7 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public int getSentinelStatus(long configId) throws IotDatabaseException {
+    public int getSentinelStatus(long configId, String deviceEui) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getSentinelStatus'");
     }

@@ -34,7 +34,7 @@ public interface SentinelDaoIface {
     public List<List> getLastValuesByDeviceEui(String deviceEui) throws IotDatabaseException;
     public List<List> getLastValuesOfDevices(Set<String> euis, long secondsBack) throws IotDatabaseException;
     public void addSentinelEvent(long configId, String deviceEui, int level, String message_pl, String message_en) throws IotDatabaseException;
-    public int getSentinelStatus(long configId) throws IotDatabaseException;
+    public int getSentinelStatus(long configId, String deviceEui) throws IotDatabaseException;
     public List<SentinelConfig> getConfigsByTag(String tagName, String tagValue, int limit, int offset, int type) throws IotDatabaseException;
     public List<SentinelConfig> getConfigsByGroup(String groupName, int limit, int offset, int type) throws IotDatabaseException;
 }

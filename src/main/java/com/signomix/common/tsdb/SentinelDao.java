@@ -838,12 +838,13 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
-    public int getSentinelStatus(long sentinelId) throws IotDatabaseException {
-        String query = "SELECT DISTINCT ON (sentinel_id) level FROM sentinel_events WHERE sentinel_id=? AND tstamp > now() - INTERVAL '24 hours' ORDER BY sentinel_id, tstamp DESC;";
+    public int getSentinelStatus(long sentinelId, String deviceEui) throws IotDatabaseException {
+        String query = "SELECT DISTINCT ON (sentinel_id, device_eui) level FROM sentinel_events WHERE sentinel_id=? AND device_eui=? AND tstamp > now() - INTERVAL '24 hours' ORDER BY sentinel_id,device_eui,tstamp DESC;";
         int status = 0;
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, sentinelId);
+            pstmt.setString(2, deviceEui);
             try (java.sql.ResultSet rs = pstmt.executeQuery();) {
                 if (rs.next()) {
                     status = rs.getInt("level");
