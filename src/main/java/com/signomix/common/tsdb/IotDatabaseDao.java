@@ -45,6 +45,7 @@ import org.jboss.logging.Logger;
 public class IotDatabaseDao implements IotDatabaseIface {
 
     private static final Logger logger = Logger.getLogger(IotDatabaseDao.class);
+    protected static final int MAX_CHANNELS = 32;
 
     Long defaultOrganizationId = 1L;
     Long defaultApplicationId = 1L;
@@ -106,7 +107,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String channel,
             boolean skipNull) throws IotDatabaseException {
         int channelIndex = getChannelIndex(deviceEUI, channel);
-        if (channelIndex < 0) {
+        if (channelIndex < 1 || channelIndex > MAX_CHANNELS) {
             return null;
         }
         String columnName = "d" + (channelIndex);
@@ -120,9 +121,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     + columnName
                     + " is not null order by tstamp desc limit 1";
         }
-        if (deviceEUI.equalsIgnoreCase("DKHSROOM311")) {
-            logger.info("DKHSROOM311 last value query: " + query);
-        }
+
         ChannelData result = null;
         try (
                 Connection conn = dataSource.getConnection();
@@ -131,7 +130,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             try (ResultSet rs = pst.executeQuery();) {
                 Double d;
                 if (rs.next()) {
-                    d = rs.getDouble(4);
+                    d = rs.getDouble(columnName);
                     if (!rs.wasNull()) {
                         result = new ChannelData(
                                 deviceEUI,
@@ -220,8 +219,13 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String deviceQuery = "SELECT eui,channels FROM devices WHERE groups like ?;";
             HashMap<String, List> devices = new HashMap<>();
             String query;
-            query = "SELECT "
-                    + "eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 "
+            query = "SELECT eui,userid,tstamp";
+            for (int i = 1; i <= MAX_CHANNELS; i++) {
+                query += ",d" + i;
+            }
+            // d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24
+            // "
+            query = query
                     + "FROM devicedata "
                     + "WHERE eui IN "
                     + "(SELECT eui FROM devices WHERE groups like ?) "
@@ -419,9 +423,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String deviceQuery = "SELECT eui,channels FROM devices WHERE groups like ?;";
             HashMap<String, List> devices = new HashMap<>();
             String query;
-            query = "SELECT "
-                    + "eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 "
-                    + "FROM devicedata "
+            query = "SELECT eui,userid,tstamp";
+            for (int i = 1; i <= MAX_CHANNELS; i++) {
+                query += ",d" + i;
+            }
+            query += " FROM devicedata "
                     + "WHERE eui IN "
                     + "(SELECT eui FROM devices WHERE groups like ?) "
                     + "AND tstamp >= ? AND tstamp <= ? "
@@ -1401,9 +1407,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
             System.out.println("no values");
             return;
         }
-        int limit = 24;
         List channelNames = getDeviceChannels(device.getEUI());
-        String query = "insert into devicedata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String query = "insert into devicedata (eui,userid,tstamp";
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            query = query.concat(",d" + i);
+        }
+        query = query.concat(",project,state,protected) values (?,?,?");
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            query = query.concat(",?");
+        }
+        query = query.concat(",?,?,?)");
         long timestamp = values.get(0).getTimestamp();
         try (
                 Connection conn = dataSource.getConnection();
@@ -1411,20 +1424,21 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getUserID());
             pst.setTimestamp(3, new java.sql.Timestamp(timestamp));
-            for (int i = 1; i <= limit; i++) {
+            for (int i = 1; i <= MAX_CHANNELS; i++) {
                 pst.setNull(i + 3, java.sql.Types.DOUBLE);
             }
             int index = -1;
             // if (values.size() <= limit) {
             // limit = values.size();
             // }
-            if (values.size() > limit) {
+            if (values.size() > MAX_CHANNELS) {
                 // TODO: send notification to the user?
             }
-            for (int i = 1; i <= limit; i++) {
+            for (int i = 1; i <= MAX_CHANNELS; i++) {
                 if (i <= values.size()) {
                     index = channelNames.indexOf(values.get(i - 1).getName());
-                    if (index >= 0 && index < limit) { // TODO: there must be control of mthe number of measures while
+                    if (index >= 0 && index < MAX_CHANNELS) { // TODO: there must be control of mthe number of measures
+                                                              // while
                         // defining device, not here
                         try {
                             pst.setDouble(
@@ -1436,9 +1450,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     }
                 }
             }
-            pst.setString(28, device.getProject());
-            pst.setDouble(29, device.getState());
-            pst.setBoolean(30, device.isDataProtected());
+            pst.setString(MAX_CHANNELS + 4, device.getProject());
+            pst.setDouble(MAX_CHANNELS + 5, device.getState());
+            pst.setBoolean(MAX_CHANNELS + 6, device.isDataProtected());
             pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1466,9 +1480,17 @@ public class IotDatabaseDao implements IotDatabaseIface {
          * e.printStackTrace();
          * }
          */
-        int limit = 24;
+
         List channelNames = getDeviceChannels(device.getEUI());
-        String query = "insert into analyticdata (eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24,project,state,protected,textvalues) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String query = "insert into analyticdata (eui,userid,tstamp";
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            query += ",d" + i;
+        }
+        query += ",project,state,protected,textvalues) values (?,?,?";
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            query += ",?";
+        }
+        query += ",?,?,?)";
         long timestamp = values.get(0).getTimestamp();
         try (
                 Connection conn = analyticDataSource.getConnection();
@@ -1476,7 +1498,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setString(1, device.getEUI());
             pst.setString(2, device.getUserID());
             pst.setTimestamp(3, new java.sql.Timestamp(timestamp));
-            for (int i = 1; i <= limit; i++) {
+            for (int i = 1; i <= MAX_CHANNELS; i++) {
                 pst.setNull(i + 3, java.sql.Types.DOUBLE);
             }
             int index = -1;
@@ -1489,7 +1511,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     stringValues.put(
                             channelName,
                             values.get(i - 1).getStringValue());
-                } else if (index < limit) {
+                } else if (index < MAX_CHANNELS) {
                     try {
                         pst.setDouble(4 + index, values.get(i - 1).getValue());
                     } catch (NullPointerException e) {
@@ -1502,9 +1524,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                             values.get(i - 1).getStringValue());
                 }
             }
-            pst.setString(28, device.getProject());
-            pst.setDouble(29, device.getState());
-            pst.setBoolean(30, device.isDataProtected());
+            pst.setString(MAX_CHANNELS + 4, device.getProject());
+            pst.setDouble(MAX_CHANNELS + 5, device.getState());
+            pst.setBoolean(MAX_CHANNELS + 6, device.isDataProtected());
             try {
                 String json = mapper.writeValueAsString(stringValues);
                 if (logger.isDebugEnabled()) {
@@ -1694,6 +1716,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 if (rs.next()) {
                     String[] ch = rs.getString(1).toLowerCase().split(",");
                     for (int i = 0; i < ch.length; i++) {
+                        if (i >= MAX_CHANNELS) {
+                            break;
+                        }
                         channels.put(ch[i], i + 1);
                     }
                 }
@@ -1719,12 +1744,17 @@ public class IotDatabaseDao implements IotDatabaseIface {
             try (ResultSet rs = pst.executeQuery();) {
                 if (rs.next()) {
                     String[] s = rs.getString(1).toLowerCase().split(",");
-                    channels = Arrays.asList(s);
-                    String channelStr = "";
-                    for (int i = 0; i < channels.size(); i++) {
-                        channelStr = channelStr + channels.get(i) + ",";
+                    for (int i = 0; i < s.length; i++) {
+                        if (i >= MAX_CHANNELS) {
+                            break;
+                        }
+                        channels.add(s[i]);
                     }
                     if (logger.isDebugEnabled()) {
+                        String channelStr = "";
+                        for (int i = 0; i < channels.size(); i++) {
+                            channelStr = channelStr + channels.get(i) + ",";
+                        }
                         logger.debug(
                                 "CHANNELS READ: " + deviceEUI + " " + channelStr);
                     }
@@ -1853,12 +1883,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
         Integer columnPosition;
         if ("*".equals(dq.getChannelName())) {
             for (String key : columnPositions.keySet()) {
-                columnSymbols.add("d" + columnPositions.get(key));
+                columnPosition = columnPositions.get(key);
+                if (columnPosition != null && columnPosition <= MAX_CHANNELS) {
+                    columnSymbols.add("d" + columnPosition);
+                }
             }
         } else {
             for (String column : dq.getChannels()) {
                 columnPosition = columnPositions.get(column);
-                if (columnPosition != null) {
+                if (columnPosition != null && columnPosition <= MAX_CHANNELS) {
                     columnSymbols.add("d" + columnPosition);
                 }
             }
@@ -2488,7 +2521,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setInt(2, scope);
             try (ResultSet rs = pst.executeQuery();) {
                 while (rs.next()) {
-                    result.add(rs.getDouble(1));
+                    result.add(rs.getDouble(columnName));
                 }
             }
         } catch (SQLException e) {
@@ -2503,7 +2536,11 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public List<List> getLastValues(String userID, String deviceEUI)
             throws IotDatabaseException {
-        String query = "select eui,userid,tstamp,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,d17,d18,d19,d20,d21,d22,d23,d24 from analyticdata where eui=? order by tstamp desc limit 1";
+        String query = "select eui,userid,tstamp";
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            query = query + ",d" + i;
+        }
+        query += " from analyticdata where eui=? order by tstamp desc limit 1";
         List<String> channels = getDeviceChannels(deviceEUI);
         ArrayList<ChannelData> row = new ArrayList<>();
         ArrayList<List> result = new ArrayList<>();
@@ -2690,64 +2727,22 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("userid varchar,")
                 // .append("day date,")
                 // .append("dtime time,")
-                .append("tstamp timestamp,")
-                .append("d1 double precision,")
-                .append("d2 double precision,")
-                .append("d3 double precision,")
-                .append("d4 double precision,")
-                .append("d5 double precision,")
-                .append("d6 double precision,")
-                .append("d7 double precision,")
-                .append("d8 double precision,")
-                .append("d9 double precision,")
-                .append("d10 double precision,")
-                .append("d11 double precision,")
-                .append("d12 double precision,")
-                .append("d13 double precision,")
-                .append("d14 double precision,")
-                .append("d15 double precision,")
-                .append("d16 double precision,")
-                .append("d17 double precision,")
-                .append("d18 double precision,")
-                .append("d19 double precision,")
-                .append("d20 double precision,")
-                .append("d21 double precision,")
-                .append("d22 double precision,")
-                .append("d23 double precision,")
-                .append("d24 double precision,")
-                .append("project varchar,")
+                .append("tstamp timestamp,");
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            sb.append("d").append(i).append(" double precision,");
+        }
+        sb.append("project varchar,")
                 .append("state double precision,")
                 .append("protected boolean default false);");
         sb
                 .append("CREATE TABLE IF NOT EXISTS analyticdata (")
                 .append("eui text not null,")
                 .append("userid text,")
-                .append("tstamp timestamptz,")
-                .append("d1 double precision,")
-                .append("d2 double precision,")
-                .append("d3 double precision,")
-                .append("d4 double precision,")
-                .append("d5 double precision,")
-                .append("d6 double precision,")
-                .append("d7 double precision,")
-                .append("d8 double precision,")
-                .append("d9 double precision,")
-                .append("d10 double precision,")
-                .append("d11 double precision,")
-                .append("d12 double precision,")
-                .append("d13 double precision,")
-                .append("d14 double precision,")
-                .append("d15 double precision,")
-                .append("d16 double precision,")
-                .append("d17 double precision,")
-                .append("d18 double precision,")
-                .append("d19 double precision,")
-                .append("d20 double precision,")
-                .append("d21 double precision,")
-                .append("d22 double precision,")
-                .append("d23 double precision,")
-                .append("d24 double precision,")
-                .append("project text,")
+                .append("tstamp timestamptz,");
+        for (int i = 1; i <= MAX_CHANNELS; i++) {
+            sb.append("d").append(i).append(" double precision,");
+        }
+        sb.append("project text,")
                 .append("state double precision,")
                 .append("protected boolean default false,")
                 .append("textvalues jsonb);");

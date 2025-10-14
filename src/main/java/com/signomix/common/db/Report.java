@@ -9,6 +9,7 @@ import com.signomix.common.User;
 
 public class Report {
     private static final Logger logger = Logger.getLogger(Report.class);
+    protected static final int MAX_CHANNELS = 32;
 
     public HashMap<String, Object> options = new HashMap<>();
 
