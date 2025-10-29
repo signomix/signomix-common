@@ -1490,7 +1490,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         for (int i = 1; i <= MAX_CHANNELS; i++) {
             query += ",?";
         }
-        query += ",?,?,?)";
+        query += ",?,?,?,?)";
         long timestamp = values.get(0).getTimestamp();
         try (
                 Connection conn = analyticDataSource.getConnection();
@@ -1533,7 +1533,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                     logger.debug("String values: " + json);
                 }
                 // set value of JSONB column
-                pst.setObject(31, json, Types.OTHER);
+                pst.setObject(MAX_CHANNELS + 7, json, Types.OTHER);
             } catch (JsonProcessingException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
