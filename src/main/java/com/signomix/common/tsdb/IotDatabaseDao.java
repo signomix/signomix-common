@@ -5179,9 +5179,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throws IotDatabaseException {
         String query;
         if (sent) {
-            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commandslog WHERE origin=?";
+            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commandslog WHERE origin=? ORDER BY createdat ASC";
         } else {
-            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commands WHERE origin=?";
+            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commands WHERE origin=? ORDER BY createdat ASC";
         }
         ArrayList<CommandDto> list = new ArrayList<>();
         try (
