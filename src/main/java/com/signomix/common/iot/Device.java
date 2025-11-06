@@ -830,13 +830,35 @@ public class Device {
                 String[] kv = tag.split(":");
                 if (kv.length == 2) {
                     Tag t = new Tag();
-                    t.name = kv[0];
-                    t.value = kv[1];
+                    // trim name and value to avoid accidental whitespaces
+                    t.name = kv[0] != null ? kv[0].trim() : kv[0];
+                    t.value = kv[1] != null ? kv[1].trim() : kv[1];
                     result.add(t);
                 }
             }
         }
         return result;
+    }
+
+    public String getTag(String tagName) {
+        /**
+         * Retrieve value for a tag by name.
+         *
+         * Behavior:
+         * - Tags are stored in the `tags` string as "name:value;name2:value2".
+         * - Parsing splits entries on `;` and then on the first `:` into name/value.
+         * - Entries that do not contain exactly one `:` are ignored.
+         * - Both name and value are trimmed of leading/trailing whitespace before
+         *   comparison/return.
+         * - If multiple tags with the same name exist, the first occurrence is returned.
+         * - If no matching tag is found, returns null.
+         */
+        for (Tag tag : getTagsAsList()) {
+            if (tag.name.equals(tagName)) {
+                return tag.value;
+            }
+        }
+        return null;
     }
 
     /*
