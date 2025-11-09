@@ -2660,7 +2660,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent) throws IotDatabaseException {
+    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent, int limit) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getDeviceCommands'");
     }

@@ -103,7 +103,7 @@ public interface IotDatabaseIface {
     //public long getMaxCommandId() throws IotDatabaseException;
     //public long getMaxCommandId(String deviceEui) throws IotDatabaseException;
     public int getChannelIndex(String deviceEUI, String channel) throws IotDatabaseException;
-    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent) throws IotDatabaseException;
+    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent, int limit) throws IotDatabaseException;
     public List<CommandDto> getAllCommands(String user, Long organizationId, boolean sent) throws IotDatabaseException;
     
     //notifications

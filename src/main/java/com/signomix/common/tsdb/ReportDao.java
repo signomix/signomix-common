@@ -128,13 +128,14 @@ public class ReportDao implements ReportDaoIface {
     public boolean isAvailable(String className, Long userNumber, Integer organization, Integer tenant, String path)
             throws IotDatabaseException {
         boolean isAvailable = false;
+        logger.info("input parameters: className="+className+", userNumber="+userNumber+", organization="+organization+", tenant="+tenant+", path="+path);
         if (userNumber != null) {
             logger.debug("Checking report availability for user: " + userNumber+" class: "+className); ;
             String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (userid=? OR userid=?);";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query2);) {
                 pstmt.setString(1, className);
-                pstmt.setLong(2, userNumber == null ? 0L : userNumber);
+                pstmt.setLong(2, userNumber);
                 pstmt.setLong(3, 0);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
@@ -149,14 +150,15 @@ public class ReportDao implements ReportDaoIface {
                 return true;
             }
         }
-        if (organization != null && path != null && !path.isEmpty()) {
-            if (tenant == null) {
-                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=? AND path ~ ?;";
+        if (organization != null) {
+            //TODO: implement path and tenant checking
+            /* if (tenant == null) {
+                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=?;";
                 try (Connection conn = dataSource.getConnection();
                         PreparedStatement pstmt = conn.prepareStatement(query);) {
                     pstmt.setString(1, className);
                     pstmt.setInt(2, organization);
-                    pstmt.setObject(3, path, java.sql.Types.OTHER);
+                    //pstmt.setObject(3, path, java.sql.Types.OTHER);
                     try (ResultSet rs = pstmt.executeQuery()) {
                         if (rs.next()) {
                             isAvailable = rs.getInt(1) > 0;
@@ -169,14 +171,14 @@ public class ReportDao implements ReportDaoIface {
                     logger.error("Error during isAvailable", e);
                     e.printStackTrace();
                 }
-            } else {
-                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=? AND tenant=? AND path ~ ?;";
+            } else { */
+                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (organization=? OR userid = 0)";
                 try (Connection conn = dataSource.getConnection();
                         PreparedStatement pstmt = conn.prepareStatement(query);) {
                     pstmt.setString(1, className);
                     pstmt.setInt(2, organization);
-                    pstmt.setInt(3, tenant);
-                    pstmt.setObject(4, path, java.sql.Types.OTHER);
+                    //pstmt.setInt(3, tenant);
+                    //pstmt.setObject(4, path, java.sql.Types.OTHER);
                     try (ResultSet rs = pstmt.executeQuery()) {
                         if (rs.next()) {
                             isAvailable = rs.getInt(1) > 0;
@@ -190,7 +192,7 @@ public class ReportDao implements ReportDaoIface {
                     e.printStackTrace();
                 }
 
-            }
+            //}
         }
         return isAvailable;
     }

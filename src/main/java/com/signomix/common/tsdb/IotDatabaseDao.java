@@ -5175,19 +5175,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent)
+    public List<CommandDto> getDeviceCommands(String deviceEui, boolean sent, int limit)
             throws IotDatabaseException {
         String query;
         if (sent) {
-            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commandslog WHERE origin=? ORDER BY createdat ASC limit 20";
+            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commandslog WHERE origin=? ORDER BY createdat DESC limit ?";
         } else {
-            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commands WHERE origin=? ORDER BY createdat ASC limit 20";
+            query = "SELECT id,category,type,origin,payload,createdat,port,sentat FROM commands WHERE origin=? ORDER BY createdat DESC limit ?";
         }
         ArrayList<CommandDto> list = new ArrayList<>();
         try (
                 Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
+            pstmt.setInt(2, limit< 100 ? limit : 100);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     CommandDto command = new CommandDto();
