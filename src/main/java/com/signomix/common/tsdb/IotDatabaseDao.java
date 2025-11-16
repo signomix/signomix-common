@@ -1305,7 +1305,27 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String deviceEUI,
             String type,
             String payload,
-            Long createdAt) throws IotDatabaseException {
+            Long createdAt, boolean skipRepeated) throws IotDatabaseException {
+                String checkQuery = "SELECT id FROM commands WHERE origin=? AND payload=? ORDER BY createdat DESC LIMIT 1;";
+        if (skipRepeated) {
+            try (
+                    Connection conn = dataSource.getConnection();
+                    PreparedStatement pst = conn.prepareStatement(checkQuery);) {
+                pst.setString(1, deviceEUI);
+                pst.setString(2, payload);
+                try (ResultSet rs = pst.executeQuery();) {
+                    if (rs.next()) {
+                        // found identical command, skip adding
+                        return rs.getLong(1);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IotDatabaseException(
+                        IotDatabaseException.SQL_EXCEPTION,
+                        e.getMessage(),
+                        e);
+            }
+        }
         String query = "insert into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
         String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
         String command = payload;
@@ -1358,8 +1378,31 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void putDeviceCommand(String deviceEUI, IotEvent commandEvent)
+    public void putDeviceCommand(String deviceEUI, IotEvent commandEvent, boolean skipRepeated)
             throws IotDatabaseException {
+        String checkQuery = "SELECT id FROM commands WHERE origin=? AND payload=? ORDER BY createdat DESC LIMIT 1;";
+        if (skipRepeated) {
+            try (
+                    Connection conn = dataSource.getConnection();
+                    PreparedStatement pst = conn.prepareStatement(checkQuery);) {
+                        String payload = (String) commandEvent.getPayload();
+                        payload = payload.substring(1);
+                pst.setString(1, deviceEUI);
+                pst.setString(2, payload);
+                try (ResultSet rs = pst.executeQuery();) {
+                    if (rs.next()) {
+                        // found identical command, skip adding
+                        return;
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IotDatabaseException(
+                        IotDatabaseException.SQL_EXCEPTION,
+                        e.getMessage(),
+                        e);
+            }
+        }
+
         String query = "insert into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
         String query2 = "DELETE FROM commands WHERE origin=?; INSERT into commands (category,type,origin,payload,createdat) values (?,?,?,?,?);";
         String command = (String) commandEvent.getPayload();

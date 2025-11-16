@@ -10,6 +10,6 @@ public interface EventLogDaoIface {
     public void createStructure() throws IotDatabaseException;   
     public void backupDb() throws IotDatabaseException;
     public void deletePartition(String partition, int monthsBack) throws IotDatabaseException;
-    public void saveLoginEvent(User user, String remoteAddress, int resultCode);
-    public void saveLoginFailure(String login, String remoteAddress, int resultCode);
+    public void saveLoginEvent(User user, String remoteAddress, int resultCode, boolean isAdmin);
+    public void saveLoginFailure(String login, String remoteAddress, int resultCode, boolean isAdmin);
 }

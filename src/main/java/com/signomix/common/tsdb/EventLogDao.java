@@ -22,7 +22,7 @@ public class EventLogDao implements EventLogDaoIface {
     @Override
     public void createStructure() throws IotDatabaseException {
 
-        String query = "CREATE TYPE event_type AS ENUM ('login', 'logout', 'query', 'insert');";
+        String query = "CREATE TYPE event_type AS ENUM ('login', 'logout', 'query', 'insert', 'adminlogin');";
         try (var connection = dataSource.getConnection();
                 var statement = connection.createStatement()) {
             statement.execute(query);
@@ -143,14 +143,14 @@ public class EventLogDao implements EventLogDaoIface {
     }
 
     @Override
-    public void saveLoginEvent(User user, String remoteAddress, int resultCode) {
+    public void saveLoginEvent(User user, String remoteAddress, int resultCode, boolean isAdmin) {
         String query = "INSERT INTO account_events (uid, organization_id, client_ip, event_type, error_code) VALUES (?, ?, ?, ?, ?)";
         try (var connection = dataSource.getConnection();
                 var statement = connection.prepareStatement(query)) {
             statement.setString(1, user.uid);
             statement.setLong(2, user.organization);
             statement.setString(3, remoteAddress);
-            statement.setObject(4, "login", java.sql.Types.OTHER);
+            statement.setObject(4, isAdmin ? "adminlogin" : "login", java.sql.Types.OTHER);
             statement.setInt(5, resultCode);
             statement.execute();
         } catch (Exception e) {
@@ -159,13 +159,13 @@ public class EventLogDao implements EventLogDaoIface {
     }
 
     @Override
-    public void saveLoginFailure(String login, String remoteAddress, int resultCode) {
+    public void saveLoginFailure(String login, String remoteAddress, int resultCode, boolean isAdmin) {
         String query = "INSERT INTO account_events (uid, client_ip, event_type, error_code) VALUES (?, ?, ?, ?)";
         try (var connection = dataSource.getConnection();
                 var statement = connection.prepareStatement(query)) {
             statement.setString(1, login);
             statement.setString(2, remoteAddress);
-            statement.setObject(3, "login", java.sql.Types.OTHER);
+            statement.setObject(3, isAdmin ? "adminlogin" : "login", java.sql.Types.OTHER);
             statement.setInt(4, resultCode);
             statement.execute();
         } catch (Exception e) {

@@ -76,13 +76,13 @@ public class QuestDbDao implements EventLogDaoIface {
     }
 
     @Override
-    public void saveLoginEvent(User user, String remoteAddress, int resultCode) {
+    public void saveLoginEvent(User user, String remoteAddress, int resultCode, boolean isAdmin) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveLoginEvent'");
     }
 
     @Override
-    public void saveLoginFailure(String login, String remoteAddress, int resultCode) {
+    public void saveLoginFailure(String login, String remoteAddress, int resultCode, boolean isAdmin) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'saveLoginFailure'");
     }

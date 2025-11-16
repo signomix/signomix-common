@@ -645,7 +645,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void putDeviceCommand(String deviceEUI, IotEvent commandEvent) throws IotDatabaseException {
+    @Deprecated
+    public void putDeviceCommand(String deviceEUI, IotEvent commandEvent, boolean skipRepeated) throws IotDatabaseException {
         String query = "insert into commands (id,category,type,origin,payload,createdat) values (?,?,?,?,?,?);";
         String query2 = "update commands set category=?,type=?,origin=?,payload=?,createdat where id=?";
         String command = (String) commandEvent.getPayload();
@@ -2622,7 +2623,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public long putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt)
+    public long putDeviceCommand(String deviceEUI, String type, String payload, Long createdAt, boolean skipRepeated)
             throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'putDeviceCommand'");
