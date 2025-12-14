@@ -1146,66 +1146,70 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void removeOldData() throws IotDatabaseException {
+    public void removeOldData(String deviceEUI, long checkpoint) throws IotDatabaseException {
         // TODO: remove old data
-        /*
-         * String query = "delete from devicedata where eui=? and tstamp<?";
-         * try (Connection conn = getConnection(); PreparedStatement pst =
-         * conn.prepareStatement(query);) {
-         * pst.setString(1, deviceEUI);
-         * pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
-         * pst.executeUpdate();
-         * } catch (SQLException e) {
-         * throw new ThingsDataException(ThingsDataException.BAD_REQUEST,
-         * e.getMessage());
-         * }
-         * String query = "delete from commands where origin like ? and createdat<?";
-         * try (Connection conn = getConnection(); PreparedStatement pst =
-         * conn.prepareStatement(query);) {
-         * pst.setString(1, "%@" + deviceEUI);
-         * pst.setLong(2, checkPoint);
-         * // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
-         * pst.executeUpdate();
-         * } catch (SQLException e) {
-         * throw new ThingsDataException(ThingsDataException.BAD_REQUEST,
-         * e.getMessage());
-         * }
-         * String query = "delete from commandslog where origin like ? and createdat<?";
-         * try (Connection conn = getConnection(); PreparedStatement pst =
-         * conn.prepareStatement(query);) {
-         * pst.setString(1, "%@" + deviceEUI);
-         * pst.setLong(2, checkPoint);
-         * // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
-         * pst.executeUpdate();
-         * } catch (SQLException e) {
-         * throw new ThingsDataException(ThingsDataException.BAD_REQUEST,
-         * e.getMessage());
-         * }
-         * String query = "delete from alerts where userid=? and createdat < ?";
-         * try (Connection conn = getConnection(); PreparedStatement pstmt =
-         * conn.prepareStatement(query);) {
-         * pstmt.setString(1, userID);
-         * pstmt.setLong(2, checkpoint);
-         * int updated = pstmt.executeUpdate();
-         * } catch (SQLException e) {
-         * throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION,
-         * e.getMessage());
-         * } catch (Exception e) {
-         * e.printStackTrace();
-         * }
-         * String query = "delete from devicestatus where userid=? and createdat < ?";
-         * try (Connection conn = getConnection(); PreparedStatement pstmt =
-         * conn.prepareStatement(query);) {
-         * pstmt.setString(1, userID);
-         * pstmt.setLong(2, checkpoint);
-         * int updated = pstmt.executeUpdate();
-         * } catch (SQLException e) {
-         * throw new ThingsDataException(ThingsDataException.HELPER_EXCEPTION,
-         * e.getMessage());
-         * } catch (Exception e) {
-         * e.printStackTrace();
-         * }
-         */
+        //logger.infof("Removing old data for deviceEUI={} before {}", deviceEUI, new java.util.Date(checkpoint));
+        String query = "delete from devicedata where eui=? and tstamp<?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.setTimestamp(2, new java.sql.Timestamp(checkpoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }
+        query = "delete from analyticdata where eui=? and tstamp<?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.setTimestamp(2, new java.sql.Timestamp(checkpoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }
+        query = "delete from commands where origin = ? and createdat<?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.setLong(2, checkpoint);
+            // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }
+        query = "delete from commandslog where origin = ? and createdat<?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+            pst.setString(1, deviceEUI);
+            pst.setLong(2, checkpoint);
+            // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }
+        query = "delete from alerts where deviceeui=? and createdat < ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            pstmt.setLong(2, checkpoint);
+            int updated = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        query = "delete from devicestatus where eui=? and ts < ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.setString(1, deviceEUI);
+            pstmt.setTimestamp(2, new java.sql.Timestamp(checkpoint));
+            int updated = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -1306,7 +1310,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             String type,
             String payload,
             Long createdAt, boolean skipRepeated) throws IotDatabaseException {
-                String checkQuery = "SELECT id FROM commands WHERE origin=? AND payload=? ORDER BY createdat DESC LIMIT 1;";
+        String checkQuery = "SELECT id FROM commands WHERE origin=? AND payload=? ORDER BY createdat DESC LIMIT 1;";
         if (skipRepeated) {
             try (
                     Connection conn = dataSource.getConnection();
@@ -1385,8 +1389,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             try (
                     Connection conn = dataSource.getConnection();
                     PreparedStatement pst = conn.prepareStatement(checkQuery);) {
-                        String payload = (String) commandEvent.getPayload();
-                        payload = payload.substring(1);
+                String payload = (String) commandEvent.getPayload();
+                payload = payload.substring(1);
                 pst.setString(1, deviceEUI);
                 pst.setString(2, payload);
                 try (ResultSet rs = pst.executeQuery();) {
@@ -1689,8 +1693,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
     @Override
     public DeviceStatusDto getDeviceStatus(String deviceEUI)
             throws IotDatabaseException {
+        long tstamp;
         String query = "SELECT last(ts,ts) AS lastseen, last(status,ts) AS status, last(alert,ts) AS alert, last(tinterval,ts) AS tinterval, last(paid,ts) as paid FROM devicestatus WHERE eui=?";
         try (
+
                 Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEUI);
@@ -1698,7 +1704,12 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 if (rs.next()) {
                     DeviceStatusDto status = new DeviceStatusDto();
                     status.eui = deviceEUI;
-                    status.lastSeen = rs.getTimestamp("lastseen").getTime();
+                    try {
+                        tstamp = rs.getTimestamp("lastseen").getTime();
+                    } catch (NullPointerException e) {
+                        tstamp = 0;
+                    }
+                    status.lastSeen = tstamp;
                     status.status = rs.getDouble("status");
                     status.alert = rs.getInt("alert");
                     status.transmissionInterval = rs.getLong("tinterval");
@@ -3411,7 +3422,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         try {
             device.setLastSeen(rs.getTimestamp("lastseen").getTime());
         } catch (Exception e) {
-            // device.setLastSeen(0);
+            device.setLastSeen(0);
         }
         try {
             device.setState(rs.getDouble("status"));
@@ -5231,7 +5242,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, deviceEui);
-            pstmt.setInt(2, limit< 100 ? limit : 100);
+            pstmt.setInt(2, limit < 100 ? limit : 100);
             try (ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()) {
                     CommandDto command = new CommandDto();

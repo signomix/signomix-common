@@ -50,6 +50,10 @@ public class IotData2 implements IotDataIface {
     public IotData2(long systemTimestamp) {
         this.timestampUTC = new Timestamp(systemTimestamp);
     }
+    public IotData2() {
+        // Default constructor
+        this.timestampUTC = null;
+    }
 
     @Override
     public String getDeviceEUI() {

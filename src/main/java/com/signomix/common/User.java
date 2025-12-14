@@ -177,4 +177,17 @@ public class User {
         return "";
     }
 
+    public boolean hasRole(String roleName) {
+        if (role == null || roleName == null) {
+            return false;
+        }
+        String[] roles = role.split(",");
+        for (String r : roles) {
+            if (r.equalsIgnoreCase(roleName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

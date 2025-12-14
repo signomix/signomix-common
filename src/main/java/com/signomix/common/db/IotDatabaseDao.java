@@ -512,7 +512,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
     }
 
     @Override
-    public void removeOldData() throws IotDatabaseException {
+    public void removeOldData(String deviceEUI, long checkpoint) throws IotDatabaseException {
         // TODO: remove old data
         /*
          * String query = "delete from devicedata where eui=? and tstamp<?";

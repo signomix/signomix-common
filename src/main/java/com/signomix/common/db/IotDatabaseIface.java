@@ -128,7 +128,7 @@ public interface IotDatabaseIface {
     public void removeOutdatedSmsLogs(long checkpoint) throws IotDatabaseException;
     public void setConfirmedSms(long id) throws IotDatabaseException;
     public List<Long> getUnconfirmedSms() throws IotDatabaseException;
-    public void removeOldData() throws IotDatabaseException;
+    public void removeOldData(String eui, long checkpoint) throws IotDatabaseException;
 
     //system parameters
     public long getParameterValue(String name, long accountType) throws IotDatabaseException;
