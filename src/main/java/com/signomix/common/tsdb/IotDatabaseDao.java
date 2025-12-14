@@ -3797,8 +3797,8 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setBoolean(32, device.isStatusUsed());
             pst.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error(e.getMessage());
+            //e.printStackTrace();
+            //logger.warn(e.getMessage());
             throw new IotDatabaseException(
                     IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
