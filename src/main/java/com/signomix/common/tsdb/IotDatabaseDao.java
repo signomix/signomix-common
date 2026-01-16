@@ -1157,6 +1157,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
+        } catch (Exception e) {            
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
         }
         query = "delete from analyticdata where eui=? and tstamp<?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -1164,6 +1168,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
             pst.setTimestamp(2, new java.sql.Timestamp(checkpoint));
             pst.executeUpdate();
         } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        } catch (Exception e) {            
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
         }
@@ -1176,6 +1184,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
+        } catch (Exception e) {            
+            e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
         }
         query = "delete from commandslog where origin = ? and createdat<?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
@@ -1184,6 +1196,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
             // pst.setTimestamp(2, new java.sql.Timestamp(checkPoint));
             pst.executeUpdate();
         } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        } catch (Exception e) {            
+            e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
         }
@@ -1195,8 +1211,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {
+        } catch (Exception e) {            
             e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
         }
         query = "delete from devicestatus where eui=? and ts < ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -1206,8 +1224,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {
+        } catch (Exception e) {            
             e.printStackTrace();
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
         }
 
     }
@@ -1276,20 +1296,20 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 + "COPY account_features to '/var/lib/postgresql/data/export/account_features.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY alerts to '/var/lib/postgresql/data/export/alerts.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY archive_alerts to '/var/lib/postgresql/data/export/archive_alerts.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY analyticdata to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM analyticdata) to '/var/lib/postgresql/data/export/analyticdata.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commands to '/var/lib/postgresql/data/export/commands.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY commandslog to '/var/lib/postgresql/data/export/commandslog.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboards to '/var/lib/postgresql/data/export/dashboards.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY dashboardtemplates to '/var/lib/postgresql/data/export/dashboardtemplates.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devicechannels to '/var/lib/postgresql/data/export/devicechannels.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY devicedata to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY devicestatus to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM devicedata) to '/var/lib/postgresql/data/export/devicedata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM devicestatus) to '/var/lib/postgresql/data/export/devicestatus.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devices to '/var/lib/postgresql/data/export/devices.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY device_tags to '/var/lib/postgresql/data/export/device_tags.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY devicetemplates to '/var/lib/postgresql/data/export/devicetemplates.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY favourites to '/var/lib/postgresql/data/export/favourites.csv' DELIMITER ';' CSV HEADER;"
                 + "COPY groups to '/var/lib/postgresql/data/export/groups.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY virtualdevicedata to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
+                + "COPY (SELECT * FROM virtualdevicedata) to '/var/lib/postgresql/data/export/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
         try (
                 Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
@@ -5276,5 +5296,60 @@ public class IotDatabaseDao implements IotDatabaseIface {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException(
                 "Unimplemented method 'getAllCommands'");
+    }
+
+    @Override
+    public int removeOutdatedData(String userID, int retentionDays, boolean skipProtected) throws IotDatabaseException {
+        String sql = "DELETE FROM analyticdata WHERE eui IN (SELECT eui FROM devices WHERE userid=?) "+
+        "AND tstamp < now() - (? * INTERVAL '1 day')";
+        if(skipProtected){
+            sql+=" AND NOT protected";
+        }   
+        int removedRows=0;
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql);) {
+            pstmt.setString(1, userID);
+            pstmt.setInt(2, retentionDays);
+            removedRows=pstmt.executeUpdate();
+            /* try(ResultSet rs = pstmt.executeQuery()){
+                if(rs.next()){
+                    removedRows=rs.getInt(1);
+                    logger.info("Outdated data points to remove for user "+userID+" ("+retentionDays+"): "+removedRows);
+                }
+            } */
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(
+                    IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }
+        return removedRows;
+    }
+
+    @Override
+    public int removeOutdatedCommands(String userID, int retentionDays) throws IotDatabaseException {
+        String sql = "DELETE FROM commands WHERE origin IN (SELECT eui FROM devices WHERE userid=?) "+
+        "AND createdat < (EXTRACT(EPOCH FROM (NOW() - (? * INTERVAL '1 day'))) * 1000)";
+        int removedRows=0;
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql);) {
+            pstmt.setString(1, userID);
+            pstmt.setInt(2, retentionDays);
+            removedRows=pstmt.executeUpdate();
+            /* try(ResultSet rs = pstmt.executeQuery()){
+                if(rs.next()){
+                    removedRows=rs.getInt(1);
+                    logger.info("Outdated commands to remove for user "+userID+" ("+retentionDays+"): "+removedRows);
+                }
+            } */
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new IotDatabaseException(
+                    IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage());
+        }    
+        return removedRows;
     }
 }

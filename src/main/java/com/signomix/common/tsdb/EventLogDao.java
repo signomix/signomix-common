@@ -126,9 +126,9 @@ public class EventLogDao implements EventLogDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY data_access_events TO '/var/lib/postgresql/data/export/data_access_events.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY account_events TO '/var/lib/postgresql/data/export/account_events.csv' DELIMITER ';' CSV HEADER;"
-                + "COPY api_events TO '/var/lib/postgresql/data/export/api_events.csv' DELIMITER ';' CSV HEADER;";
+        String query = "COPY (SELECT * FROM data_access_events) TO '/var/lib/postgresql/data/export/data_access_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM account_events) TO '/var/lib/postgresql/data/export/account_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY (SELECT * FROM api_events) TO '/var/lib/postgresql/data/export/api_events.csv' DELIMITER ';' CSV HEADER;";
         try (var connection = dataSource.getConnection();
                 var statement = connection.createStatement()) {
             statement.execute(query);

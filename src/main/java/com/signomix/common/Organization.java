@@ -1,6 +1,7 @@
 package com.signomix.common;
 
 import java.beans.Transient;
+import java.util.HashMap;
 
 public class Organization {
     public Integer id;
@@ -51,5 +52,20 @@ public class Organization {
     @Transient
     public void setNumberOfTenants(Integer numberOfTenants) {
         this.numberOfTenants = numberOfTenants;
+    }
+
+    public HashMap<String, Object> getConfigurationMap() {
+        HashMap<String, Object> configMap = new HashMap<>();
+        if(configuration==null || configuration.isEmpty()){
+            return configMap;
+        }
+        // deserialize configuration (JSON) into HashMap
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            configMap = mapper.readValue(configuration, HashMap.class);
+        } catch (Exception e) {
+            e.printStackTrace();    
+        }
+        return configMap;
     }
 }

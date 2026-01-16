@@ -104,6 +104,7 @@ public class UserDao implements UserDaoIface {
             pst.setInt(2, User.IS_REGISTERING);
             pst.executeUpdate();
         } catch (SQLException e) {
+            LOG.error(e.getMessage());
             e.printStackTrace();
             // throw new KeyValueDBException(e.getErrorCode(), e.getMessage());
         }

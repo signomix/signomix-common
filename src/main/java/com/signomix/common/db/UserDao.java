@@ -81,8 +81,8 @@ public class UserDao implements UserDaoIface {
 
     @Override
     public void removeNotConfirmed(long days) {
-        String query = "DELETE FROM users WHERE confirmed=false AND " + days
-                + ">TIMESTAMPDIFF(DAY, CURRENT_TIMESTAMP, created) ";
+        String query = "DELETE FROM users WHERE confirmed = false "
+                + "AND (CURRENT_TIMESTAMP - created) > interval '" + days + " days';";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -373,7 +373,8 @@ public class UserDao implements UserDaoIface {
      * }
      */
     @Override
-    public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset, String searchField, String searchValue)
+    public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset, String searchField,
+            String searchValue)
             throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
@@ -399,7 +400,8 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public List<User> getUsers(Integer limit, Integer offset, String searchField, String searchValue) throws IotDatabaseException {
+    public List<User> getUsers(Integer limit, Integer offset, String searchField, String searchValue)
+            throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"
                 + "user_number,services,phoneprefix,credits,autologin,language,organization from users";
@@ -440,7 +442,8 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
-    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset, String searchField, String searchValue) throws IotDatabaseException {
+    public List<User> getTenantUsers(long tenantId, Integer limit, Integer offset, String searchField,
+            String searchValue) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getTenantUsers'");
     }

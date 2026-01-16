@@ -2690,4 +2690,16 @@ public class IotDatabaseDao implements IotDatabaseIface {
         throw new UnsupportedOperationException("Unimplemented method 'getDeviceStatus'");
     }
 
+    @Override
+    public int removeOutdatedData(String userID, int retentionDays, boolean skipProtected) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeOutdatedData'");
+    }
+
+    @Override
+    public int removeOutdatedCommands(String userID, int retentionDays) throws IotDatabaseException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeOutdatedCommands'");
+    }
+
 }

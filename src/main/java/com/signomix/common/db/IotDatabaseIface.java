@@ -35,6 +35,9 @@ public interface IotDatabaseIface {
     public void putVirtualData(Device device, VirtualData data) throws IotDatabaseException;
     public void saveAnalyticData(Device device, ArrayList<ChannelData> list) throws IotDatabaseException;
     
+    public int removeOutdatedData(String userID, int retentionDays, boolean skipProtected) throws IotDatabaseException;
+    public int removeOutdatedCommands(String userID, int retentionDays) throws IotDatabaseException;
+    
     //GROUPS
     public DeviceGroup getGroup(String groupEUI) throws IotDatabaseException;
     public List<DeviceGroup> getOrganizationGroups(long organizationId, int limit, int offset, String searchString) throws IotDatabaseException;
