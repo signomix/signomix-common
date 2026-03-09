@@ -1,16 +1,20 @@
 package com.signomix.common.tsdb;
 
-import com.signomix.common.db.IotDatabaseException;
-import com.signomix.common.db.ReportDaoIface;
-import com.signomix.common.db.ReportDefinition;
-import io.agroal.api.AgroalDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.db.IotDatabaseException;
+import com.signomix.common.db.ReportDaoIface;
+import com.signomix.common.db.ReportDefinition;
+
+import io.agroal.api.AgroalDataSource;
 
 /**
  * Implements ReportDaoIface for PostgreSQL database
@@ -90,6 +94,7 @@ public class ReportDao implements ReportDaoIface {
                 + "team VARCHAR,"
                 + "administrators VARCHAR,"
                 + "dql VARCHAR,"
+                + "template VARCHAR,"
                 + "name VARCHAR,"
                 + "description VARCHAR,"
                 + "created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP"
@@ -103,7 +108,7 @@ public class ReportDao implements ReportDaoIface {
                 PreparedStatement pstmt = conn.prepareStatement(query3);) {
             pstmt.execute();
         } catch (SQLException e) {
-            logger.error("Error during createStructure: "+ e.getMessage());
+            logger.error("Error during createStructure: " + e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
         } catch (Exception e) {
             logger.error("Error during createStructure", e);
@@ -128,9 +133,11 @@ public class ReportDao implements ReportDaoIface {
     public boolean isAvailable(String className, Long userNumber, Integer organization, Integer tenant, String path)
             throws IotDatabaseException {
         boolean isAvailable = false;
-        logger.info("input parameters: className="+className+", userNumber="+userNumber+", organization="+organization+", tenant="+tenant+", path="+path);
+        logger.info("input parameters: className=" + className + ", userNumber=" + userNumber + ", organization="
+                + organization + ", tenant=" + tenant + ", path=" + path);
         if (userNumber != null) {
-            logger.debug("Checking report availability for user: " + userNumber+" class: "+className); ;
+            logger.debug("Checking report availability for user: " + userNumber + " class: " + className);
+            ;
             String query2 = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (userid=? OR userid=?);";
             try (Connection conn = dataSource.getConnection();
                     PreparedStatement pstmt = conn.prepareStatement(query2);) {
@@ -151,48 +158,51 @@ public class ReportDao implements ReportDaoIface {
             }
         }
         if (organization != null) {
-            //TODO: implement path and tenant checking
-            /* if (tenant == null) {
-                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=?;";
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(query);) {
-                    pstmt.setString(1, className);
-                    pstmt.setInt(2, organization);
-                    //pstmt.setObject(3, path, java.sql.Types.OTHER);
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        if (rs.next()) {
-                            isAvailable = rs.getInt(1) > 0;
-                        }
+            // TODO: implement path and tenant checking
+            /*
+             * if (tenant == null) {
+             * String query =
+             * "SELECT COUNT(*) FROM reports WHERE class_name=? AND organization=?;";
+             * try (Connection conn = dataSource.getConnection();
+             * PreparedStatement pstmt = conn.prepareStatement(query);) {
+             * pstmt.setString(1, className);
+             * pstmt.setInt(2, organization);
+             * //pstmt.setObject(3, path, java.sql.Types.OTHER);
+             * try (ResultSet rs = pstmt.executeQuery()) {
+             * if (rs.next()) {
+             * isAvailable = rs.getInt(1) > 0;
+             * }
+             * }
+             * } catch (SQLException e) {
+             * logger.error("Error during isAvailable", e);
+             * e.printStackTrace();
+             * } catch (Exception e) {
+             * logger.error("Error during isAvailable", e);
+             * e.printStackTrace();
+             * }
+             * } else {
+             */
+            String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (organization=? OR userid = 0)";
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+                pstmt.setString(1, className);
+                pstmt.setInt(2, organization);
+                // pstmt.setInt(3, tenant);
+                // pstmt.setObject(4, path, java.sql.Types.OTHER);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        isAvailable = rs.getInt(1) > 0;
                     }
-                } catch (SQLException e) {
-                    logger.error("Error during isAvailable", e);
-                    e.printStackTrace();
-                } catch (Exception e) {
-                    logger.error("Error during isAvailable", e);
-                    e.printStackTrace();
                 }
-            } else { */
-                String query = "SELECT COUNT(*) FROM reports WHERE class_name=? AND (organization=? OR userid = 0)";
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(query);) {
-                    pstmt.setString(1, className);
-                    pstmt.setInt(2, organization);
-                    //pstmt.setInt(3, tenant);
-                    //pstmt.setObject(4, path, java.sql.Types.OTHER);
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        if (rs.next()) {
-                            isAvailable = rs.getInt(1) > 0;
-                        }
-                    }
-                } catch (SQLException e) {
-                    logger.error("Error during isAvailable", e);
-                    e.printStackTrace();
-                } catch (Exception e) {
-                    logger.error("Error during isAvailable", e);
-                    e.printStackTrace();
-                }
+            } catch (SQLException e) {
+                logger.error("Error during isAvailable", e);
+                e.printStackTrace();
+            } catch (Exception e) {
+                logger.error("Error during isAvailable", e);
+                e.printStackTrace();
+            }
 
-            //}
+            // }
         }
         return isAvailable;
     }
@@ -226,19 +236,22 @@ public class ReportDao implements ReportDaoIface {
             }
             pstmt.execute();
         } catch (SQLException e) {
-            logger.warn("Error during saveReport1: " +e.getMessage());
-            //throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            logger.warn("Error during saveReport1: " + e.getMessage());
+            // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+            // e.getMessage(), e);
         } catch (Exception e) {
-            logger.error("Error during saveReport2"+e.getMessage());
+            logger.error("Error during saveReport2" + e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
 
     @Override
-    public void saveReportDefinition(ReportDefinition reportDefinition) throws IotDatabaseException {
-        String query = "INSERT INTO report_definitions (organization, tenant, path, userid, team, administrators, dql, name, description) VALUES (?,?,?,?,?,?,?,?,?); ";
+    public int saveReportDefinition(ReportDefinition reportDefinition) throws IotDatabaseException {
+        int generatedId = -1;
+        String query = "INSERT INTO report_definitions (organization, tenant, path, userid, team, administrators, dql, name, description, template) VALUES (?,?,?,?,?,?,?,?,?,?); ";
+        // insert report definition and return generated id
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
+                PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);) {
             if (reportDefinition.organization == null) {
                 pstmt.setNull(1, java.sql.Types.INTEGER);
             } else {
@@ -259,12 +272,12 @@ public class ReportDao implements ReportDaoIface {
             } else {
                 pstmt.setString(4, reportDefinition.userLogin);
             }
-            if(reportDefinition.team == null){
+            if (reportDefinition.team == null) {
                 pstmt.setNull(5, java.sql.Types.VARCHAR);
             } else {
                 pstmt.setString(5, reportDefinition.team);
             }
-            if(reportDefinition.administrators == null){
+            if (reportDefinition.administrators == null) {
                 pstmt.setNull(6, java.sql.Types.VARCHAR);
             } else {
                 pstmt.setString(6, reportDefinition.administrators);
@@ -284,10 +297,24 @@ public class ReportDao implements ReportDaoIface {
             } else {
                 pstmt.setString(7, reportDefinition.description);
             }
+            if (reportDefinition.template == null) {
+                pstmt.setNull(8, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(8, reportDefinition.template);
+            }
             pstmt.execute();
-        } catch (SQLException e) {
-            logger.error("Error during saveReportDefinition", e);
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    generatedId = generatedKeys.getInt(1);
+                } else {
+                    throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
+                            "Creating report definition failed, no ID obtained.");
+                }
+                return generatedId;
+            } catch (SQLException e1) {
+                logger.error("Error during saveReportDefinition", e1);
+                throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e1.getMessage());
+            }
         } catch (Exception e) {
             logger.error("Error during saveReportDefinition", e);
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
@@ -314,6 +341,7 @@ public class ReportDao implements ReportDaoIface {
                     reportDefinition.dql = rs.getString("dql");
                     reportDefinition.name = rs.getString("name");
                     reportDefinition.description = rs.getString("description");
+                    reportDefinition.template = rs.getString("template");
                 }
                 return reportDefinition;
             }
@@ -344,7 +372,7 @@ public class ReportDao implements ReportDaoIface {
 
     @Override
     public void updateReportDefinition(Integer id, ReportDefinition reportDefinition) throws IotDatabaseException {
-        String query = "UPDATE report_definitions SET organization=?, tenant=?, path=?, userid=?, team=?, administrators=?, dql=?, name=?, description=? WHERE id=?;";
+        String query = "UPDATE report_definitions SET organization=?, tenant=?, path=?, userid=?, team=?, administrators=?, dql=?, name=?, description=?, template=? WHERE id=?;";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             if (reportDefinition.organization == null) {
@@ -367,12 +395,12 @@ public class ReportDao implements ReportDaoIface {
             } else {
                 pstmt.setString(4, reportDefinition.userLogin);
             }
-            if(reportDefinition.team == null){
+            if (reportDefinition.team == null) {
                 pstmt.setNull(5, java.sql.Types.VARCHAR);
             } else {
                 pstmt.setString(5, reportDefinition.team);
             }
-            if(reportDefinition.administrators == null){
+            if (reportDefinition.administrators == null) {
                 pstmt.setNull(6, java.sql.Types.VARCHAR);
             } else {
                 pstmt.setString(6, reportDefinition.administrators);
@@ -392,7 +420,12 @@ public class ReportDao implements ReportDaoIface {
             } else {
                 pstmt.setString(9, reportDefinition.description);
             }
-            pstmt.setInt(10, id);
+            if (reportDefinition.template == null) {
+                pstmt.setNull(10, java.sql.Types.VARCHAR);
+            } else {
+                pstmt.setString(10, reportDefinition.template);
+            }
+            pstmt.setInt(11, id);
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("Error during updateReportDefinition", e);
@@ -405,15 +438,15 @@ public class ReportDao implements ReportDaoIface {
 
     @Override
     public List<ReportDefinition> getReportDefinitions(String userLogin) throws IotDatabaseException {
-        String query = "SELECT * FROM report_definitions WHERE userid=? or report_definitions.team LIKE ? "+
-        "OR report_definition.administrators LIKE ? ORDER BY name DESC;";
+        String query = "SELECT * FROM report_definitions WHERE userid=? or report_definitions.team LIKE ? " +
+                "OR report_definition.administrators LIKE ? ORDER BY name DESC;";
 
         ArrayList<ReportDefinition> reportDefinitions = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setString(1, userLogin);
-            pstmt.setString(2, "%,"+userLogin+",%");
-            pstmt.setString(3, "%,"+userLogin+",%");
+            pstmt.setString(2, "%," + userLogin + ",%");
+            pstmt.setString(3, "%," + userLogin + ",%");
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     ReportDefinition reportDefinition = new ReportDefinition();
@@ -427,6 +460,7 @@ public class ReportDao implements ReportDaoIface {
                     reportDefinition.dql = rs.getString("dql");
                     reportDefinition.name = rs.getString("name");
                     reportDefinition.description = rs.getString("description");
+                    reportDefinition.template = rs.getString("template");
                     reportDefinitions.add(reportDefinition);
                 }
                 return reportDefinitions;
@@ -439,7 +473,5 @@ public class ReportDao implements ReportDaoIface {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
     }
-
-    
 
 }

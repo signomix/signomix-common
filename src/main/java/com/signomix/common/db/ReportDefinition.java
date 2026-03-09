@@ -9,6 +9,7 @@ public class ReportDefinition {
     public Integer tenant;
     public String path;
     public String dql;
+    public String template;
     public String name;
     public String description;
 }
