@@ -439,7 +439,7 @@ public class ReportDao implements ReportDaoIface {
     @Override
     public List<ReportDefinition> getReportDefinitions(String userLogin) throws IotDatabaseException {
         String query = "SELECT * FROM report_definitions WHERE userid=? or report_definitions.team LIKE ? " +
-                "OR report_definition.administrators LIKE ? ORDER BY name DESC;";
+                "OR report_definitions.administrators LIKE ? ORDER BY name DESC;";
 
         ArrayList<ReportDefinition> reportDefinitions = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
