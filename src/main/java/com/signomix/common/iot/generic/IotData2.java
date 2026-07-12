@@ -4,20 +4,18 @@
  */
 package com.signomix.common.iot.generic;
 
+import com.signomix.common.DateTool;
+import com.signomix.common.db.IotDataIface;
+import com.signomix.common.iot.ChannelData;
+import com.signomix.common.iot.chirpstack.uplink.ChirpstackUplink;
+import com.signomix.common.iot.ttn3.TtnData3;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.DateTool;
-import com.signomix.common.db.IotDataIface;
-import com.signomix.common.iot.ChannelData;
-import com.signomix.common.iot.chirpstack.uplink.ChirpstackUplink;
-import com.signomix.common.iot.ttn3.TtnData3;
 
 /**
  *
@@ -50,6 +48,7 @@ public class IotData2 implements IotDataIface {
     public IotData2(long systemTimestamp) {
         this.timestampUTC = new Timestamp(systemTimestamp);
     }
+
     public IotData2() {
         // Default constructor
         this.timestampUTC = null;
@@ -95,13 +94,13 @@ public class IotData2 implements IotDataIface {
     @Override
     public Double getDoubleValue(String fieldName) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        // Tools | Templates.
     }
 
     @Override
     public String getStringValue(String fieldName) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        // Tools | Templates.
     }
 
     /**
@@ -119,7 +118,7 @@ public class IotData2 implements IotDataIface {
     }
 
     public void setTimestampUTC(long systemTimestamp) {
-        if( timestampUTC!=null){
+        if (timestampUTC != null) {
             return;
         }
         // timestamp
@@ -147,7 +146,9 @@ public class IotData2 implements IotDataIface {
         String fieldName;
         for (int i = 0; i < payload_fields.size(); i++) {
             tempMap = new HashMap<>();
-            fieldName = ((String) payload_fields.get(i).get("name")).toLowerCase();
+            fieldName = (
+                (String) payload_fields.get(i).get("name")
+            ).toLowerCase();
             tempMap.put("name", fieldName);
             Object value = payload_fields.get(i).get("value");
             if (value == null) {
@@ -162,7 +163,12 @@ public class IotData2 implements IotDataIface {
             } else if (value instanceof String) {
                 tempMap.put("value", value);
             } else {
-                logger.warn("Unsupported value type for key: " + fieldName + ", value: " + value);  
+                logger.warn(
+                    "Unsupported value type for key: " +
+                        fieldName +
+                        ", value: " +
+                        value
+                );
             }
             payload_fields.set(i, tempMap);
         }
@@ -242,7 +248,7 @@ public class IotData2 implements IotDataIface {
             } catch (ClassCastException e) {
                 mval.setValue((String) this.payload_fields.get(i).get("value"));
             }
-            mval.setStringValue("" + this.payload_fields.get(i).get("stringValue"));
+            mval.setStringValue("" + this.payload_fields.get(i).get("value"));
             if (this.getTimeField() != null) {
                 mval.setTimestamp(this.getTimeField().toEpochMilli());
             } else {
@@ -262,5 +268,4 @@ public class IotData2 implements IotDataIface {
             this.dataList.add(mval);
         }
     }
-
 }

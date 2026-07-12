@@ -13,7 +13,7 @@ import com.signomix.common.db.ShortenerDaoIface;
 import io.agroal.api.AgroalDataSource;
 
 public class ShortenerDao implements ShortenerDaoIface {
-    private static final Logger LOG = Logger.getLogger(ShortenerDao.class);
+    private static final Logger logger = Logger.getLogger(ShortenerDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -76,6 +76,29 @@ public class ShortenerDao implements ShortenerDaoIface {
         } catch (Exception e) {
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
+    }
+
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("ShortenerDb.restoreDb");
+        // delete all records
+        String queryDelete = "delete from urls;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(queryDelete);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        String query = "COPY urls FROM '/var/lib/postgresql/data/import/urls.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        logger.info("ShortenerDb.restoreDb done");
     }
 
     @Override

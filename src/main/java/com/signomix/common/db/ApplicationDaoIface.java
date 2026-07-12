@@ -11,6 +11,7 @@ public interface ApplicationDaoIface {
     public void backupDb() throws IotDatabaseException;
 
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public Application addApplication(Application application) throws IotDatabaseException;
     public void updateApplication(Application application) throws IotDatabaseException;
     public void removeApplication(int id) throws IotDatabaseException;

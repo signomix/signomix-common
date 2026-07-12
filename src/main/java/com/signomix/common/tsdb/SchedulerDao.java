@@ -45,7 +45,32 @@ public class SchedulerDao implements SchedulerDaoIface {
         }
     }
 
+    @Override
     public void restoreDb() throws IotDatabaseException {
+        logger.info("SchedulerDao.restoreDb");
+        //delete all data from tables
+        String deleteQuery =
+            "DELETE FROM task_parameter;" +
+            "DELETE FROM task_definition;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(deleteQuery);
+        ) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during restore", e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
+        } catch (Exception e) {
+            logger.error("Error during restore", e);
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
+        }
         String query =
             "COPY task_definition FROM '/var/lib/postgresql/data/import/task_definition.csv' DELIMITER ';' CSV HEADER;" +
             "COPY task_parameter FROM '/var/lib/postgresql/data/import/task_parameter.csv' DELIMITER ';' CSV HEADER;";
@@ -68,6 +93,7 @@ public class SchedulerDao implements SchedulerDaoIface {
                 e.getMessage()
             );
         }
+        logger.info("SchedulerDao.restoreDb done");
     }
 
     @Override

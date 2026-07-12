@@ -11,6 +11,7 @@ public interface DashboardIface {
     public void setDatasource(AgroalDataSource ds);
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public void addDashboard(Dashboard dashboard) throws IotDatabaseException;
     public void removeDashboard(String dashboardId) throws IotDatabaseException;
     public Dashboard getDashboard(String dashboardId) throws IotDatabaseException;

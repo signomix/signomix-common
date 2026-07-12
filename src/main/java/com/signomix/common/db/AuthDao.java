@@ -1,30 +1,30 @@
 package com.signomix.common.db;
 
+import com.signomix.common.Token;
+import com.signomix.common.TokenType;
+import com.signomix.common.User;
+import io.agroal.api.AgroalDataSource;
+import io.quarkus.cache.CacheResult;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import javax.inject.Singleton;
-
 import org.jboss.logging.Logger;
-
-import com.signomix.common.Token;
-import com.signomix.common.TokenType;
-import com.signomix.common.User;
-
-import io.agroal.api.AgroalDataSource;
-import io.quarkus.cache.CacheResult;
 
 @Singleton
 public class AuthDao implements AuthDaoIface {
+
     private static final Logger LOG = Logger.getLogger(AuthDao.class);
 
     private AgroalDataSource dataSource;
-    private String questDbConfig=null;
+    private String questDbConfig = null;
 
     @Override
-    public void setDatasource(AgroalDataSource dataSource, String questDbConfig) {
+    public void setDatasource(
+        AgroalDataSource dataSource,
+        String questDbConfig
+    ) {
         this.dataSource = dataSource;
         this.questDbConfig = questDbConfig;
     }
@@ -36,43 +36,65 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void createStructure() throws IotDatabaseException {
-        String query = "CREATE TYPE token_type AS ENUM ('SESSION', 'API', 'PERMANENT', 'RESET_PASSWORD', 'EMAIL_VERIFICATION', 'DASHBOARD');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+        String query =
+            "CREATE TYPE token_type AS ENUM ('SESSION', 'API', 'PERMANENT', 'RESET_PASSWORD', 'EMAIL_VERIFICATION', 'DASHBOARD');";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
             LOG.warn(e.getMessage());
         } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
 
-        query = "CREATE TABLE IF NOT EXISTS tokens ("
-                + "token varchar primary key,"
-                + "uid varchar,"
-                + "issuer varchar,"
-                + "payload varchar,"
-                + "tstamp timestamp default CURRENT_TIMESTAMP,"
-                + "eoflife timestamp,"
-                + "type token_type);"
-                + "CREATE TABLE IF NOT EXISTS ptokens ("
-                + "token varchar primary key,"
-                + "uid varchar,"
-                + "issuer varchar,"
-                + "payload varchar,"
-                + "tstamp timestamp default CURRENT_TIMESTAMP,"
-                + "eoflife timestamp,"
-                + "type token_type);";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+        query =
+            "CREATE TABLE IF NOT EXISTS tokens (" +
+            "token varchar primary key," +
+            "uid varchar," +
+            "issuer varchar," +
+            "payload varchar," +
+            "tstamp timestamp default CURRENT_TIMESTAMP," +
+            "eoflife timestamp," +
+            "type token_type);" +
+            "CREATE TABLE IF NOT EXISTS ptokens (" +
+            "token varchar primary key," +
+            "uid varchar," +
+            "issuer varchar," +
+            "payload varchar," +
+            "tstamp timestamp default CURRENT_TIMESTAMP," +
+            "eoflife timestamp," +
+            "type token_type);";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
     }
 
     @Override
     @CacheResult(cacheName = "token-cache")
-    public String getUserId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
+    public String getUserId(
+        String token,
+        long sessionTokenLifetime,
+        long permanentTokenLifetime
+    ) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
         try {
@@ -81,13 +103,17 @@ public class AuthDao implements AuthDaoIface {
             if (null == token) {
                 return null;
             }
-            String querySession = "SELECT uid FROM tokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
-            String queryPermanent = "SELECT uid FROM ptokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
+            String querySession =
+                "SELECT uid FROM tokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
+            String queryPermanent =
+                "SELECT uid FROM ptokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
 
-            String updateSession = "UPDATE tokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
-            String updatePermanent = "UPDATE ptokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String updateSession =
+                "UPDATE tokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String updatePermanent =
+                "UPDATE ptokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
             String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + token);
@@ -100,8 +126,10 @@ public class AuthDao implements AuthDaoIface {
                 updateQuery = updateSession;
                 lifetime = sessionTokenLifetime;
             }
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);
+            ) {
                 pstmt.setString(1, token);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
@@ -116,8 +144,12 @@ public class AuthDao implements AuthDaoIface {
                 LOG.error(ex.getMessage());
             }
             if (userUid != null) {
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                try (
+                    Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(
+                        updateQuery
+                    );
+                ) {
                     pstmt.setLong(1, lifetime);
                     pstmt.setString(2, token);
                     int count = pstmt.executeUpdate();
@@ -139,8 +171,10 @@ public class AuthDao implements AuthDaoIface {
     @Override
     public void removeSession(String token) {
         String query = "DELETE FROM tokens WHERE token=?";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             pstmt.setString(1, token);
             boolean ok = pstmt.execute();
         } catch (SQLException ex) {
@@ -152,10 +186,13 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void clearExpiredTokens() {
-        String query = "DELETE FROM tokens WHERE eoflife<CURRENT_TIMESTAMP; "
-                + "DELETE FROM ptokens WHERE eoflife<CURRENT_TIMESTAMP";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
+        String query =
+            "DELETE FROM tokens WHERE eoflife<CURRENT_TIMESTAMP; " +
+            "DELETE FROM ptokens WHERE eoflife<CURRENT_TIMESTAMP";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             boolean ok = pstmt.execute();
         } catch (SQLException ex) {
             LOG.warn(ex.getMessage());
@@ -166,32 +203,85 @@ public class AuthDao implements AuthDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "CALL CSVWRITE('backup/tokens.csv', 'SELECT * FROM tokens');"
-                + "CALL CSVWRITE('backup/ptokens.csv', 'SELECT * FROM ptokens');";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+        String query =
+            "CALL CSVWRITE('backup/tokens.csv', 'SELECT * FROM tokens');" +
+            "CALL CSVWRITE('backup/ptokens.csv', 'SELECT * FROM ptokens');";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
     }
 
     @Override
-    public Token createTokenForUser(User issuer, String userId, long lifetime, boolean permanent, TokenType type, String payload) {
+    public void restoreDb() throws IotDatabaseException {
+        String query =
+            "CALL CSVREAD('restore/tokens.csv');" +
+            "CALL CSVREAD('restore/ptokens.csv');";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
+        } catch (Exception e) {
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
+        }
+    }
+
+    @Override
+    public Token createTokenForUser(
+        User issuer,
+        String userId,
+        long lifetime,
+        boolean permanent,
+        TokenType type,
+        String payload
+    ) {
         try {
-            LOG.info("createTokenForUser: " + userId + " " + lifetime + " " + permanent);
+            LOG.info(
+                "createTokenForUser: " +
+                    userId +
+                    " " +
+                    lifetime +
+                    " " +
+                    permanent
+            );
             // String token = java.util.UUID.randomUUID().toString();
             Token t = new Token(userId, lifetime, permanent);
             t.setIssuer(issuer.uid);
             String query;
             if (permanent) {
-                query = "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
+                query =
+                    "INSERT INTO ptokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
             } else {
-                query = "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
+                query =
+                    "INSERT INTO tokens (token,uid,tstamp,eoflife,issuer) VALUES (?,?,CURRENT_TIMESTAMP,DATEADD('MINUTE', ?, CURRENT_TIMESTAMP),?)";
             }
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);
+            ) {
                 pstmt.setString(1, t.getToken());
                 pstmt.setString(2, t.getUid());
                 pstmt.setLong(3, t.getLifetime());
@@ -213,12 +303,18 @@ public class AuthDao implements AuthDaoIface {
     }
 
     @Override
-    public Token createApiToken(User issuer, long lifetimeMinutes, String key){
-        throw new UnsupportedOperationException("Unimplemented method 'createApiToken'");
+    public Token createApiToken(User issuer, long lifetimeMinutes, String key) {
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'createApiToken'"
+        );
     }
 
     @Override
-    public String getIssuerId(String token, long sessionTokenLifetime, long permanentTokenLifetime) {
+    public String getIssuerId(
+        String token,
+        long sessionTokenLifetime,
+        long permanentTokenLifetime
+    ) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
         try {
@@ -227,13 +323,17 @@ public class AuthDao implements AuthDaoIface {
             if (null == token) {
                 return null;
             }
-            String querySession = "SELECT uid FROM tokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
-            String queryPermanent = "SELECT uid FROM ptokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
+            String querySession =
+                "SELECT uid FROM tokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
+            String queryPermanent =
+                "SELECT uid FROM ptokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
 
-            String updateSession = "UPDATE tokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
-            String updatePermanent = "UPDATE ptokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String updateSession =
+                "UPDATE tokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
+            String updatePermanent =
+                "UPDATE ptokens SET eoflife=DATEADD('MINUTE', ?, CURRENT_TIMESTAMP) WHERE token=?";
             String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + token);
@@ -246,8 +346,10 @@ public class AuthDao implements AuthDaoIface {
                 updateQuery = updateSession;
                 lifetime = sessionTokenLifetime;
             }
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);
+            ) {
                 pstmt.setString(1, token);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
@@ -262,8 +364,12 @@ public class AuthDao implements AuthDaoIface {
                 LOG.error(ex.getMessage());
             }
             if (userUid != null) {
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                try (
+                    Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(
+                        updateQuery
+                    );
+                ) {
                     pstmt.setLong(1, lifetime);
                     pstmt.setString(2, token);
                     int count = pstmt.executeUpdate();
@@ -282,7 +388,11 @@ public class AuthDao implements AuthDaoIface {
         }
     }
 
-    public Token getToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
+    public Token getToken(
+        String tokenID,
+        long sessionTokenLifetime,
+        long permanentTokenLifetime
+    ) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
         Token token = null;
@@ -291,10 +401,12 @@ public class AuthDao implements AuthDaoIface {
             if (null == tokenID) {
                 return null;
             }
-            String querySession = "SELECT * FROM tokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
-            String queryPermanent = "SELECT * FROM ptokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
+            String querySession =
+                "SELECT * FROM tokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
+            String queryPermanent =
+                "SELECT * FROM ptokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
             String query;
             long lifetime = 0;
             LOG.debug("token:" + tokenID);
@@ -305,14 +417,19 @@ public class AuthDao implements AuthDaoIface {
                 query = querySession;
                 lifetime = sessionTokenLifetime;
             }
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);
+            ) {
                 pstmt.setString(1, tokenID);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
-                    token = new Token(rs.getString("uid"), lifetime,
-                            tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
+                    token = new Token(
+                        rs.getString("uid"),
+                        lifetime,
+                        tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX)
+                    );
                     token.setIssuer(rs.getString("issuer"));
                     token.setPayload(rs.getString("payload"));
                     token.setTimestamp(rs.getTimestamp("tstamp").getTime());
@@ -335,7 +452,11 @@ public class AuthDao implements AuthDaoIface {
         }
     }
 
-    public Token updateToken(String tokenID, long sessionTokenLifetime, long permanentTokenLifetime) {
+    public Token updateToken(
+        String tokenID,
+        long sessionTokenLifetime,
+        long permanentTokenLifetime
+    ) {
         // TODO: update eoflife
         // TODO: RETURNING can be used for PostgreSQL
         Token token = null;
@@ -344,13 +465,17 @@ public class AuthDao implements AuthDaoIface {
             if (null == tokenID) {
                 return null;
             }
-            String querySession = "SELECT * FROM tokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
-            String queryPermanent = "SELECT * FROM ptokens WHERE token=? AND"
-                    + " eoflife>=CURRENT_TIMESTAMP";
+            String querySession =
+                "SELECT * FROM tokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
+            String queryPermanent =
+                "SELECT * FROM ptokens WHERE token=? AND" +
+                " eoflife>=CURRENT_TIMESTAMP";
 
-            String updateSession = "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
-            String updatePermanent = "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String updateSession =
+                "UPDATE tokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
+            String updatePermanent =
+                "UPDATE ptokens SET eoflife=(CURRENT_TIMESTAMP + ? * INTERVAL '1 minute') WHERE token=?";
             String query, updateQuery;
             long lifetime = 0;
             LOG.debug("token:" + tokenID);
@@ -363,14 +488,19 @@ public class AuthDao implements AuthDaoIface {
                 updateQuery = updateSession;
                 lifetime = sessionTokenLifetime;
             }
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement pstmt = conn.prepareStatement(query);) {
+            try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);
+            ) {
                 pstmt.setString(1, tokenID);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     LOG.info("getUserId: token found: " + tokenID);
-                    token = new Token(rs.getString("uid"), lifetime,
-                            tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX));
+                    token = new Token(
+                        rs.getString("uid"),
+                        lifetime,
+                        tokenID.startsWith(Token.PERMANENT_TOKEN_PREFIX)
+                    );
                     token.setIssuer(rs.getString("issuer"));
                     token.setPayload(rs.getString("payload"));
                     token.setTimestamp(rs.getTimestamp("tstamp").getTime());
@@ -386,8 +516,12 @@ public class AuthDao implements AuthDaoIface {
                 ex.printStackTrace();
             }
             if (token != null) {
-                try (Connection conn = dataSource.getConnection();
-                        PreparedStatement pstmt = conn.prepareStatement(updateQuery);) {
+                try (
+                    Connection conn = dataSource.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(
+                        updateQuery
+                    );
+                ) {
                     pstmt.setLong(1, lifetime);
                     pstmt.setString(2, tokenID);
                     int count = pstmt.executeUpdate();
@@ -411,43 +545,56 @@ public class AuthDao implements AuthDaoIface {
     @Override
     public void removeToken(String token) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeToken'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'removeToken'"
+        );
     }
 
     @Override
     public void modifyToken(Token token) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'modifyToken'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'modifyToken'"
+        );
     }
 
     @Override
     public Token findTokenById(String tokenId) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findTokenById'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'findTokenById'"
+        );
     }
 
     @Override
     public void removeDashboardToken(String dashboardId) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeDashboardToken'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'removeDashboardToken'"
+        );
     }
 
     @Override
     public void saveToken(Token token) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'saveToken'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'saveToken'"
+        );
     }
 
     @Override
     public Token getApiToken(User user) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getApiToken'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'getApiToken'"
+        );
     }
 
     @Override
     public void removeApiToken(User user) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeApiToken'");
+        throw new UnsupportedOperationException(
+            "Unimplemented method 'removeApiToken'"
+        );
     }
-
 }

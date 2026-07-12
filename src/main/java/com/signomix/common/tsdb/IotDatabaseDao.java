@@ -1157,7 +1157,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {            
+        } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
@@ -1170,7 +1170,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {            
+        } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
@@ -1184,7 +1184,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {            
+        } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
@@ -1198,7 +1198,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {            
+        } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
@@ -1211,7 +1211,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {            
+        } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
@@ -1224,7 +1224,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        } catch (Exception e) {            
+        } catch (Exception e) {
             e.printStackTrace();
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
@@ -1322,6 +1322,103 @@ public class IotDatabaseDao implements IotDatabaseIface {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("IotDatabaseDao.restoreDb");
+        //clear all tables first
+        String clearQuery = "TRUNCATE TABLE devices CASCADE;"
+                + "TRUNCATE TABLE devicedata CASCADE; "
+                + "TRUNCATE TABLE devicestatus CASCADE; "
+                + "TRUNCATE TABLE devicechannels CASCADE; "
+                + "TRUNCATE TABLE commands CASCADE; "
+                + "TRUNCATE TABLE commandslog CASCADE; "
+                + "TRUNCATE TABLE alerts CASCADE; "
+                + "TRUNCATE TABLE archive_alerts CASCADE; "
+                + "TRUNCATE TABLE analyticdata CASCADE; "
+                + "TRUNCATE TABLE dashboards CASCADE; "
+                + "TRUNCATE TABLE dashboardtemplates CASCADE; "
+                + "TRUNCATE TABLE device_tags CASCADE; "
+                + "TRUNCATE TABLE devicetemplates CASCADE; "
+                + "TRUNCATE TABLE favourites CASCADE; "
+                + "TRUNCATE TABLE groups CASCADE; "
+                + "TRUNCATE TABLE virtualdevicedata CASCADE;"
+                + "TRUNCATE TABLE account_params CASCADE;"
+                + "TRUNCATE TABLE account_features CASCADE;";
+        try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(clearQuery);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(
+                    IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage(),
+                    e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String query = "COPY account_params FROM '/var/lib/postgresql/data/import/account_params.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_features FROM '/var/lib/postgresql/data/import/account_features.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY alerts FROM '/var/lib/postgresql/data/import/alerts.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY archive_alerts FROM '/var/lib/postgresql/data/import/archive_alerts.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY analyticdata FROM '/var/lib/postgresql/data/import/analyticdata.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY commands FROM '/var/lib/postgresql/data/import/commands.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY commandslog FROM '/var/lib/postgresql/data/import/commandslog.csv' DELIMITER ';' QUOTE '\"' CSV HEADER;"
+                + "COPY devicechannels FROM '/var/lib/postgresql/data/import/devicechannels.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicestatus FROM '/var/lib/postgresql/data/import/devicestatus.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devices FROM '/var/lib/postgresql/data/import/devices.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY device_tags FROM '/var/lib/postgresql/data/import/device_tags.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY devicetemplates FROM '/var/lib/postgresql/data/import/devicetemplates.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY favourites FROM '/var/lib/postgresql/data/import/favourites.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY groups FROM '/var/lib/postgresql/data/import/groups.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY virtualdevicedata FROM '/var/lib/postgresql/data/import/virtualdevicedata.csv' DELIMITER ';' CSV HEADER;";
+        try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(
+                    IotDatabaseException.SQL_EXCEPTION,
+                    e.getMessage(),
+                    e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // logger.info("IotDatabaseDao.restoreDb devices");
+        // query = "COPY devices FROM '/var/lib/postgresql/data/import/devices.csv' DELIMITER ';' CSV HEADER;";
+        // int updated = 0;
+        // try (
+        //         Connection conn = dataSource.getConnection();
+        //         PreparedStatement pstmt = conn.prepareStatement(query);) {
+        //             logger.info("executing devices restore query");
+        //     updated = pstmt.executeUpdate();
+        //     logger.info("Devices restored: " + updated);
+        // } catch (SQLException e) {
+        //     logger.error("Error restoring devices: " + e.getMessage());
+        //     throw new IotDatabaseException(
+        //             IotDatabaseException.SQL_EXCEPTION,
+        //             e.getMessage(),
+        //             e);
+        // } catch (Exception e) {
+        //     logger.error("Error restoring devices: " + e.getMessage());
+        // }
+
+        // dashbards restored in separation, because of expecting errors
+        // errors here are not breaks restoring, because dashboards are not mandatory for system operation
+        String query2 = "COPY dashboards FROM '/var/lib/postgresql/data/import/dashboards.csv' WITH (DELIMITER ';', FORMAT CSV, HEADER, FORCE_NULL(created_at,items_mobile));"
+        + "COPY dashboardtemplates FROM '/var/lib/postgresql/data/import/dashboardtemplates.csv' DELIMITER ';' CSV HEADER; ";
+        try (
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query2);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error restoring dashboards: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        logger.info("IotDatabaseDao.restoreDb done");
     }
 
     @Override
@@ -2704,11 +2801,14 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("CREATE TABLE IF NOT EXISTS dashboardtemplates (")
                 .append("id varchar primary key,")
                 .append("title varchar,")
-                .append("name varchar,")
                 .append("items varchar,")
+                .append("widgets varchar,")
+                .append(
+                        "organization bigint default " + defaultOrganizationId + ",")
+                .append("name varchar,")
                 .append("items_mobile varchar,")
-                .append("variables varchar,")
-                .append("widgets varchar);");
+                .append("variables varchar);");
+
         // devices
         sb
                 .append("CREATE TABLE IF NOT EXISTS devices (")
@@ -2749,9 +2849,9 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("organizationapp bigint references applications,")
                 .append("defaultdashboard boolean default true,")
                 .append("path ltree,")
-                .append("status_used boolean default false,")
-                .append("createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);");
-
+                .append("phone varchar,")
+                .append("createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,")
+                .append("status_used boolean default false);");
         // dashboards
         sb
                 .append("CREATE TABLE IF NOT EXISTS dashboards (")
@@ -2764,14 +2864,15 @@ public class IotDatabaseDao implements IotDatabaseIface {
                 .append("items varchar,")
                 .append("token varchar,")
                 .append("shared boolean,")
-                .append("template varchar,")
-                .append("items_mobile varchar,")
-                .append("variables varchar,")
                 .append(
                         "organization bigint default " + defaultOrganizationId + ",")
                 .append("administrators varchar,")
                 .append(
-                        "created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);");
+                        "created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,")
+                .append("variables varchar,")
+                .append("template varchar,")
+                .append("items_mobile varchar);");
+
         // alerts
         sb
                 .append("CREATE TABLE IF NOT EXISTS alerts (")
@@ -5304,7 +5405,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
         "AND tstamp < now() - (? * INTERVAL '1 day')";
         if(skipProtected){
             sql+=" AND NOT protected";
-        }   
+        }
         int removedRows=0;
         try (
             Connection conn = dataSource.getConnection();
@@ -5349,7 +5450,7 @@ public class IotDatabaseDao implements IotDatabaseIface {
             throw new IotDatabaseException(
                     IotDatabaseException.SQL_EXCEPTION,
                     e.getMessage());
-        }    
+        }
         return removedRows;
     }
 }

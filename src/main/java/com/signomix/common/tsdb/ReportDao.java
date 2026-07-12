@@ -47,6 +47,36 @@ public class ReportDao implements ReportDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("ReportDao.restoreDb");
+        // delete tables content before restore
+        String deleteQuery = "TRUNCATE TABLE reports CASCADE; TRUNCATE TABLE report_definitions CASCADE;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(deleteQuery);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during restore", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during restore", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        String query = "COPY reports FROM '/var/lib/postgresql/data/import/reports.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY report_definitions FROM '/var/lib/postgresql/data/import/report_definitions.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("Error during restore", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error during restore", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        logger.info("ReportDao.restoreDb done");
+    }
+
+    @Override
     public void createStructure() throws IotDatabaseException {
         String query = "CREATE TABLE IF NOT EXISTS reports ("
                 + "class_name VARCHAR,"
@@ -121,7 +151,7 @@ public class ReportDao implements ReportDaoIface {
      * Check if a report is available for a given user
      * In case userNumber is null, check if a report is available for a given
      * organization, tenant and path.
-     * 
+     *
      * @param className
      * @param userNumber
      * @param organization

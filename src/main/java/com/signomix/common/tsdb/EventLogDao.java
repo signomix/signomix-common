@@ -9,8 +9,11 @@ import com.signomix.common.db.EventLogDaoIface;
 import com.signomix.common.db.IotDatabaseException;
 
 import io.agroal.api.AgroalDataSource;
+import org.jboss.logging.Logger;
 
 public class EventLogDao implements EventLogDaoIface {
+
+    private static final Logger logger = Logger.getLogger(EventLogDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -45,7 +48,7 @@ public class EventLogDao implements EventLogDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
-        } 
+        }
 
         query = "CREATE TABLE IF NOT EXISTS account_events ("
                 + "ts TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
@@ -66,7 +69,7 @@ public class EventLogDao implements EventLogDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
-        } 
+        }
 
         query = "CREATE TABLE IF NOT EXISTS api_events ("
                 + "ts TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
@@ -87,7 +90,7 @@ public class EventLogDao implements EventLogDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.execute();
         } catch (SQLException e) {
-        } 
+        }
 
         // remove retention policy
         query="SELECT remove_retention_policy('api_events');";
@@ -136,6 +139,31 @@ public class EventLogDao implements EventLogDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "backupDb " + e.getMessage());
         }
 
+    }
+
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("EventLogDao.restoreDb");
+        //clear tables
+        String query = "DELETE FROM data_access_events;"
+                + "DELETE FROM account_events;"
+                + "DELETE FROM api_events;";
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement()) {
+            statement.execute(query);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "restoreDb " +e.getMessage());
+        }
+        query = "COPY data_access_events FROM '/var/lib/postgresql/data/import/data_access_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY account_events FROM '/var/lib/postgresql/data/import/account_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY api_events FROM '/var/lib/postgresql/data/import/api_events.csv' DELIMITER ';' CSV HEADER;";
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement()) {
+            statement.execute(query);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "restoreDb " + e.getMessage());
+        }
+        logger.info("EventLogDao.restoreDb done");
     }
 
     @Override

@@ -6,5 +6,6 @@ public interface CmsDaoIface {
     public void setDatasource(AgroalDataSource ds);
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public void doCleanup() throws IotDatabaseException;
 }

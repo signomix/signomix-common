@@ -19,7 +19,7 @@ import com.signomix.common.db.OrganizationDaoIface;
 import io.agroal.api.AgroalDataSource;
 
 public class OrganizationDao implements OrganizationDaoIface {
-    private static final Logger LOG = Logger.getLogger(OrganizationDao.class);
+    private static final Logger logger = Logger.getLogger(OrganizationDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -67,7 +67,7 @@ public class OrganizationDao implements OrganizationDaoIface {
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             pst.executeUpdate();
         } catch (SQLException e2) {
-            LOG.warn("Error inserting default organization " + e2.getMessage());
+            logger.warn("Error inserting default organization " + e2.getMessage());
             // throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION,
             // e2.getMessage(), e2);
         }
@@ -119,6 +119,33 @@ public class OrganizationDao implements OrganizationDaoIface {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("OrganizationDao.restoreDb");
+
+        // delete tables
+        String queryDelete = "TRUNCATE TABLE organizations CASCADE; TRUNCATE TABLE tenants CASCADE; TRUNCATE TABLE tenant_structure CASCADE; TRUNCATE TABLE tenant_users CASCADE;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(queryDelete);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String query = "COPY tenants FROM '/var/lib/postgresql/data/import/tenants.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY organizations FROM '/var/lib/postgresql/data/import/organizations.csv' WITH (DELIMITER ';', FORMAT CSV, HEADER, QUOTE '\"', FORCE_NULL(id,code,name,description,configuration,created_at,updated_at,locked,vat));"
+                + "COPY tenant_structure FROM '/var/lib/postgresql/data/import/tenant_structure.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY tenant_users FROM '/var/lib/postgresql/data/import/tenant_users.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        logger.info("OrganizationDao.restoreDb done");
     }
 
     @Override

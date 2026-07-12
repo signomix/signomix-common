@@ -235,6 +235,36 @@ public class BillingDao implements BillingDaoIface {
 
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("BillingDao.restoreDb");
+        // clear tables first
+        String clearQuery = "DELETE FROM orders; DELETE FROM account_points;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(clearQuery);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        String query = "COPY account_points FROM '/var/lib/postgresql/data/import/account_points.csv' DELIMITER ';' CSV HEADER;";
+        //"COPY orders FROM '/var/lib/postgresql/data/import/orders.csv' DELIMITER ';' CSV HEADER;" //TODO: add orders restore
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        logger.info("BillingDao.restoreDb: done");
+    }
+
     private String buildId(int lastOrder, int month, int year) {
         String id = "Z/" + lastOrder + "/" + month + "/" + year + "/S";
         return id;

@@ -34,6 +34,12 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+        // TODO: implement
+        // implemented in IotDatabaseDao class
+    }
+
+    @Override
     public void createStructure() throws IotDatabaseException {
         // implemented in IotDatabaseDao class
         /*

@@ -49,6 +49,33 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("SentinelDao.restoreDb");
+        //delete all data from tables
+        String queryDelete = "DELETE FROM sentinels; DELETE FROM sentinel_events; DELETE FROM sentinel_devices;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(queryDelete);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        String query = "COPY sentinels FROM '/var/lib/postgresql/data/import/sentinels.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY sentinel_events FROM '/var/lib/postgresql/data/import/sentinel_events.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY sentinel_devices FROM '/var/lib/postgresql/data/import/sentinel_devices.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        logger.info("SentinelDao.restoreDb done");
+    }
+
+    @Override
     public void createStructure() throws IotDatabaseException {
         logger.debug("Creating sentinel tables...");
         String query = "CREATE TABLE IF NOT EXISTS sentinels ("
@@ -431,7 +458,7 @@ public class SentinelDao implements SentinelDaoIface {
      * Returns map of devices and their channels for given sentinel config.
      * Example result: { "eui1": { "temperature": "d1", "humidity": "d2" }, "eui2":
      * { "temperature": "d14", "humidity": "d1" } }
-     * 
+     *
      * @param configId sentinel config id
      * @param limit    query limit
      * @param offset   query offset
@@ -477,7 +504,7 @@ public class SentinelDao implements SentinelDaoIface {
      * eui.
      * Example result: { "eui1": { "temperature": "d1", "humidity": "d2" }, "eui2":
      * { "temperature": "d14", "humidity": "d1" } }
-     * 
+     *
      * @param configId  sentinel config id
      * @param deviceEui device eui
      */
@@ -523,7 +550,7 @@ public class SentinelDao implements SentinelDaoIface {
      * d3, d4, d5, d6, d7, d8, d9, d10,
      * Example result: [ [ "eui1", "2020-01-01 00:00:00", 1.0, 2.0, 3.0 ], [ "eui2",
      * "2020-01-01 00:00:00", 4.0, 5.0, 6.0 ] ]
-     * 
+     *
      * @param sentinelConfigId sentinel config id
      */
     @Override
@@ -582,7 +609,7 @@ public class SentinelDao implements SentinelDaoIface {
      * d3, d4, d5, d6, d7, d8, d9, d10,
      * Example result: [ [ "eui1", "2020-01-01 00:00:00", 1.0, 2.0, 3.0 ], [ "eui2",
      * * "2020-01-01 00:00:00", 4.0, 5.0, 6.0 ] ]
-     * 
+     *
      * @param euis        set of device euis
      * @param secondsBack number of seconds to look back for data
      */

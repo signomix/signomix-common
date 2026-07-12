@@ -1756,6 +1756,10 @@ public class IotDatabaseDao implements IotDatabaseIface {
         }
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
     /**
      * Get list of devices accessible for user.
      * This method should not be used for users with organization different than

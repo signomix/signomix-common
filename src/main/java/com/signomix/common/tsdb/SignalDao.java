@@ -452,4 +452,32 @@ public class SignalDao implements SignalDaoIface {
         }
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("SignalDao.restoreDb");
+        // delete tables
+        String queryDelete = "DELETE FROM signals; DELETE FROM user_signals; DELETE FROM archive_signals; DELETE FROM archive_user_signals;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(queryDelete);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        String query = "COPY signals FROM '/var/lib/postgresql/data/import/signals.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY user_signals FROM '/var/lib/postgresql/data/import/user_signals.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY archive_signals FROM '/var/lib/postgresql/data/import/archive_signals.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY archive_user_signals FROM '/var/lib/postgresql/data/import/archive_user_signals.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        logger.info("SignalDao.restoreDb done");
+    }
+
 }

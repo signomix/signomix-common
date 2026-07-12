@@ -4,8 +4,11 @@ import com.signomix.common.User;
 import com.signomix.common.db.EventLogDaoIface;
 import com.signomix.common.db.IotDatabaseException;
 import io.agroal.api.AgroalDataSource;
+import org.jboss.logging.Logger;
 
 public class QuestDbDao implements EventLogDaoIface {
+    private static final Logger logger = Logger.getLogger(QuestDbDao.class);
+
 
     private AgroalDataSource dataSource;
 
@@ -58,6 +61,34 @@ public class QuestDbDao implements EventLogDaoIface {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "backupDb " + e.getMessage());
         }
 
+    }
+
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("QuestDbDao.restoreDb omited");
+        // // delete existing data
+        // String deleteQuery = "TRUNCATE TABLE data_access_events; TRUNCATE TABLE account_events;";
+        // try (var connection = dataSource.getConnection();
+        //         var statement = connection.createStatement()) {
+        //     statement.execute(deleteQuery);
+        // } catch (Exception e) {
+        //     throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "restoreDb delete "+ e.getMessage());
+        // }
+        // String query = "COPY data_access_events FROM '/var/lib/postgresql/data/import/qdb_data_access_events.csv' WITH HEADER true;";
+        // try (var connection = dataSource.getConnection();
+        //         var statement = connection.createStatement()) {
+        //     statement.execute(query);
+        // } catch (Exception e) {
+        //     throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "restoreDb " + e.getMessage());
+        // }
+        // query = "COPY account_events FROM '/var/lib/postgresql/data/import/qdb_account_events.csv' WITH HEADER true;";
+        // try (var connection = dataSource.getConnection();
+        //         var statement = connection.createStatement()) {
+        //     statement.execute(query);
+        // } catch (Exception e) {
+        //     throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, "restoreDb " + e.getMessage());
+        // }
+        // logger.info("QuestDbDao.restoreDb done");
     }
 
     @Override

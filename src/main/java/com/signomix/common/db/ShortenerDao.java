@@ -91,4 +91,8 @@ public class ShortenerDao implements ShortenerDaoIface {
         }
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
 }

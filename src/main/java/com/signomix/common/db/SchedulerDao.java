@@ -22,4 +22,8 @@ public class SchedulerDao implements SchedulerDaoIface {
 
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
 }

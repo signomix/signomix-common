@@ -11,8 +11,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
+import org.jboss.logging.Logger;
 
 public class NewsDao implements NewsDaoIface {
+
+    private static final Logger logger = Logger.getLogger(NewsDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -237,6 +240,29 @@ public class NewsDao implements NewsDaoIface {
         } catch (SQLException e) {
             throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
         }
+    }
+
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("newsDao.restoreDb");
+        // delete all data from tables
+        String deleteQuery = "DELETE FROM news_definition; DELETE FROM user_news; DELETE FROM news_documents;";
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(deleteQuery)) {
+            statement.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        String query = "COPY news_definition FROM '/var/lib/postgresql/data/import/news_definition.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY user_news FROM '/var/lib/postgresql/data/import/user_news.csv' DELIMITER ';' CSV HEADER;"
+                + "COPY news_documents FROM '/var/lib/postgresql/data/import/news_documents.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage());
+        }
+        logger.info("newsDao.restoreDb done");
     }
 
     @Override

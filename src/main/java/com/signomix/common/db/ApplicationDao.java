@@ -173,6 +173,10 @@ public class ApplicationDao implements ApplicationDaoIface {
         return result;
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
 /*     @Override
     public ApplicationConfig getApplicationConfig(long applicationId) throws IotDatabaseException {
         // TODO Auto-generated method stub

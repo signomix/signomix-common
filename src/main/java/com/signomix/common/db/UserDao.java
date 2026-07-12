@@ -138,6 +138,10 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
+    @Override
     public User getUser(String uid) throws IotDatabaseException {
         String query = "SELECT uid,type,email,name,surname,role,secret,password,generalchannel,"
                 + "infochannel,warningchannel,alertchannel,confirmed,unregisterreq,authstatus,created,"

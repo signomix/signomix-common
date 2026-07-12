@@ -50,6 +50,10 @@ public class SentinelDao implements SentinelDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
+    @Override
     public long addConfig(SentinelConfig config) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addConfig'");

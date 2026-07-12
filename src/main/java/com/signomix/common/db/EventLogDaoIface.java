@@ -9,6 +9,7 @@ public interface EventLogDaoIface {
     public void setDatasource(AgroalDataSource dataSource);
     public void createStructure() throws IotDatabaseException;   
     public void backupDb() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public void deletePartition(String partition, int monthsBack) throws IotDatabaseException;
     public void saveLoginEvent(User user, String remoteAddress, int resultCode, boolean isAdmin);
     public void saveLoginFailure(String login, String remoteAddress, int resultCode, boolean isAdmin);

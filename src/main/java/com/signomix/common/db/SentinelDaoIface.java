@@ -16,6 +16,7 @@ public interface SentinelDaoIface {
     public void setDatasource(AgroalDataSource ds);
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public long addConfig(SentinelConfig config) throws IotDatabaseException;
     public void addDevice(long configId, String deviceEui, String channelMapping) throws IotDatabaseException;
     public void removeDevice(String deviceEui) throws IotDatabaseException;

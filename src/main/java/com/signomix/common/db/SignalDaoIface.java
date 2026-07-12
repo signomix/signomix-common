@@ -11,6 +11,7 @@ public interface SignalDaoIface {
     public AgroalDataSource getDataSource();
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public void saveSignal(Signal signal) throws IotDatabaseException;
     public Signal getSignalById(long id) throws IotDatabaseException;
     public void updateSignal(Signal signal) throws IotDatabaseException;

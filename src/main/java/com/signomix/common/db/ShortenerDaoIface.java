@@ -9,4 +9,5 @@ public interface ShortenerDaoIface {
     public void removeUrl(String target)  throws IotDatabaseException;
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
 }

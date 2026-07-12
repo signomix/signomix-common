@@ -134,4 +134,8 @@ public class CmsDao implements CmsDaoIface {
         }
     }
 
+    @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
 }

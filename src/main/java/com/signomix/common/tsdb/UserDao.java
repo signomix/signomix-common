@@ -19,7 +19,7 @@ public class UserDao implements UserDaoIface {
 
     public static final long DEFAULT_ORGANIZATION_ID = 1;
 
-    private static final Logger LOG = Logger.getLogger(UserDao.class);
+    private static final Logger logger = Logger.getLogger(UserDao.class);
 
     private AgroalDataSource dataSource;
 
@@ -104,7 +104,7 @@ public class UserDao implements UserDaoIface {
             pst.setInt(2, User.IS_REGISTERING);
             pst.executeUpdate();
         } catch (SQLException e) {
-            LOG.error(e.getMessage());
+            logger.error(e.getMessage());
             e.printStackTrace();
             // throw new KeyValueDBException(e.getErrorCode(), e.getMessage());
         }
@@ -174,6 +174,29 @@ public class UserDao implements UserDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("restoreDb");
+        // delete tables
+        String queryDelete = "TRUNCATE TABLE users CASCADE;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(queryDelete);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String query = "COPY users FROM '/var/lib/postgresql/data/import/users.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        logger.info("restoreDb done");
+    }
+
+    @Override
     public User getUser(String uid) throws IotDatabaseException {
         User u = null;
         String query = "SELECT users.*, tenant_users.path AS tpath, tenant_users.tenant_id," +
@@ -187,14 +210,14 @@ public class UserDao implements UserDaoIface {
                 if (rs.next()) {
                     u = buildUser(rs);
                 } else {
-                    LOG.warn("User not found: " + uid);
+                    logger.warn("User not found: " + uid);
                 }
             } catch (Exception e) {
-                LOG.error(e.getMessage());
+                logger.error(e.getMessage());
                 e.printStackTrace();
             }
         } catch (SQLException e) {
-            LOG.error(e.getMessage());
+            logger.error(e.getMessage());
             throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
         }
         return u;
@@ -313,7 +336,7 @@ public class UserDao implements UserDaoIface {
      * Check if user object has all parameters set or basic parameters or
      * notification parameters
      * only then uses the correct update method
-     * 
+     *
      * @param user
      * @throws IotDatabaseException
      */
@@ -331,7 +354,7 @@ public class UserDao implements UserDaoIface {
      * LOG.info("updateUserBasicParams: " + user.uid);
      * }
      * }
-     * 
+     *
      * private void updateUserNotifications(User user) throws IotDatabaseException {
      * LOG.info("generalNotificationChannel: " + user.generalNotificationChannel);
      * String query = "UPDATE users SET "
@@ -362,7 +385,7 @@ public class UserDao implements UserDaoIface {
 
     /**
      * Update all user parameters except notifications
-     * 
+     *
      * @param user
      */
     /*
@@ -414,7 +437,7 @@ public class UserDao implements UserDaoIface {
      * }
      */
 
-    /*    
+    /*
     */
     @Override
     public List<User> getOrganizationUsers(long organizationId, Integer limit, Integer offset, String searchField,
@@ -461,7 +484,7 @@ public class UserDao implements UserDaoIface {
         if (offset != null) {
             query += " OFFSET " + offset;
         }
-        LOG.info("getOrganizationUsers: " + query);
+        logger.info("getOrganizationUsers: " + query);
         ArrayList<User> users = new ArrayList<>();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {
             pstmt.setLong(1, organizationId);

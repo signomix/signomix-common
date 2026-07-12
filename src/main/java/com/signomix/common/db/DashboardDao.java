@@ -70,6 +70,10 @@ public class DashboardDao implements DashboardIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
+    @Override
     public void addDashboard(Dashboard dashboard) throws IotDatabaseException {
         String query = "INSERT INTO dashboards (id,name,userid,title,team,widgets,token,shared,administrators,items,organization) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(query);) {

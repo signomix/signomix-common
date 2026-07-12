@@ -21,6 +21,7 @@ public interface IotDatabaseIface {
     public void commit();
     public void backupDb() throws IotDatabaseException;
     public void createStructure() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public void setDatasource(AgroalDataSource ds);
     public void setAnalyticDatasource(AgroalDataSource ds);
     public void setQueryResultsLimit(int limit);

@@ -181,5 +181,6 @@ public interface ReportIface {
          * @param options
          */
         public void setOptions(HashMap<String, Object> options);
+        public void restoreDb() throws IotDatabaseException;
 
 }

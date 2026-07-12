@@ -25,6 +25,7 @@ public interface UserDaoIface {
     public void removeNotConfirmed(long since);
     public List<User> getAll();
     public void backupDb() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
 
     //public List<Organization> getOrganizations(Integer limit, Integer offset) throws IotDatabaseException;
     //public Organization getOrganization(long id) throws IotDatabaseException;

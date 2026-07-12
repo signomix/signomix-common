@@ -42,6 +42,38 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+        logger.info("ApplicationDao restoreDb");
+        //clear tables
+        String clearQuery = "TRUNCATE TABLE applications CASCADE;";
+                //+ "DELETE FROM application_config;";
+                //
+         try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(clearQuery);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        String query = "COPY applications FROM '/var/lib/postgresql/data/import/applications.csv' DELIMITER ';' CSV HEADER;";
+                //+ "COPY application_config FROM '/var/lib/postgresql/data/import/application_config.csv' DELIMITER ';' CSV HEADER;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query);) {
+            pstmt.execute();
+        } catch (SQLException e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("restoreDb", e);
+            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+        }
+        logger.info("ApplicationDao restoreDb done");
+    }
+
+    @Override
     public void createStructure() throws IotDatabaseException {
         logger.info("createStructure");
         StringBuilder sb = new StringBuilder("");
@@ -286,7 +318,7 @@ public class ApplicationDao implements ApplicationDaoIface {
      * }
      * return config;
      * }
-     * 
+     *
      * @Override
      * public void setApplicationConfig(long applicationId, ApplicationConfig
      * config) throws IotDatabaseException {

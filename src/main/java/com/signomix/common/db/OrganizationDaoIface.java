@@ -12,6 +12,7 @@ public interface OrganizationDaoIface {
     public void setDatasource(AgroalDataSource ds);
     public void createStructure() throws IotDatabaseException;
     public void backupDb() throws IotDatabaseException;
+    public void restoreDb() throws IotDatabaseException;
     public void addTenant(Long organizationId, String name, String root, String menuDefinition) throws IotDatabaseException;
     public void updateTenant(Integer id, Long organizationId, String name, String root, String menuDefinition) throws IotDatabaseException;
     public void deleteTenant(Integer id) throws IotDatabaseException;

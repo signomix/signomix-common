@@ -57,6 +57,10 @@ public class OrganizationDao implements OrganizationDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
+    @Override
     public void addTenant(Long organizationId, String name, String root, String menuDefinition) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'addTenant'");

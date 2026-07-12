@@ -75,6 +75,10 @@ public class SignalDao implements SignalDaoIface {
     }
 
     @Override
+    public void restoreDb() throws IotDatabaseException {
+    }
+
+    @Override
     public void archiveSignals(long checkpoint) throws IotDatabaseException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'archiveSignals'");
