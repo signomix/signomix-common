@@ -35,13 +35,13 @@ public class OrganizationDao implements OrganizationDaoIface {
         sb.append("create table if not exists organizations (")
                 .append("id SERIAL PRIMARY KEY,")
                 .append("code varchar unique,")
-                .append("vat varchar unique,")
                 .append("name varchar,")
                 .append("description varchar,")
                 .append("configuration jsonb default '{}'::jsonb,")
-                .append("locked boolean default false,")
                 .append("created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,")
-                .append("updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);");
+                .append("updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,")
+                .append("locked boolean default false,")
+                .append("vat varchar);");
         String query = sb.toString();
         try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
             boolean updated = pst.executeUpdate() > 0;
