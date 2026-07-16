@@ -11,7 +11,7 @@ public interface ReportIface {
         /**
          * Get report result as ReportResult object.
          * This is the method to be used primarily by desktop widgets.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -35,7 +35,7 @@ public interface ReportIface {
         /**
          * Get report result as ReportResult object.
          * This is the method to be used primarily by mobile widgets.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -52,7 +52,7 @@ public interface ReportIface {
 
         /**
          * Get report result as HTML string.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -76,7 +76,7 @@ public interface ReportIface {
 
         /**
          * Get report result as HTML string.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -94,7 +94,7 @@ public interface ReportIface {
 
         /**
          * Get report result as CSV string.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -117,7 +117,7 @@ public interface ReportIface {
 
         /**
          * Get report result as CSV string.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -135,7 +135,7 @@ public interface ReportIface {
 
         /**
          * Get report result as CSV string.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -159,7 +159,7 @@ public interface ReportIface {
 
         /**
          * Get report result as CSV string.
-         * 
+         *
          * @param olapDs
          * @param oltpDs
          * @param logsDs
@@ -175,12 +175,11 @@ public interface ReportIface {
                         User user,
                         String format);
 
-        
+
         /**
          * Set report options.
          * @param options
          */
         public void setOptions(HashMap<String, Object> options);
-        public void restoreDb() throws IotDatabaseException;
 
 }
