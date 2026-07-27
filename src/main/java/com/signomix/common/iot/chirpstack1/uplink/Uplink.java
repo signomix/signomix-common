@@ -317,4 +317,8 @@ public class Uplink implements IotDataIface {
         return new Timestamp(getTimestamp());
     }
 
+    @Override
+    public long getReceivedAt(){
+        return 0;
+    }
 }

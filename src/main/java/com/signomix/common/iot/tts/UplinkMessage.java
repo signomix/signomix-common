@@ -1,5 +1,7 @@
 package com.signomix.common.iot.tts;
 
+import java.sql.Timestamp;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -12,7 +14,19 @@ public class UplinkMessage {
     @JsonProperty("uplink_message")
     private UplinkPayload uplinkPayload;
 
+    @JsonProperty("received_at")
+    private Timestamp receivedAt;
+
     // Gettery i Settery
+
+    public Timestamp getReceivedAt() {
+        return receivedAt;
+    }
+
+    public void setReceivedAt(Timestamp receivedAt) {
+        this.receivedAt = receivedAt;
+    }
+    
     public EndDeviceIds getEndDeviceIds() {
         return endDeviceIds;
     }

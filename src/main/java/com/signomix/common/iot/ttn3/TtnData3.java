@@ -34,6 +34,7 @@ public class TtnData3 extends TtnData implements IotDataIface {
     private String[] payloadFieldNames = {};
     public String timestampStr1;
     public String timestampStr2=null; //TODO: remove
+    public long receivedAt;
 
     @Override
     public String getDeviceID() {

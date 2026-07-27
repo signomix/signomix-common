@@ -124,6 +124,17 @@ public class TtnData extends HashMap implements Map, IotDataIface {
         return t;
     }
 
+    @Override
+    public long getReceivedAt(){
+        long t;
+        try {
+            t = (Long) get("receivedAt");
+        } catch (Exception e) {
+            t = getTimeField().toEpochMilli();
+        }
+        return t;
+    }
+
     public long getFrameCounter() {
         return (Long) get("counter");
     }

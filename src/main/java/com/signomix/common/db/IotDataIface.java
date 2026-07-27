@@ -20,6 +20,7 @@ public interface IotDataIface {
     //public long getLongValue(String fieldName, int multiplier);
     public Instant getTimeField();
     public long getTimestamp();
+    public long getReceivedAt();
     public Timestamp getTimestampUTC();
     public long getReceivedPackageTimestamp(); // timestamp from data object metadata
     public Double getDoubleValue(String fieldName);

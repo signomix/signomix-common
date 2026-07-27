@@ -4,18 +4,20 @@
  */
 package com.signomix.common.iot.generic;
 
-import com.signomix.common.DateTool;
-import com.signomix.common.db.IotDataIface;
-import com.signomix.common.iot.ChannelData;
-import com.signomix.common.iot.chirpstack.uplink.ChirpstackUplink;
-import com.signomix.common.iot.ttn3.TtnData3;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.jboss.logging.Logger;
+
+import com.signomix.common.DateTool;
+import com.signomix.common.db.IotDataIface;
+import com.signomix.common.iot.ChannelData;
+import com.signomix.common.iot.chirpstack.uplink.ChirpstackUplink;
+import com.signomix.common.iot.ttn3.TtnData3;
 
 /**
  *
@@ -267,5 +269,10 @@ public class IotData2 implements IotDataIface {
             //logger.info("TIMESTAMP : "+mval.getName()+" "+mval.getTimestamp());
             this.dataList.add(mval);
         }
+    }
+
+    @Override
+    public long getReceivedAt(){
+        return 0;
     }
 }

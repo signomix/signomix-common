@@ -1,5 +1,7 @@
 package com.signomix.common.iot.tts;
 
+import java.sql.Timestamp;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -18,7 +20,18 @@ public class RxMetadata {
     @JsonProperty("location")
     private Location location;
 
+    @JsonProperty("time")
+    private Timestamp time;
+
     // Gettery, Settery i toString()
+
+    public Timestamp getTime(){
+        return time;
+    }
+    public void setTime(Timestamp time){
+        this.time = time;
+    }
+
     public GatewayIds getGatewayIds() {
         return gatewayIds;
     }

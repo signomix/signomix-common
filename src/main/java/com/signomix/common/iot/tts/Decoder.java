@@ -15,7 +15,7 @@ public class Decoder {
      * @param json the JSON string to decode
      * @return a TtnData3 object containing the decoded data
      */
-    public static TtnData3 decode(String json){
+    public static TtnData3 decode(String json) {
         // Log the JSON string for debugging
         if (logger.isDebugEnabled()) {
             logger.debug(json);
@@ -27,22 +27,27 @@ public class Decoder {
         // and convert it into a TtnData3 object
         TtnData3 data = null;
         ObjectMapper objectMapper = new ObjectMapper();
-        try{
+        try {
             UplinkMessage uplinkMessage = objectMapper.readValue(json, UplinkMessage.class);
-            if(logger.isDebugEnabled()){
+            if (logger.isDebugEnabled()) {
                 logger.debug("UplinkMessage: " + uplinkMessage);
             }
             data = new TtnData3();
-            data.deviceEui=uplinkMessage.getEndDeviceIds().getDeviceEui();
-            data.deviceId=uplinkMessage.getEndDeviceIds().getDeviceId();
-            data.fPort=Long.valueOf(uplinkMessage.getUplinkPayload().getfPort());
-            data.fCounter=uplinkMessage.getUplinkPayload().getfCnt();
-            data.frmPayload=uplinkMessage.getUplinkPayload().getFrmPayload();
-            data.decodedPayload=uplinkMessage.getUplinkPayload().getDecodedPayload();
-            data.rxMetadata=uplinkMessage.getUplinkPayload().getRxMetadata();
+            data.deviceEui = uplinkMessage.getEndDeviceIds().getDeviceEui();
+            data.deviceId = uplinkMessage.getEndDeviceIds().getDeviceId();
+            data.fPort = Long.valueOf(uplinkMessage.getUplinkPayload().getfPort());
+            data.fCounter = uplinkMessage.getUplinkPayload().getfCnt();
+            data.frmPayload = uplinkMessage.getUplinkPayload().getFrmPayload();
+            data.decodedPayload = uplinkMessage.getUplinkPayload().getDecodedPayload();
+            data.rxMetadata = uplinkMessage.getUplinkPayload().getRxMetadata();
             data.rxMetadataJson = objectMapper.writeValueAsString(data.rxMetadata);
-            data.timestamp= uplinkMessage.getUplinkPayload().getReceivedAt().getTime();
-        }catch (Exception e){
+            if(uplinkMessage.getUplinkPayload().getReceivedAt()!=null){
+                data.timestamp = uplinkMessage.getUplinkPayload().getReceivedAt().getTime();
+            }else{
+                data.timestamp=System.currentTimeMillis();
+            }
+            data.receivedAt = uplinkMessage.getReceivedAt().getTime();
+        } catch (Exception e) {
             // Log the exception if an error occurs during decoding
             logger.error("Error decoding JSON: " + e.getMessage());
             // Log the stack trace for better debugging
