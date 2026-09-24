@@ -1,5 +1,7 @@
 package com.signomix.common.iot.ttn3;
 
+import com.signomix.common.db.IotDataIface;
+import com.signomix.common.iot.tts.RxMetadata;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
@@ -7,9 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.signomix.common.db.IotDataIface;
-import com.signomix.common.iot.tts.RxMetadata;
 
 /**
  *
@@ -33,8 +32,9 @@ public class TtnData3 extends TtnData implements IotDataIface {
     private long receivedUplinkTimestamp;
     private String[] payloadFieldNames = {};
     public String timestampStr1;
-    public String timestampStr2=null; //TODO: remove
+    public String timestampStr2 = null; //TODO: remove
     public long receivedAt;
+    public String authKey;
 
     @Override
     public String getDeviceID() {
@@ -82,19 +82,16 @@ public class TtnData3 extends TtnData implements IotDataIface {
         try {
             value = (Double) decodedPayload.get(fieldName);
             return value;
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
         try {
             value = new Double((Long) decodedPayload.get(fieldName));
             return value;
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
         try {
             // when the field is received as String
             value = Double.parseDouble((String) decodedPayload.get(fieldName));
             return value;
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
         return value;
     }
 
@@ -150,8 +147,8 @@ public class TtnData3 extends TtnData implements IotDataIface {
          * timestamp = System.currentTimeMillis();
          * }
          */
-        
-       /*  Instant instant;
+
+        /*  Instant instant;
         Timestamp ts;
 
         try {
@@ -178,7 +175,10 @@ public class TtnData3 extends TtnData implements IotDataIface {
                     Iterator it2 = ((Map) element).keySet().iterator();
                     while (it2.hasNext()) {
                         subKey = (String) it2.next();
-                        tmpMap.put(key + "_" + subKey, ((Map) element).get(subKey));
+                        tmpMap.put(
+                            key + "_" + subKey,
+                            ((Map) element).get(subKey)
+                        );
                     }
                 } else {
                     tmpMap.put(key, element);
@@ -211,5 +211,4 @@ public class TtnData3 extends TtnData implements IotDataIface {
         // TODO Auto-generated method stub
         return null;
     }
-
 }

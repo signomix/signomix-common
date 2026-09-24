@@ -27,17 +27,27 @@ public class ApplicationDao implements ApplicationDaoIface {
 
     @Override
     public void backupDb() throws IotDatabaseException {
-        String query = "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;";
-                //+ "COPY application_config to '/var/lib/postgresql/data/export/application_config.csv' DELIMITER ';' CSV HEADER;";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
+        String query =
+            "COPY applications to '/var/lib/postgresql/data/export/applications.csv' DELIMITER ';' CSV HEADER;";
+        //+ "COPY application_config to '/var/lib/postgresql/data/export/application_config.csv' DELIMITER ';' CSV HEADER;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("backupDb", e);
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
             logger.error("backupDb", e);
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
     }
 
@@ -46,29 +56,48 @@ public class ApplicationDao implements ApplicationDaoIface {
         logger.info("ApplicationDao restoreDb");
         //clear tables
         String clearQuery = "TRUNCATE TABLE applications CASCADE;";
-                //+ "DELETE FROM application_config;";
-                //
-         try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(clearQuery);) {
+        //+ "DELETE FROM application_config;";
+        //
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(clearQuery);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("restoreDb", e);
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
             logger.error("restoreDb", e);
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
-        String query = "COPY applications FROM '/var/lib/postgresql/data/import/applications.csv' DELIMITER ';' CSV HEADER;";
-                //+ "COPY application_config FROM '/var/lib/postgresql/data/import/application_config.csv' DELIMITER ';' CSV HEADER;";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(query);) {
+        String query =
+            "COPY applications FROM '/var/lib/postgresql/data/import/applications.csv' DELIMITER ';' CSV HEADER;";
+        //+ "COPY application_config FROM '/var/lib/postgresql/data/import/application_config.csv' DELIMITER ';' CSV HEADER;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(query);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("restoreDb", e);
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
             logger.error("restoreDb", e);
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
         logger.info("ApplicationDao restoreDb done");
     }
@@ -79,44 +108,65 @@ public class ApplicationDao implements ApplicationDaoIface {
         StringBuilder sb = new StringBuilder("");
         //sb.append("CREATE SEQUENCE IF NOT EXISTS id_app_seq;");
         sb.append("create table IF NOT EXISTS applications (")
-                .append("id SERIAL primary key,")
-                .append("organization INTEGER default " + DEFAULT_ORGANIZATION_ID + ",")
-                .append("version INTEGER default 0,")
-                .append("name varchar,")
-                .append("description varchar,")
-                .append("config VARCHAR,")
-                .append("decoder varchar,")
-                .append("code varchar,")
-                .append("UNIQUE (organization, name));");
+            .append("id SERIAL primary key,")
+            .append(
+                "organization INTEGER default " + DEFAULT_ORGANIZATION_ID + ","
+            )
+            .append("version INTEGER default 0,")
+            .append("name varchar,")
+            .append("description varchar,")
+            .append("config VARCHAR,")
+            .append("decoder varchar,")
+            .append("code varchar,")
+            .append("UNIQUE (organization, name));");
         /*
          * .append("CREATE TABLE IF NOT EXISTS application_config (")
          * .append("app_id BIGINT,")
          * .append("key VARCHAR(64),")
          * .append("value VARCHAR);");
          */
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sb.toString());) {
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sb.toString());
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("createStructure_1: " + e.getMessage());
             e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
             logger.error("createStructure_2: " + e.getMessage());
             e.printStackTrace();
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
-        String indexQuery = "CREATE INDEX IF NOT EXISTS idx_applications_name ON applications (name);";
+        String indexQuery =
+            "CREATE INDEX IF NOT EXISTS idx_applications_name ON applications (name);";
         // + "CREATE INDEX IF NOT EXISTS idx_application_config_app_id ON
         // application_config (app_id);";
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(indexQuery);) {
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(indexQuery);
+        ) {
             pstmt.execute();
         } catch (SQLException e) {
             logger.error("createStructure3: " + e.getMessage());
-            throw new IotDatabaseException(IotDatabaseException.SQL_EXCEPTION, e.getMessage(), e);
+            throw new IotDatabaseException(
+                IotDatabaseException.SQL_EXCEPTION,
+                e.getMessage(),
+                e
+            );
         } catch (Exception e) {
-            throw new IotDatabaseException(IotDatabaseException.UNKNOWN, e.getMessage());
+            throw new IotDatabaseException(
+                IotDatabaseException.UNKNOWN,
+                e.getMessage()
+            );
         }
         /* try (Connection conn = dataSource.getConnection();
                 PreparedStatement pst = conn.prepareStatement(
@@ -132,10 +182,15 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public Application addApplication(Application application) throws IotDatabaseException {
+    public Application addApplication(Application application)
+        throws IotDatabaseException {
         Application app = application;
-        String query = "INSERT INTO APPLICATIONS (organization,version,name,description,config,decoder,code) values (?,?,?,?,?,?,?) RETURNING id;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        String query =
+            "INSERT INTO APPLICATIONS (organization,version,name,description,config,decoder,code) values (?,?,?,?,?,?,?) RETURNING id;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setInt(1, application.organization);
             pst.setInt(2, application.version);
             pst.setString(3, application.name);
@@ -143,7 +198,7 @@ public class ApplicationDao implements ApplicationDaoIface {
             pst.setString(5, application.config.getAsString());
             pst.setString(6, application.decoder);
             pst.setString(7, application.code);
-            try (ResultSet rs = pst.executeQuery();) {
+            try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
                     app.id = rs.getInt(1);
                 }
@@ -156,9 +211,14 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public void updateApplication(Application application) throws IotDatabaseException {
-        String query = "UPDATE applications SET organization=?, version=?, name=?, description=?, config=?, decoder=?, code=? WHERE id=?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+    public void updateApplication(Application application)
+        throws IotDatabaseException {
+        String query =
+            "UPDATE applications SET organization=?, version=?, name=?, description=?, config=?, decoder=?, code=? WHERE id=?;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setInt(1, application.organization);
             pst.setInt(2, application.version);
             pst.setString(3, application.name);
@@ -177,7 +237,10 @@ public class ApplicationDao implements ApplicationDaoIface {
     @Override
     public void removeApplication(int id) throws IotDatabaseException {
         String query = "DELETE FROM applications WHERE id=?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setInt(1, id);
             pst.executeUpdate();
         } catch (SQLException e) {
@@ -190,16 +253,20 @@ public class ApplicationDao implements ApplicationDaoIface {
     public Application getApplication(int id) throws IotDatabaseException {
         Application app = null;
         String query = "SELECT * FROM applications WHERE id=?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setLong(1, id);
-            try (ResultSet rs = pst.executeQuery();) {
+            try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
                     app = new Application(
-                            rs.getInt("id"),
-                            rs.getInt("organization"),
-                            rs.getInt("version"),
-                            rs.getString("name"),
-                            rs.getString("description"));
+                        rs.getInt("id"),
+                        rs.getInt("organization"),
+                        rs.getInt("version"),
+                        rs.getString("name"),
+                        rs.getString("description")
+                    );
                     app.decoder = rs.getString("decoder");
                     app.code = rs.getString("code");
                     app.setConfig(rs.getString("config"));
@@ -213,20 +280,26 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public Application getApplication(int organizationId, String name) throws IotDatabaseException {
+    public Application getApplication(int organizationId, String name)
+        throws IotDatabaseException {
         Application app = null;
-        String query = "SELECT * FROM applications WHERE organization=? AND name=?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        String query =
+            "SELECT * FROM applications WHERE organization=? AND name=?;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setInt(1, organizationId);
             pst.setString(2, name);
-            try (ResultSet rs = pst.executeQuery();) {
+            try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
                     app = new Application(
-                            rs.getInt("id"),
-                            rs.getInt("organization"),
-                            rs.getInt("version"),
-                            rs.getString("name"),
-                            rs.getString("description"));
+                        rs.getInt("id"),
+                        rs.getInt("organization"),
+                        rs.getInt("version"),
+                        rs.getString("name"),
+                        rs.getString("description")
+                    );
                     app.decoder = rs.getString("decoder");
                     app.code = rs.getString("code");
                     app.setConfig(rs.getString("config"));
@@ -240,21 +313,26 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public List<Application> getApplications(int limit, int offset) throws IotDatabaseException {
+    public List<Application> getApplications(int limit, int offset)
+        throws IotDatabaseException {
         ArrayList<Application> result = new ArrayList<>();
         String query = "SELECT * FROM applications LIMIT ? OFFSET ?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setInt(1, limit);
             pst.setInt(2, offset);
-            try (ResultSet rs = pst.executeQuery();) {
+            try (ResultSet rs = pst.executeQuery()) {
                 Application application;
                 while (rs.next()) {
                     application = new Application(
-                            rs.getInt("id"),
-                            rs.getInt("organization"),
-                            rs.getInt("version"),
-                            rs.getString("name"),
-                            rs.getString("description"));
+                        rs.getInt("id"),
+                        rs.getInt("organization"),
+                        rs.getInt("version"),
+                        rs.getString("name"),
+                        rs.getString("description")
+                    );
                     application.decoder = rs.getString("decoder");
                     application.code = rs.getString("code");
                     application.setConfig(rs.getString("config"));
@@ -269,22 +347,31 @@ public class ApplicationDao implements ApplicationDaoIface {
     }
 
     @Override
-    public List<Application> getApplications(int organizationId, int limit, int offset) throws IotDatabaseException {
+    public List<Application> getApplications(
+        int organizationId,
+        int limit,
+        int offset
+    ) throws IotDatabaseException {
         ArrayList<Application> result = new ArrayList<>();
         Application app = null;
-        String query = "SELECT * FROM applications WHERE organization=? LIMIT ? OFFSET ?;";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement pst = conn.prepareStatement(query);) {
+        String query =
+            "SELECT * FROM applications WHERE organization=? LIMIT ? OFFSET ?;";
+        try (
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pst = conn.prepareStatement(query);
+        ) {
             pst.setLong(1, organizationId);
             pst.setInt(2, limit);
             pst.setInt(3, offset);
-            try (ResultSet rs = pst.executeQuery();) {
+            try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
                     app = new Application(
-                            rs.getInt("id"),
-                            rs.getInt("organization"),
-                            rs.getInt("version"),
-                            rs.getString("name"),
-                            rs.getString("description"));
+                        rs.getInt("id"),
+                        rs.getInt("organization"),
+                        rs.getInt("version"),
+                        rs.getString("name"),
+                        rs.getString("description")
+                    );
                     app.decoder = rs.getString("decoder");
                     app.code = rs.getString("code");
                     app.setConfig(rs.getString("config"));
@@ -346,5 +433,4 @@ public class ApplicationDao implements ApplicationDaoIface {
      * }
      * }
      */
-
 }
